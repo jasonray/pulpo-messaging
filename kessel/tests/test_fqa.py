@@ -236,7 +236,6 @@ class TestFqa(unittest.TestCase):
     #         self.assertEqual(dq_m.id, m.id)
     #         sw_process.stop()
 
-
     #     dq_m = fqa.dequeue_next()
     #     self.assertIsNone(dq_m)
 
