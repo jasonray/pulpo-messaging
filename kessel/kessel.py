@@ -88,8 +88,7 @@ class FileQueueAdapter():
         return m
 
     def load_message_by_id(self, message_id):
-        return self._load_message_from_file(
-            self._get_message_file_path(message_id))
+        return self._load_message_from_file(self._get_message_file_path(message_id))
 
     def _load_message_from_file(self, file_path):
         m = None
@@ -151,10 +150,8 @@ class FileQueueAdapter():
         with os.scandir(directory) as entries:
             sorted_entries = sorted(entries, key=lambda entry: entry.name)
 
-        filtered_entries = filter(
-            lambda entry: entry.name.endswith('.message'), sorted_entries)
-        filtered_entries = filter(lambda entry: entry.is_file(),
-                                  filtered_entries)
+        filtered_entries = filter(lambda entry: entry.name.endswith('.message'), sorted_entries)
+        filtered_entries = filter(lambda entry: entry.is_file(), filtered_entries)
 
         # return DirEntry https://docs.python.org/3/library/os.html#os.DirEntry
         return filtered_entries
@@ -217,5 +214,4 @@ class FileQueueAdapter():
         return os.path.exists(self._get_lock_file_path(message_id=messsage_id))
 
     def _does_message_exist(self, messsage_id) -> bool:
-        return os.path.exists(
-            self._get_message_file_path(message_id=messsage_id))
+        return os.path.exists(self._get_message_file_path(message_id=messsage_id))
