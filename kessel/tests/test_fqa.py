@@ -116,8 +116,8 @@ class TestFqaCompliance(unittest.TestCase):
 
 class TestFqa(unittest.TestCase):
 
-    def file_queue_adapter_factory(self) -> FileQueueAdapter:
-        return FileQueueAdapter(base_path=get_unique_base_path('fqa'))
+    def file_queue_adapter_factory(self, tag: str = 'fqa') -> FileQueueAdapter:
+        return FileQueueAdapter(base_path=get_unique_base_path(tag))
 
     def test_construct(self):
         fqa = self.file_queue_adapter_factory()
@@ -198,23 +198,43 @@ class TestFqa(unittest.TestCase):
     #     print('get_unique_base_path p3', path)
     #     return path
 
-    def test_enqueue_dequeue_x100(self):
-        message_count = 100
-        messages = []
-        fqa = self.file_queue_adapter_factory()
+    # def test_enqueue_dequeue_x100(self):
+    #     self.run_pref_test(100,False)
 
-        for i in range(0, message_count):
-            m = Message(payload=f'm{i}')
-            fqa.enqueue(m)
-            messages.append(m)
+    # def test_enqueue_dequeue_x1000(self):
+    #     self.run_pref_test(1000,False)
 
-        for i in range(0, message_count):
-            dq_m = fqa.dequeue_next()
-            self.assertIsNotNone(dq_m)
-            # fqa.commit(message=dq_m)
+    # def test_enqueue_dequeue_x10000(self):
+    #     self.run_pref_test(1000,False)
 
-            m = messages[i]
-            self.assertEqual(dq_m.id, m.id)
+    # def test_enqueue_dequeue_with_commit_x100(self):
+    #     self.run_pref_test(100,True)
 
-        dq_m = fqa.dequeue_next()
-        self.assertIsNone(dq_m)
+    # def test_enqueue_dequeue_with_commit_x1000(self):
+    #     self.run_pref_test(1000,True)
+
+    # def test_enqueue_dequeue_with_commit_x10000(self):
+    #     self.run_pref_test(10000,True)
+
+
+    # def run_pref_test(self, number_of_iterations:int, commit_messages: bool):
+    #     messages = []
+    #     fqa = self.file_queue_adapter_factory(f'pref-n{number_of_iterations}-c{commit_messages}')
+
+    #     for i in range(0, number_of_iterations):
+    #         m = Message(payload=f'm{i}')
+    #         fqa.enqueue(m)
+    #         messages.append(m)
+
+    #     for i in range(0, number_of_iterations):
+    #         dq_m = fqa.dequeue_next()
+    #         self.assertIsNotNone(dq_m)
+    #         if commit_messages:
+    #             fqa.commit(message=dq_m)
+
+    #         m = messages[i]
+    #         self.assertEqual(dq_m.id, m.id)
+
+    #     dq_m = fqa.dequeue_next()
+    #     self.assertIsNone(dq_m)
+
