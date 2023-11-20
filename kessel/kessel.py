@@ -188,3 +188,19 @@ class FileQueueAdapter():
         os.remove(lock_file_path)
 
         print('commit complete')
+
+    def rollback(self, message: Message):
+        message_id = None
+        if isinstance(message, Message):
+            message_id = message.id
+        elif isinstance(message, str):
+            # not really the right way to commit a message but it will work
+            message_id = message
+        else:
+            raise Exception('commit expects message object')
+
+        lock_file_path = self.get_lock_path(message_id=message_id)
+        print(f'remove lock {lock_file_path}')
+        os.remove(lock_file_path)
+
+        print('rollback complete')
