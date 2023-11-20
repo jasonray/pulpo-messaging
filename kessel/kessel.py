@@ -59,7 +59,8 @@ class FileQueueAdapter():
 
         message_path_file = None
         # entries = os.listdir(path=self._base_path)
-        entries = self.sorted_directory_listing_with_os_scandir(self._base_path)
+        entries = self.sorted_directory_listing_with_os_scandir(
+            self._base_path)
         print('scanning directory:', entries)
         for file in entries:
             print(f'checking file name: {file.name}')

@@ -9,7 +9,9 @@ import time
 
 class TestFqa(unittest.TestCase):
     _kessel_root_directory = '/tmp/kessel/unit-test'
-    _kessel_directory = os.path.join(_kessel_root_directory, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    _kessel_directory = os.path.join(
+        _kessel_root_directory,
+        datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
 
     def test_construct(self):
         fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
