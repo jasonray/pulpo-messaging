@@ -1,0 +1,27 @@
+all: default
+
+clean: 
+	rm -rf /tmp/kessel/unit-test/
+
+deps:
+	pip install -r requirements.txt
+
+dev_deps:
+	pip install -r requirements-dev.txt
+
+check-format: dev_deps
+	yapf -rd kessel
+
+format: dev_deps
+	yapf -ri kessel
+
+lint: check-format
+	pylint -r n kessel
+
+lint-no-error: 
+	pylint --exit-zero -r n kessel
+
+test: build dev_deps
+	python3 -m pytest -v
+
+build: clean deps
