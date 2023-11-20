@@ -24,4 +24,5 @@ lint-no-error:
 test: build dev_deps
 	python3 -m pytest -v
 
-build: clean deps
+build: deps
+	# might re-add clean 
