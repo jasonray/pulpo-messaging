@@ -216,7 +216,6 @@ class TestFqa(unittest.TestCase):
     # def test_enqueue_dequeue_with_commit_x10000(self):
     #     self.run_pref_test(10000,True)
 
-
     # def run_pref_test(self, number_of_iterations:int, commit_messages: bool):
     #     messages = []
     #     fqa = self.file_queue_adapter_factory(f'pref-n{number_of_iterations}-c{commit_messages}')
@@ -237,4 +236,3 @@ class TestFqa(unittest.TestCase):
 
     #     dq_m = fqa.dequeue_next()
     #     self.assertIsNone(dq_m)
-
