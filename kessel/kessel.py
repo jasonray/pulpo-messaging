@@ -44,7 +44,7 @@ class FileQueueAdapter():
         self._base_path = base_path
         os.makedirs(name=self._base_path, mode=0o777, exist_ok=True)
 
-    def enqueue(self, message: Message) -> str:
+    def enqueue(self, message: Message) -> Message:
         message_id = self.create_message_id()
         path_file = self.create_new_message_path_file(message_id)
         self.save_message_to_file(message=message, path_file=path_file)
@@ -90,6 +90,9 @@ class FileQueueAdapter():
             print('no message found')
 
         return m
+
+    def load_message_by_id(self, message_id):
+        return self.load_message_from_file( self.get_message_path(message_id) )
 
     def load_message_from_file(self, path_file):
         m = None

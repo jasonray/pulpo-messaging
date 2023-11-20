@@ -21,16 +21,19 @@ class TestFqa(unittest.TestCase):
         fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
         m = Message(payload='hello world')
         m = fqa.enqueue(m)
-        self.assertIsNotNone(m)
+
+        message_check = fqa.load_message_by_id(m.id)
+        self.assertIsNotNone(message_check)
+
 
     def test_dequeue_message(self):
         fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
         m1 = Message(payload='hello world')
-        m1_path_file = fqa.enqueue(m1)
+        m1 = fqa.enqueue(m1)
 
         m2 = fqa.dequeue_next()
-        self.assertEqual(m2.header, 'm1.0')
         self.assertEqual(m2.payload, 'hello world')
+        self.assertEqual(m2.id, m1.id)
 
         # check that lock file exists
         self.assertTrue(fqa.does_lock_exist(m2.id))
@@ -38,25 +41,26 @@ class TestFqa(unittest.TestCase):
     def test_two_cannot_dequeue_same_record(self):
         fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
         m1 = Message(payload='hello world')
-        m1_path_file = fqa.enqueue(m1)
+        m1 = fqa.enqueue(m1)
 
-        m2 = fqa.dequeue_next()
+        dq_1 = fqa.dequeue_next()
+        self.assertIsNotNone(dq_1)
 
         # because message is locked, should not be able to dequeue
-        m3 = fqa.dequeue_next()
-        self.assertIsNone(m3)
+        dq_2 = fqa.dequeue_next()
+        self.assertIsNone(dq_2)
 
     def test_two_dequeue_nonlocked_record(self):
         fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
         m1 = Message(payload='hello world m1')
         print('enqueue m1')
-        m1_path_file = fqa.enqueue(m1)
-        print('enqueue complete', m1_path_file)
+        m1 = fqa.enqueue(m1)
+        print('enqueue complete', m1.id)
 
         m2 = Message(payload='hello world m2')
         print('enqueue m2')
         m2_path_file = fqa.enqueue(m2)
-        print('enqueue complete', m2_path_file)
+        print('enqueue complete', m2.id)
 
         print('first dequeue, expect m1')
         dq1 = fqa.dequeue_next()
