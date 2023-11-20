@@ -59,25 +59,22 @@ class FileQueueAdapter():
 
         message_path_file = None
         # entries = os.listdir(path=self._base_path)
-        entries = self._sorted_directory_listing_with_os_scandir(
+        entries = self._get_message_file_list(
             self._base_path)
         print('scanning directory:', entries)
         for file in entries:
             print(f'checking file name: {file.name}')
 
-            if file.is_file() and file.name.endswith('.message'):
-                # in future, this is where I would test for delay and maybe TTL
-                print('file meets criteria')
-                # message_path_file = os.path.join(self._base_path, file)
-                print(f'attempt to lock message: {file.path}')
-                if self._lock_file(file.path):
-                    print('locked message')
-                    message_path_file = file.path
-                else:
-                    print('failed to lock message')
-                    message_path_file = None
+            # in future, this is where I would test for delay and maybe TTL
+            print('file meets criteria')
+            # message_path_file = os.path.join(self._base_path, file)
+            print(f'attempt to lock message: {file.path}')
+            if self._lock_file(file.path):
+                print('locked message')
+                message_path_file = file.path
             else:
-                print('file does not meet criteria, skipping')
+                print('failed to lock message')
+                message_path_file = None
 
             if message_path_file:
                 break
@@ -150,12 +147,15 @@ class FileQueueAdapter():
         path_file = os.path.join(self._base_path, file_name)
         return path_file
 
-    def _sorted_directory_listing_with_os_scandir(self, directory):
+    def _get_message_file_list(self, directory) -> os.DirEntry :
         with os.scandir(directory) as entries:
             sorted_entries = sorted(entries, key=lambda entry: entry.name)
-            # sorted_items = [entry.name for entry in sorted_entries]
+
+        filtered_entries = filter( lambda entry: entry.name.endswith('.message') , sorted_entries )
+        filtered_entries = filter( lambda entry: entry.is_file() , filtered_entries )
+
         # return DirEntry https://docs.python.org/3/library/os.html#os.DirEntry
-        return sorted_entries
+        return filtered_entries
 
     def _get_message_file_path(self, message_id) -> str:
         file_name = f'{message_id}.message'
