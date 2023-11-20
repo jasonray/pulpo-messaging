@@ -7,7 +7,9 @@ from kessel.kessel import Message
 import time
 
 _kessel_root_directory = '/tmp/kessel/unit-test'
-_timestamp=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+_timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+
+
 def get_unique_base_path(tag: str = None):
     path = _kessel_root_directory
     if tag:
@@ -15,11 +17,11 @@ def get_unique_base_path(tag: str = None):
     path = os.path.join(path, str(uuid.uuid4()))
     return path
 
+
 class TestFqa(unittest.TestCase):
     _kessel_root_directory = '/tmp/kessel/unit-test'
-    _kessel_directory = os.path.join(
-        _kessel_root_directory,
-        datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    _kessel_directory = os.path.join(_kessel_root_directory,
+                                     datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
 
     def test_construct(self):
         fqa = FileQueueAdapter(base_path=get_unique_base_path())
