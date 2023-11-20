@@ -5,6 +5,8 @@ import unittest
 from kessel.kessel import FileQueueAdapter
 from kessel.kessel import QueueAdapter
 from kessel.kessel import Message
+from statman import Statman
+from statman import Stopwatch
 import time
 import inspect
 
@@ -188,16 +190,6 @@ class TestFqa(unittest.TestCase):
             contents = f.read()
         return contents
 
-    # def get_unique_base_path(self, tag: str = None):
-    #     path = self._kessel_directory
-    #     print('get_unique_base_path p1', path)
-    #     if tag:
-    #         path = os.path.join(path, tag)
-    #     print('get_unique_base_path p2', path)
-    #     path = os.path.join(path, str(uuid.uuid4()))
-    #     print('get_unique_base_path p3', path)
-    #     return path
-
     # def test_enqueue_dequeue_x100(self):
     #     self.run_pref_test(100,False)
 
@@ -209,23 +201,32 @@ class TestFqa(unittest.TestCase):
 
     # def test_enqueue_dequeue_with_commit_x100(self):
     #     self.run_pref_test(100,True)
+    #     1/0
 
     # def test_enqueue_dequeue_with_commit_x1000(self):
     #     self.run_pref_test(1000,True)
 
     # def test_enqueue_dequeue_with_commit_x10000(self):
     #     self.run_pref_test(10000,True)
+    #     1/0
 
     # def run_pref_test(self, number_of_iterations:int, commit_messages: bool):
+    #     Statman.reset()
+
     #     messages = []
     #     fqa = self.file_queue_adapter_factory(f'pref-n{number_of_iterations}-c{commit_messages}')
 
+    #     sw_enqueue=Stopwatch(name=f'fqa.perf-test.n{number_of_iterations}:c{commit_messages}.enqueue', enable_history=True)
     #     for i in range(0, number_of_iterations):
+    #         sw_enqueue.start()
     #         m = Message(payload=f'm{i}')
     #         fqa.enqueue(m)
     #         messages.append(m)
+    #         sw_enqueue.stop()
 
+    #     sw_process=Stopwatch(name=f'fqa.perf-test.n{number_of_iterations}:c{commit_messages}.process', enable_history=True)
     #     for i in range(0, number_of_iterations):
+    #         sw_process.start()
     #         dq_m = fqa.dequeue_next()
     #         self.assertIsNotNone(dq_m)
     #         if commit_messages:
@@ -233,6 +234,23 @@ class TestFqa(unittest.TestCase):
 
     #         m = messages[i]
     #         self.assertEqual(dq_m.id, m.id)
+    #         sw_process.stop()
+
 
     #     dq_m = fqa.dequeue_next()
     #     self.assertIsNone(dq_m)
+
+    #     print(Statman.gauge('fqa.enqueue'))
+    #     print(Statman.gauge('fqa.dequeue'))
+    #     print(Statman.gauge('fqa.commit'))
+    #     print(Statman.gauge('fqa.rollback'))
+    #     print('* enqueue')
+    #     print(sw_enqueue.history.count())
+    #     print(sw_enqueue.history.average_value())
+    #     print(sw_enqueue.history.max_value())
+    #     print(sw_enqueue.history.min_value())
+    #     print('* process')
+    #     print(sw_process.history.count())
+    #     print(sw_process.history.average_value())
+    #     print(sw_process.history.max_value())
+    #     print(sw_process.history.min_value())
