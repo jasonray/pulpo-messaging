@@ -7,8 +7,6 @@ from kessel.kessel import QueueAdapter
 from kessel.kessel import Message
 from statman import Statman
 from statman import Stopwatch
-import time
-import inspect
 
 _kessel_root_directory = '/tmp/kessel/unit-test'
 _timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")

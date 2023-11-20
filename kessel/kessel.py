@@ -1,8 +1,8 @@
 import os
 import uuid
 import time
-from statman import Statman
 from pathlib import Path
+from statman import Statman
 
 
 class Message():
