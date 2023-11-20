@@ -2,6 +2,7 @@ import os
 import uuid
 import time
 from pathlib import Path
+from statman import Statman
 
 
 class Message():
@@ -69,6 +70,7 @@ class FileQueueAdapter(QueueAdapter):
         path_file = self._create_new_message_file_path(message_id)
         self._save_message_to_file(message=message, path_file=path_file)
         message._id = message_id
+        Statman.gauge('fqa.enqueue').increment()
         return message
 
     def dequeue_next(self) -> Message:
@@ -102,6 +104,7 @@ class FileQueueAdapter(QueueAdapter):
         if message_path_file:
             print(f'load message: {message_path_file}')
             m = self._load_message_from_file(file_path=message_path_file)
+            Statman.gauge('fqa.dequeue').increment()
         else:
             print('no message found')
 
@@ -147,12 +150,14 @@ class FileQueueAdapter(QueueAdapter):
         # this is an early way to check if lock already exists
         if os.path.exists(lock_path_file_name):
             print('lock exists on message, unable to mark')
+            Statman.gauge('fqa.lock-check.exists.check').increment()
             return False
 
         print('touch to create lock')
         try:
             lock_path.touch()
         except FileExistsError:
+            Statman.gauge('fqa.lock-check.exists.failed-touch').increment()
             print('failed to lock, lock already exists')
             return False
 
@@ -205,6 +210,7 @@ class FileQueueAdapter(QueueAdapter):
         self._delete_message(message_id=message_id)
         self._delete_lock(message_id=message_id)
         print(f'commit complete {message_id}')
+        Statman.gauge('fqa.commit').increment()
 
     def rollback(self, message: Message):
         message_id = None
@@ -219,6 +225,7 @@ class FileQueueAdapter(QueueAdapter):
         print(f'rollback {message_id}')
         self._delete_lock(message_id=message_id)
         print(f'rollback complete {message_id}')
+        Statman.gauge('fqa.rollback').increment()
 
     def _delete_lock(self, message_id: str):
         print(f'remove lock {message_id}')
