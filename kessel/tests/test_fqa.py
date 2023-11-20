@@ -6,23 +6,31 @@ from kessel.kessel import FileQueueAdapter
 from kessel.kessel import Message
 import time
 
+_kessel_root_directory = '/tmp/kessel/unit-test'
+_timestamp=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+def get_unique_base_path(tag: str = None):
+    path = _kessel_root_directory
+    if tag:
+        path = os.path.join(path, tag)
+    path = os.path.join(path, str(uuid.uuid4()))
+    return path
 
 class TestFqa(unittest.TestCase):
     _kessel_root_directory = '/tmp/kessel/unit-test'
     _kessel_directory = os.path.join(_kessel_root_directory, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
 
     def test_construct(self):
-        fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
+        fqa = FileQueueAdapter(base_path=get_unique_base_path())
         self.assertIsNotNone(fqa)
 
     def test_publish_message(self):
-        fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
+        fqa = FileQueueAdapter(base_path=get_unique_base_path())
         m = Message(payload='hello world')
         m = fqa.enqueue(m)
         self.assertIsNotNone(m)
 
     def test_dequeue_message(self):
-        fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
+        fqa = FileQueueAdapter(base_path=get_unique_base_path())
         m1 = Message(payload='hello world')
         m1_path_file = fqa.enqueue(m1)
 
@@ -36,7 +44,7 @@ class TestFqa(unittest.TestCase):
         self.assertTrue(os.path.exists(expected_lock_file))
 
     def test_two_cannot_dequeue_same_record(self):
-        fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
+        fqa = FileQueueAdapter(base_path=get_unique_base_path())
         m1 = Message(payload='hello world')
         m1_path_file = fqa.enqueue(m1)
 
@@ -47,7 +55,7 @@ class TestFqa(unittest.TestCase):
         self.assertIsNone(m3)
 
     def test_two_dequeue_nonlocked_record(self):
-        fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
+        fqa = FileQueueAdapter(base_path=get_unique_base_path())
         m1 = Message(payload='hello world m1')
         print('enqueue m1')
         m1_path_file = fqa.enqueue(m1)
@@ -74,12 +82,4 @@ class TestFqa(unittest.TestCase):
             contents = f.read()
         return contents
 
-    def get_unique_base_path(self, tag: str = None):
-        path = self._kessel_directory
-        print('get_unique_base_path p1', path)
-        if tag:
-            path = os.path.join(path, tag)
-        print('get_unique_base_path p2', path)
-        path = os.path.join(path, str(uuid.uuid4()))
-        print('get_unique_base_path p3', path)
-        return path
+
