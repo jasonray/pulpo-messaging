@@ -159,9 +159,32 @@ class FileQueueAdapter():
     def does_lock_exist(self, messsage_id) -> bool:
         return os.path.exists(self.get_lock_path(message_id=messsage_id))
 
+    def does_message_exist(self, messsage_id) -> bool:
+        return os.path.exists(self.get_message_path(message_id=messsage_id))
+
     def trim(self, text):
         text = str(text)
         text = text.replace('\r', '')
         text = text.replace('\n', '')
         text = text.strip()
         return text
+
+    def commit(self, message: Message):
+        message_id = None
+        if isinstance(message, Message):
+            message_id = message.id
+        elif isinstance(message, str):
+            # not really the right way to commit a message but it will work
+            message_id = message
+        else:
+            raise Exception('commit expects message object')
+
+        message_file_path = self.get_message_path(message_id=message_id)
+        print(f'remove message {message_file_path}')
+        os.remove(message_file_path)
+
+        lock_file_path = self.get_lock_path(message_id=message_id)
+        print(f'remove lock {lock_file_path}')
+        os.remove(lock_file_path)
+
+        print('commit complete')
