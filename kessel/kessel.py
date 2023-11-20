@@ -154,7 +154,7 @@ class FileQueueAdapter():
         return self.get_message_path(message_id=message_id) + '.lock'
 
     def does_lock_exist(self, messsage_id) -> bool:
-        os.path.exists(lock_path_file_name)
+        return os.path.exists(self.get_lock_path(message_id=messsage_id))
 
     def trim(self, text):
         text = str(text)

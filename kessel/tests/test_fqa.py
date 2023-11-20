@@ -33,9 +33,7 @@ class TestFqa(unittest.TestCase):
         self.assertEqual(m2.payload, 'hello world')
 
         # check that lock file exists
-        expected_lock_file = fqa.get_lock_path(m2.id)
-        print('checking lock file', expected_lock_file)
-        self.assertTrue(os.path.exists(expected_lock_file))
+        self.assertTrue(fqa.does_lock_exist(m2.id))
 
     def test_two_cannot_dequeue_same_record(self):
         fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
