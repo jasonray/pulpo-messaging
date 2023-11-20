@@ -22,7 +22,7 @@ class TestFqa(unittest.TestCase):
         m = Message(payload='hello world')
         m = fqa.enqueue(m)
 
-        self.assertTrue(fqa.does_message_exist(m.id))
+        self.assertTrue(fqa._does_message_exist(m.id))
 
     def test_dequeue_message(self):
         fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
@@ -34,8 +34,8 @@ class TestFqa(unittest.TestCase):
         self.assertEqual(dq_1.id, m1.id)
 
         # messsage should exist, lock should exist
-        self.assertTrue(fqa.does_message_exist(m1.id))
-        self.assertTrue(fqa.does_lock_exist(m1.id))
+        self.assertTrue(fqa._does_message_exist(m1.id))
+        self.assertTrue(fqa._does_lock_exist(m1.id))
 
     def test_two_cannot_dequeue_same_record(self):
         fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
@@ -78,19 +78,19 @@ class TestFqa(unittest.TestCase):
         m1 = fqa.enqueue(m1)
 
         # messsage should exist, lock should not exist
-        self.assertTrue(fqa.does_message_exist(m1.id))
-        self.assertFalse(fqa.does_lock_exist(m1.id))
+        self.assertTrue(fqa._does_message_exist(m1.id))
+        self.assertFalse(fqa._does_lock_exist(m1.id))
 
         dq_1 = fqa.dequeue_next()
         # messsage should exist, lock should exist
-        self.assertTrue(fqa.does_message_exist(m1.id))
-        self.assertTrue(fqa.does_lock_exist(m1.id))
+        self.assertTrue(fqa._does_message_exist(m1.id))
+        self.assertTrue(fqa._does_lock_exist(m1.id))
 
         fqa.commit(dq_1)
 
         # messsage should not exist, lock not should exist
-        self.assertFalse(fqa.does_message_exist(m1.id))
-        self.assertFalse(fqa.does_lock_exist(m1.id))
+        self.assertFalse(fqa._does_message_exist(m1.id))
+        self.assertFalse(fqa._does_lock_exist(m1.id))
 
     def test_rollback_removes_lock(self):
         fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
@@ -98,19 +98,19 @@ class TestFqa(unittest.TestCase):
         m1 = fqa.enqueue(m1)
 
         # messsage should exist, lock should not exist
-        self.assertTrue(fqa.does_message_exist(m1.id))
-        self.assertFalse(fqa.does_lock_exist(m1.id))
+        self.assertTrue(fqa._does_message_exist(m1.id))
+        self.assertFalse(fqa._does_lock_exist(m1.id))
 
         dq_1 = fqa.dequeue_next()
         # messsage should exist, lock should exist
-        self.assertTrue(fqa.does_message_exist(m1.id))
-        self.assertTrue(fqa.does_lock_exist(m1.id))
+        self.assertTrue(fqa._does_message_exist(m1.id))
+        self.assertTrue(fqa._does_lock_exist(m1.id))
 
         fqa.rollback(dq_1)
 
         # messsage should exist, lock not should exist
-        self.assertTrue(fqa.does_message_exist(m1.id))
-        self.assertFalse(fqa.does_lock_exist(m1.id))
+        self.assertTrue(fqa._does_message_exist(m1.id))
+        self.assertFalse(fqa._does_lock_exist(m1.id))
 
     def get_message_content(self, path_file):
         with open(file=path_file, encoding="utf-8", mode='r') as f:

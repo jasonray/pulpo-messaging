@@ -45,9 +45,9 @@ class FileQueueAdapter():
         os.makedirs(name=self._base_path, mode=0o777, exist_ok=True)
 
     def enqueue(self, message: Message) -> Message:
-        message_id = self.create_message_id()
-        path_file = self.create_new_message_path_file(message_id)
-        self.save_message_to_file(message=message, path_file=path_file)
+        message_id = self._create_message_id()
+        path_file = self._create_new_message_file_path(message_id)
+        self._save_message_to_file(message=message, path_file=path_file)
         message._id = message_id
         return message
 
@@ -59,7 +59,7 @@ class FileQueueAdapter():
 
         message_path_file = None
         # entries = os.listdir(path=self._base_path)
-        entries = self.sorted_directory_listing_with_os_scandir(
+        entries = self._sorted_directory_listing_with_os_scandir(
             self._base_path)
         print('scanning directory:', entries)
         for file in entries:
@@ -70,7 +70,7 @@ class FileQueueAdapter():
                 print('file meets criteria')
                 # message_path_file = os.path.join(self._base_path, file)
                 print(f'attempt to lock message: {file.path}')
-                if self.lock_file(file.path):
+                if self._lock_file(file.path):
                     print('locked message')
                     message_path_file = file.path
                 else:
@@ -85,35 +85,44 @@ class FileQueueAdapter():
         m = None
         if message_path_file:
             print(f'load message: {message_path_file}')
-            m = self.load_message_from_file(path_file=message_path_file)
+            m = self._load_message_from_file(file_path=message_path_file)
         else:
             print('no message found')
 
         return m
 
     def load_message_by_id(self, message_id):
-        return self.load_message_from_file(self.get_message_path(message_id))
+        return self._load_message_from_file(self._get_message_file_path(message_id))
 
-    def load_message_from_file(self, path_file):
+    def _load_message_from_file(self, file_path):
         m = None
-        with open(file=path_file, encoding="utf-8", mode='r') as f:
+        with open(file=file_path, encoding="utf-8", mode='r') as f:
             header = f.readline()
-            header = self.trim(header)
+            header = self._trim(header)
             payload = f.readline()
-            payload = self.trim(payload)
-        (path, file_name) = os.path.split(path_file)
-        message_id = file_name.replace('.message', '')
+            payload = self._trim(payload)
+
+        message_id = self._get_message_id_from_file_path(file_path)
         m = Message(payload=payload, header=header)
         m._id = message_id
         return m
+    
+    def _get_message_id_from_file_path(self, message_file_path):
+        (message_path, message_file_name) = os.path.split(message_file_path)
+        return self._get_message_id_from_file_name(message_file_name)
+
+    def _get_message_id_from_file_name(self, message_file_name):
+        # todo: pretty weak approach, might try to get better way
+        # like message id in message
+        return message_file_name.replace('.message', '')
 
     # https://docs.python.org/3/tutorial/inputoutput.html#saving-structured-data-with-json
-    def save_message_to_file(self, message, path_file):
+    def _save_message_to_file(self, message, path_file):
         serialized_message = str(message)
         with open(file=path_file, encoding="utf-8", mode='w') as f:
             f.write(serialized_message)
 
-    def lock_file(self, path_file_name):
+    def _lock_file(self, path_file_name):
         lock_path_file_name = path_file_name + '.lock'
         lock_path = Path(lock_path_file_name)
 
@@ -133,36 +142,30 @@ class FileQueueAdapter():
 
         return True
 
-    def create_message_id(self):
+    def _create_message_id(self):
         return f"{time.time()}-{uuid.uuid4()}"
 
-    def create_new_message_path_file(self, message_id):
+    def _create_new_message_file_path(self, message_id):
         file_name = message_id + '.message'
         path_file = os.path.join(self._base_path, file_name)
         return path_file
 
-    def sorted_directory_listing_with_os_scandir(self, directory):
+    def _sorted_directory_listing_with_os_scandir(self, directory):
         with os.scandir(directory) as entries:
             sorted_entries = sorted(entries, key=lambda entry: entry.name)
             # sorted_items = [entry.name for entry in sorted_entries]
         # return DirEntry https://docs.python.org/3/library/os.html#os.DirEntry
         return sorted_entries
 
-    def get_message_path(self, message_id) -> str:
+    def _get_message_file_path(self, message_id) -> str:
         file_name = f'{message_id}.message'
         path = os.path.join(self._base_path, file_name)
         return path
 
-    def get_lock_path(self, message_id) -> str:
-        return self.get_message_path(message_id=message_id) + '.lock'
+    def _get_lock_file_path(self, message_id) -> str:
+        return self._get_message_file_path(message_id=message_id) + '.lock'
 
-    def does_lock_exist(self, messsage_id) -> bool:
-        return os.path.exists(self.get_lock_path(message_id=messsage_id))
-
-    def does_message_exist(self, messsage_id) -> bool:
-        return os.path.exists(self.get_message_path(message_id=messsage_id))
-
-    def trim(self, text):
+    def _trim(self, text):
         text = str(text)
         text = text.replace('\r', '')
         text = text.replace('\n', '')
@@ -179,15 +182,10 @@ class FileQueueAdapter():
         else:
             raise Exception('commit expects message object')
 
-        message_file_path = self.get_message_path(message_id=message_id)
-        print(f'remove message {message_file_path}')
-        os.remove(message_file_path)
-
-        lock_file_path = self.get_lock_path(message_id=message_id)
-        print(f'remove lock {lock_file_path}')
-        os.remove(lock_file_path)
-
-        print('commit complete')
+        print(f'commit {message_id}')
+        self._delete_message(message_id=message_id)
+        self._delete_lock(message_id=message_id)
+        print(f'commit complete {message_id}')
 
     def rollback(self, message: Message):
         message_id = None
@@ -197,10 +195,24 @@ class FileQueueAdapter():
             # not really the right way to commit a message but it will work
             message_id = message
         else:
-            raise Exception('commit expects message object')
+            raise Exception('rollback expects message object')
 
-        lock_file_path = self.get_lock_path(message_id=message_id)
-        print(f'remove lock {lock_file_path}')
+        print(f'rollback {message_id}')
+        self._delete_lock(message_id=message_id)
+        print(f'rollback complete {message_id}')
+
+    def _delete_lock(self, message_id : str):
+        print(f'remove lock {message_id}')
+        lock_file_path = self._get_lock_file_path(message_id=message_id)
         os.remove(lock_file_path)
 
-        print('rollback complete')
+    def _delete_message(self, message_id : str):
+        print(f'remove message {message_id}')
+        lock_file_path = self._get_message_file_path(message_id=message_id)
+        os.remove(lock_file_path)
+
+    def _does_lock_exist(self, messsage_id) -> bool:
+        return os.path.exists(self._get_lock_file_path(message_id=messsage_id))
+
+    def _does_message_exist(self, messsage_id) -> bool:
+        return os.path.exists(self._get_message_file_path(message_id=messsage_id))
