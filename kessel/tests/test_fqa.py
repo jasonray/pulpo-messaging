@@ -129,20 +129,20 @@ class TestFqa(unittest.TestCase):
 
     def test_enqueue_dequeue_x100(self):
         message_count = 100
-        messages=[]
+        messages = []
         fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
 
-        for i in range(0,message_count):
-            m=Message(payload=f'm{i}') 
+        for i in range(0, message_count):
+            m = Message(payload=f'm{i}')
             fqa.enqueue(m)
             messages.append(m)
 
-        for i in range(0,message_count):
+        for i in range(0, message_count):
             dq_m = fqa.dequeue_next()
             self.assertIsNotNone(dq_m)
             # fqa.commit(message=dq_m)
 
-            m=messages[i]
+            m = messages[i]
             self.assertEqual(dq_m.id, m.id)
 
         dq_m = fqa.dequeue_next()

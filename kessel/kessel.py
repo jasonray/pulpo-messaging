@@ -59,8 +59,7 @@ class FileQueueAdapter():
 
         message_path_file = None
         # entries = os.listdir(path=self._base_path)
-        entries = self._get_message_file_list(
-            self._base_path)
+        entries = self._get_message_file_list(self._base_path)
         print('scanning directory:', entries)
         for file in entries:
             print(f'checking file name: {file.name}')
@@ -89,7 +88,8 @@ class FileQueueAdapter():
         return m
 
     def load_message_by_id(self, message_id):
-        return self._load_message_from_file(self._get_message_file_path(message_id))
+        return self._load_message_from_file(
+            self._get_message_file_path(message_id))
 
     def _load_message_from_file(self, file_path):
         m = None
@@ -103,7 +103,7 @@ class FileQueueAdapter():
         m = Message(payload=payload, header=header)
         m._id = message_id
         return m
-    
+
     def _get_message_id_from_file_path(self, message_file_path):
         (message_path, message_file_name) = os.path.split(message_file_path)
         return self._get_message_id_from_file_name(message_file_name)
@@ -147,12 +147,14 @@ class FileQueueAdapter():
         path_file = os.path.join(self._base_path, file_name)
         return path_file
 
-    def _get_message_file_list(self, directory) -> os.DirEntry :
+    def _get_message_file_list(self, directory) -> os.DirEntry:
         with os.scandir(directory) as entries:
             sorted_entries = sorted(entries, key=lambda entry: entry.name)
 
-        filtered_entries = filter( lambda entry: entry.name.endswith('.message') , sorted_entries )
-        filtered_entries = filter( lambda entry: entry.is_file() , filtered_entries )
+        filtered_entries = filter(
+            lambda entry: entry.name.endswith('.message'), sorted_entries)
+        filtered_entries = filter(lambda entry: entry.is_file(),
+                                  filtered_entries)
 
         # return DirEntry https://docs.python.org/3/library/os.html#os.DirEntry
         return filtered_entries
@@ -201,12 +203,12 @@ class FileQueueAdapter():
         self._delete_lock(message_id=message_id)
         print(f'rollback complete {message_id}')
 
-    def _delete_lock(self, message_id : str):
+    def _delete_lock(self, message_id: str):
         print(f'remove lock {message_id}')
         lock_file_path = self._get_lock_file_path(message_id=message_id)
         os.remove(lock_file_path)
 
-    def _delete_message(self, message_id : str):
+    def _delete_message(self, message_id: str):
         print(f'remove message {message_id}')
         lock_file_path = self._get_message_file_path(message_id=message_id)
         os.remove(lock_file_path)
@@ -215,4 +217,5 @@ class FileQueueAdapter():
         return os.path.exists(self._get_lock_file_path(message_id=messsage_id))
 
     def _does_message_exist(self, messsage_id) -> bool:
-        return os.path.exists(self._get_message_file_path(message_id=messsage_id))
+        return os.path.exists(
+            self._get_message_file_path(message_id=messsage_id))
