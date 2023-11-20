@@ -22,7 +22,7 @@ lint-no-error:
 	pylint --exit-zero -r n kessel
 
 test: build dev_deps
-	python3 -m pytest -v
+	python3 -m pytest -v --durations=0
 
 build: deps
 	# might re-add clean 
