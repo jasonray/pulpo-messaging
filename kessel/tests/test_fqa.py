@@ -25,7 +25,6 @@ class TestFqa(unittest.TestCase):
         message_check = fqa.load_message_by_id(m.id)
         self.assertIsNotNone(message_check)
 
-
     def test_dequeue_message(self):
         fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
         m1 = Message(payload='hello world')

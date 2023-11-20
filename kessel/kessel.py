@@ -92,7 +92,7 @@ class FileQueueAdapter():
         return m
 
     def load_message_by_id(self, message_id):
-        return self.load_message_from_file( self.get_message_path(message_id) )
+        return self.load_message_from_file(self.get_message_path(message_id))
 
     def load_message_from_file(self, path_file):
         m = None
