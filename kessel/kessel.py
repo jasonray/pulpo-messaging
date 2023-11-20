@@ -37,10 +37,30 @@ class Message():
         return self._payload
 
 
-class FileQueueAdapter():
+class QueueAdapter():
+
+    def __init__(self):
+        print('QueueAdapter init')
+
+    def enqueue(self, message: Message) -> Message:
+        pass
+
+    def dequeue(self) -> Message:
+        pass
+
+    def commit(self, message: Message) -> Message:
+        pass
+
+    def rollback(self, message: Message) -> Message:
+        pass
+
+
+class FileQueueAdapter(QueueAdapter):
     _base_path = None
 
     def __init__(self, base_path):
+        super().__init__()
+        print('FileQueueAdapter init')
         self._base_path = base_path
         os.makedirs(name=self._base_path, mode=0o777, exist_ok=True)
 
