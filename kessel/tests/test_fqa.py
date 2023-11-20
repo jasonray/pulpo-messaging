@@ -126,3 +126,24 @@ class TestFqa(unittest.TestCase):
         path = os.path.join(path, str(uuid.uuid4()))
         print('get_unique_base_path p3', path)
         return path
+
+    def test_enqueue_dequeue_x100(self):
+        message_count = 100
+        messages=[]
+        fqa = FileQueueAdapter(base_path=self.get_unique_base_path())
+
+        for i in range(0,message_count):
+            m=Message(payload=f'm{i}') 
+            fqa.enqueue(m)
+            messages.append(m)
+
+        for i in range(0,message_count):
+            dq_m = fqa.dequeue_next()
+            self.assertIsNotNone(dq_m)
+            # fqa.commit(message=dq_m)
+
+            m=messages[i]
+            self.assertEqual(dq_m.id, m.id)
+
+        dq_m = fqa.dequeue_next()
+        self.assertIsNone(dq_m)
