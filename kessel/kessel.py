@@ -88,12 +88,10 @@ class FileQueueAdapter(QueueAdapter):
         lock_file_path = None
         # entries = os.listdir(path=self._base_path)
         entries = self._get_message_file_list(self._base_path)
-        self.log('scanning directory:', entries)
         for file in entries:
-            self.log(f'checking file name: {file.name}')
-
-            # in future, this is where I would test for delay and maybe TTL
-            self.log('file meets criteria')
+            # self.log(f'checking file name: {file.name}')
+            # # in future, this is where I would test for delay and maybe TTL
+            # self.log('file meets criteria')
             # message_path_file = os.path.join(self._base_path, file)
             self.log(f'attempt to lock message: {file.path}')
             lock_file_path = self._lock_file(file.path)
