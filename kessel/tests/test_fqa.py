@@ -136,3 +136,17 @@ class TestFqa(unittest.TestCase):
         lock_file_path = fqa._get_lock_file_path(message_id=message_id)
         self.assertEquals(lock_file_path, expected_lock_file_path)
 
+    def test_get_lock_file_path(self):
+        base_path = 'tmp/kessel/unit-test/imaginary'
+        expected_lock_path = 'tmp/kessel/unit-test/imaginary/lock'
+        message_id = '123'
+        expected_message_file_path = 'tmp/kessel/unit-test/imaginary/123.message'
+
+        fqa =  FileQueueAdapter(base_path )
+        self.assertEqual(fqa._lock_path , expected_lock_path)
+        
+        message_file_path = fqa._get_message_file_path(message_id=message_id)
+        self.assertEquals(message_file_path, expected_message_file_path)
+
+
+
