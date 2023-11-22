@@ -32,7 +32,7 @@ class TestFqaCompliance(unittest.TestCase):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
-        dq_1 = qa.dequeue_next()
+        dq_1 = qa.dequeue()
 
         self.assertEqual(dq_1.payload, 'hello world')
         self.assertEqual(dq_1.id, m1.id)
@@ -42,10 +42,10 @@ class TestFqaCompliance(unittest.TestCase):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
-        dq_1 = qa.dequeue_next()
+        dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
 
-        dq_2 = qa.dequeue_next()
+        dq_2 = qa.dequeue()
         self.assertIsNone(dq_2)
 
     def test_dequeue_skip_locked_message_with_2(self):
@@ -61,14 +61,14 @@ class TestFqaCompliance(unittest.TestCase):
         print('enqueue complete', m2.id)
 
         print('first dequeue, expect m1')
-        dq1 = qa.dequeue_next()
+        dq1 = qa.dequeue()
         self.assertEqual(dq1.payload, m1.payload)
         print('second dequeue, expect m2')
-        dq2 = qa.dequeue_next()
+        dq2 = qa.dequeue()
         self.assertEqual(dq2.payload, m2.payload)
 
         # because message is locked, should not be able to dequeue
-        dq3 = qa.dequeue_next()
+        dq3 = qa.dequeue()
         self.assertIsNone(dq3)
 
     def test_commit_removes_message(self):
@@ -76,20 +76,20 @@ class TestFqaCompliance(unittest.TestCase):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
-        dq_1 = qa.dequeue_next()
+        dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
 
         # at this point, m1 should exist and be locked
 
         # because message is locked, it should not be available for dequeue
-        dq_2 = qa.dequeue_next()
+        dq_2 = qa.dequeue()
         self.assertIsNone(dq_2)
 
         qa.commit(dq_1)
 
         # at this point, m1 should not exist
 
-        dq_3 = qa.dequeue_next()
+        dq_3 = qa.dequeue()
         self.assertIsNone(dq_3)
 
     def test_rollback_removes_lock(self):
@@ -97,20 +97,20 @@ class TestFqaCompliance(unittest.TestCase):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
-        dq_1 = qa.dequeue_next()
+        dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
 
         # at this point, m1 should exist and be locked
 
         # because message is locked, it should not be available for dequeue
-        dq_2 = qa.dequeue_next()
+        dq_2 = qa.dequeue()
         self.assertIsNone(dq_2)
 
         qa.rollback(dq_1)
 
         # at this point, m1 should exist and be available for dequeue
 
-        dq_3 = qa.dequeue_next()
+        dq_3 = qa.dequeue()
         self.assertIsNotNone(dq_3)
 
 
@@ -225,7 +225,7 @@ class TestFqa(unittest.TestCase):
     #     sw_process=Stopwatch(name=f'fqa.perf-test.n{number_of_iterations}:c{commit_messages}.process', enable_history=True)
     #     for i in range(0, number_of_iterations):
     #         sw_process.start()
-    #         dq_m = fqa.dequeue_next()
+    #         dq_m = fqa.dequeue()
     #         self.assertIsNotNone(dq_m)
     #         if commit_messages:
     #             fqa.commit(message=dq_m)
@@ -234,7 +234,7 @@ class TestFqa(unittest.TestCase):
     #         self.assertEqual(dq_m.id, m.id)
     #         sw_process.stop()
 
-    #     dq_m = fqa.dequeue_next()
+    #     dq_m = fqa.dequeue()
     #     self.assertIsNone(dq_m)
 
     #     print(Statman.gauge('fqa.enqueue'))
