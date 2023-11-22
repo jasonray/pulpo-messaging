@@ -81,7 +81,7 @@ class FileQueueAdapter(QueueAdapter):
 
         self.log('begin dequeue')
 
-        message_path_file = None
+        lock_file_path = None
         # entries = os.listdir(path=self._base_path)
         entries = self._get_message_file_list(self._base_path)
         self.log('scanning directory:', entries)
@@ -92,20 +92,17 @@ class FileQueueAdapter(QueueAdapter):
             self.log('file meets criteria')
             # message_path_file = os.path.join(self._base_path, file)
             self.log(f'attempt to lock message: {file.path}')
-            if self._lock_file(file.path):
+            lock_file_path = self._lock_file(file.path)
+            if lock_file_path:
                 self.log('locked message')
-                message_path_file = file.path
+                break
             else:
                 self.log('failed to lock message')
-                message_path_file = None
-
-            if message_path_file:
-                break
 
         m = None
-        if message_path_file:
-            self.log(f'load message: {message_path_file}')
-            m = self._load_message_from_file(file_path=message_path_file)
+        if lock_file_path:
+            self.log(f'load message (dq): {lock_file_path}')
+            m = self._load_message_from_file(file_path=lock_file_path)
             Statman.gauge('fqa.dequeue').increment()
         else:
             self.log('no message found')
@@ -116,6 +113,7 @@ class FileQueueAdapter(QueueAdapter):
         return self._load_message_from_file(self._get_message_file_path(message_id))
 
     def _load_message_from_file(self, file_path):
+        self.log(f'load message [file_path:{file_path}]')
         m = None
         with open(file=file_path, encoding="utf-8", mode='r') as f:
             header = f.readline()
@@ -123,7 +121,9 @@ class FileQueueAdapter(QueueAdapter):
             payload = f.readline()
             payload = self._trim(payload)
 
+        self.log(f'load message id from file path [file_path:{file_path}]')
         message_id = self._get_message_id_from_file_path(file_path)
+        self.log(f'extracted message id [file_path:{file_path}]=>[id:{message_id}]')
         m = Message(payload=payload, header=header)
         m._id = message_id
         return m
@@ -135,7 +135,10 @@ class FileQueueAdapter(QueueAdapter):
     def _get_message_id_from_file_name(self, message_file_name):
         # todo: pretty weak approach, might try to get better way
         # like message id in message
-        return message_file_name.replace('.message', '')
+        buffer = message_file_name
+        buffer=buffer.replace('.message', '')
+        buffer=buffer.replace('.lock', '')
+        return buffer
 
     # https://docs.python.org/3/tutorial/inputoutput.html#saving-structured-data-with-json
     def _save_message_to_file(self, message:Message, path_file:str):
@@ -144,27 +147,24 @@ class FileQueueAdapter(QueueAdapter):
         with open(file=path_file, encoding="utf-8", mode='w') as f:
             f.write(serialized_message)
 
-    def _lock_file(self, path_file_name):
+    def _lock_file(self, path_file_name)->str:
         lock_path_file_name = path_file_name + '.lock'
-        lock_path = Path(lock_path_file_name)
+        # lock_path = Path(lock_path_file_name)
 
-        self.log('attempt to lock with lock file: ', lock_path_file_name)
+        # lock_file_path = self._get_message_file_path(message_id=message_id)
+        # message_file_path = self._get_lock_file_path(message_id=message_id)
+        # os.rename(src=lock_file_path, dest=message_file_path)
 
-        # this is an early way to check if lock already exists
-        if os.path.exists(lock_path_file_name):
-            self.log('lock exists on message, unable to mark')
-            Statman.gauge('fqa.lock-check.exists.check').increment()
-            return False
 
-        self.log('touch to create lock')
         try:
-            lock_path.touch(exist_ok=False)
+            self.log(f'attempt to lock with lock file: [{path_file_name}]=>[{lock_path_file_name}]')
+            os.rename(src=path_file_name, dst=lock_path_file_name)
         except FileExistsError:
-            Statman.gauge('fqa.lock-check.exists.failed-touch').increment()
-            self.log('failed to lock, lock already exists')
-            return False
+            Statman.gauge('fqa.lock-check.exists.failed-lock').increment()
+            self.log('failed to lock')
+            return None
 
-        return True
+        return lock_path_file_name
 
     def _create_message_id(self):
         return f"{time.time()}-{uuid.uuid4()}"
@@ -175,7 +175,7 @@ class FileQueueAdapter(QueueAdapter):
         return path_file
 
     def _get_message_file_list(self, directory) -> os.DirEntry:
-        self.log('scanning directory {directory}')
+        self.log(f'scanning directory {directory}')
         with os.scandir(directory) as entries:
             sorted_entries = sorted(entries, key=lambda entry: entry.name)
 
@@ -188,10 +188,15 @@ class FileQueueAdapter(QueueAdapter):
     def _get_message_file_path(self, message_id) -> str:
         file_name = f'{message_id}.message'
         path = os.path.join(self._base_path, file_name)
+        self.log(f'_get_message_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
     def _get_lock_file_path(self, message_id) -> str:
-        return self._get_message_file_path(message_id=message_id) + '.lock'
+        self.log(f'_get_lock_file_path {message_id}')
+        message_file_path = self._get_message_file_path(message_id=message_id) 
+        lock_file_path = message_file_path+'.lock'
+        self.log(f'_get_lock_file_path [id:{message_id}]=>[message_file_path:{message_file_path}]=>[lock_file_path:{lock_file_path}]')
+        return lock_file_path
 
     def _trim(self, text):
         text = str(text)
@@ -211,7 +216,7 @@ class FileQueueAdapter(QueueAdapter):
             raise Exception('commit expects message object')
 
         self.log(f'commit {message_id}')
-        self._delete_message(message_id=message_id)
+        # self._delete_message(message_id=message_id)
         self._delete_lock(message_id=message_id)
         self.log(f'commit complete {message_id}')
         Statman.gauge('fqa.commit').increment()
@@ -226,14 +231,22 @@ class FileQueueAdapter(QueueAdapter):
         else:
             raise Exception('rollback expects message object')
 
-        self.log(f'rollback {message_id}')
-        self._delete_lock(message_id=message_id)
-        self.log(f'rollback complete {message_id}')
+        self.log(f'rollback [id={message_id}]')
+        self._rollback_lock(message_id=message_id)
+        self.log(f'rollback complete [id={message_id}]')
         Statman.gauge('fqa.rollback').increment()
+
+    def _rollback_lock(self, message_id: str):
+        self.log(f'rollback lock [id={message_id}]')
+        lock_file_path = self._get_lock_file_path(message_id=message_id)
+        message_file_path = self._get_message_file_path(message_id=message_id)
+        self.log(f'move file [{lock_file_path}]=>[{message_file_path}]')
+        os.rename(src=lock_file_path, dst=message_file_path)
 
     def _delete_lock(self, message_id: str):
         self.log(f'remove lock {message_id}')
         lock_file_path = self._get_lock_file_path(message_id=message_id)
+        self.log(f'delete file {lock_file_path}')
         os.remove(lock_file_path)
 
     def _delete_message(self, message_id: str):
