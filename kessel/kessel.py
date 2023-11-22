@@ -2,6 +2,7 @@ import os
 import uuid
 import time
 import datetime
+import random
 from pathlib import Path
 from statman import Statman
 
@@ -88,11 +89,21 @@ class FileQueueAdapter(QueueAdapter):
         lock_file_path = None
         # entries = os.listdir(path=self._base_path)
         entries = self._get_message_file_list(self._base_path)
+        skip_entries = random.randint(0,10)
+
         for file in entries:
+            if skip_entries>0:
+                self.log(f'expiremental.  Will skip {skip_entries}')
+                for file in entries:
+                    skip_entries =- 1
+                    if skip_entries<=0:
+                        break
+
             # self.log(f'checking file name: {file.name}')
             # # in future, this is where I would test for delay and maybe TTL
             # self.log('file meets criteria')
             # message_path_file = os.path.join(self._base_path, file)
+
             self.log(f'attempt to lock message: {file.path}')
             lock_file_path = self._lock_file(file.path)
             if lock_file_path:
