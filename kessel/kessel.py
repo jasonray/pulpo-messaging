@@ -1,8 +1,10 @@
 import os
 import uuid
 import time
+import datetime
 from pathlib import Path
 from statman import Statman
+
 
 
 class Message():
@@ -41,7 +43,7 @@ class Message():
 class QueueAdapter():
 
     def __init__(self):
-        print('QueueAdapter init')
+        self.log('QueueAdapter init')
 
     def enqueue(self, message: Message) -> Message:
         pass
@@ -61,7 +63,7 @@ class FileQueueAdapter(QueueAdapter):
 
     def __init__(self, base_path):
         super().__init__()
-        print('FileQueueAdapter init')
+        self.log('FileQueueAdapter init')
         self._base_path = base_path
         os.makedirs(name=self._base_path, mode=0o777, exist_ok=True)
 
@@ -73,28 +75,28 @@ class FileQueueAdapter(QueueAdapter):
         Statman.gauge('fqa.enqueue').increment()
         return message
 
-    def dequeue_next(self) -> Message:
+    def dequeue(self) -> Message:
         # if there is a message ready for dequeue, return it
         # if no message, return Nothing
 
-        print('begin dequeue')
+        self.log('begin dequeue')
 
         message_path_file = None
         # entries = os.listdir(path=self._base_path)
         entries = self._get_message_file_list(self._base_path)
-        print('scanning directory:', entries)
+        self.log('scanning directory:', entries)
         for file in entries:
-            print(f'checking file name: {file.name}')
+            self.log(f'checking file name: {file.name}')
 
             # in future, this is where I would test for delay and maybe TTL
-            print('file meets criteria')
+            self.log('file meets criteria')
             # message_path_file = os.path.join(self._base_path, file)
-            print(f'attempt to lock message: {file.path}')
+            self.log(f'attempt to lock message: {file.path}')
             if self._lock_file(file.path):
-                print('locked message')
+                self.log('locked message')
                 message_path_file = file.path
             else:
-                print('failed to lock message')
+                self.log('failed to lock message')
                 message_path_file = None
 
             if message_path_file:
@@ -102,11 +104,11 @@ class FileQueueAdapter(QueueAdapter):
 
         m = None
         if message_path_file:
-            print(f'load message: {message_path_file}')
+            self.log(f'load message: {message_path_file}')
             m = self._load_message_from_file(file_path=message_path_file)
             Statman.gauge('fqa.dequeue').increment()
         else:
-            print('no message found')
+            self.log('no message found')
 
         return m
 
@@ -136,8 +138,9 @@ class FileQueueAdapter(QueueAdapter):
         return message_file_name.replace('.message', '')
 
     # https://docs.python.org/3/tutorial/inputoutput.html#saving-structured-data-with-json
-    def _save_message_to_file(self, message, path_file):
+    def _save_message_to_file(self, message:Message, path_file:str):
         serialized_message = str(message)
+        self.log(f'_save_message_to_file {message.id} [{path_file}]')
         with open(file=path_file, encoding="utf-8", mode='w') as f:
             f.write(serialized_message)
 
@@ -145,20 +148,20 @@ class FileQueueAdapter(QueueAdapter):
         lock_path_file_name = path_file_name + '.lock'
         lock_path = Path(lock_path_file_name)
 
-        print('attempt to lock with lock file: ', lock_path_file_name)
+        self.log('attempt to lock with lock file: ', lock_path_file_name)
 
         # this is an early way to check if lock already exists
         if os.path.exists(lock_path_file_name):
-            print('lock exists on message, unable to mark')
+            self.log('lock exists on message, unable to mark')
             Statman.gauge('fqa.lock-check.exists.check').increment()
             return False
 
-        print('touch to create lock')
+        self.log('touch to create lock')
         try:
-            lock_path.touch()
+            lock_path.touch(exist_ok=False)
         except FileExistsError:
             Statman.gauge('fqa.lock-check.exists.failed-touch').increment()
-            print('failed to lock, lock already exists')
+            self.log('failed to lock, lock already exists')
             return False
 
         return True
@@ -172,6 +175,7 @@ class FileQueueAdapter(QueueAdapter):
         return path_file
 
     def _get_message_file_list(self, directory) -> os.DirEntry:
+        self.log('scanning directory {directory}')
         with os.scandir(directory) as entries:
             sorted_entries = sorted(entries, key=lambda entry: entry.name)
 
@@ -206,10 +210,10 @@ class FileQueueAdapter(QueueAdapter):
         else:
             raise Exception('commit expects message object')
 
-        print(f'commit {message_id}')
+        self.log(f'commit {message_id}')
         self._delete_message(message_id=message_id)
         self._delete_lock(message_id=message_id)
-        print(f'commit complete {message_id}')
+        self.log(f'commit complete {message_id}')
         Statman.gauge('fqa.commit').increment()
 
     def rollback(self, message: Message):
@@ -222,18 +226,18 @@ class FileQueueAdapter(QueueAdapter):
         else:
             raise Exception('rollback expects message object')
 
-        print(f'rollback {message_id}')
+        self.log(f'rollback {message_id}')
         self._delete_lock(message_id=message_id)
-        print(f'rollback complete {message_id}')
+        self.log(f'rollback complete {message_id}')
         Statman.gauge('fqa.rollback').increment()
 
     def _delete_lock(self, message_id: str):
-        print(f'remove lock {message_id}')
+        self.log(f'remove lock {message_id}')
         lock_file_path = self._get_lock_file_path(message_id=message_id)
         os.remove(lock_file_path)
 
     def _delete_message(self, message_id: str):
-        print(f'remove message {message_id}')
+        self.log(f'remove message {message_id}')
         lock_file_path = self._get_message_file_path(message_id=message_id)
         os.remove(lock_file_path)
 
@@ -242,3 +246,73 @@ class FileQueueAdapter(QueueAdapter):
 
     def _does_message_exist(self, messsage_id) -> bool:
         return os.path.exists(self._get_message_file_path(message_id=messsage_id))
+    
+    def log(self, *argv):
+        message = ""
+        for arg in argv:
+            if not arg is None:
+                message += ' ' + str(arg)
+
+        pid = os.getpid()
+        dt = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
+
+        TEMPLATE = "[p:{pid}]\t[{dt}]\t{message}"
+        output = TEMPLATE.format(pid=pid, dt=dt, message=message)
+        # if self.disable_output_buffering:
+        print(output, flush=True)
+        # else:
+        #     self.log(output)
+
+class Kessel():
+    _queue_adapter = None
+
+    def __init__(self):
+        self.log('init queue adapter')
+        self._queue_adapter = FileQueueAdapter('/tmp/kessel/fqa')
+
+    @property
+    def queue_adapter(self) -> QueueAdapter:
+        return self._queue_adapter
+    
+    def publish(self, message:Message) -> Message:
+        self.log('publish message to queue adapter')
+        return self.queue_adapter.enqueue(message)
+    
+    def initialize(self) -> Message:
+        self.log('starting kessel')
+        continue_processing=True
+        iterations_with_no_messages = 0
+        while continue_processing:
+            self.log('begin dequeue')
+            message = self.queue_adapter.dequeue()
+            if message:
+                self.log(f'received message {message.id}')
+                self.log('this would be the point to delegate to handler')
+                self.queue_adapter.commit(message)
+                self.log('commit complete')
+            else:
+                self.log('no message available, sleep')
+                iterations_with_no_messages += 1
+                if iterations_with_no_messages > 12:
+                    self.log('no message available, shutdown')
+                    continue_processing=False
+                else:
+                    self.log('no message available, sleep')
+                    time.sleep(5)
+
+    def log(self, *argv):
+        message = ""
+        for arg in argv:
+            if not arg is None:
+                message += ' ' + str(arg)
+
+        pid = os.getpid()
+        dt = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
+
+        TEMPLATE = "[p:{pid}]\t[{dt}]\t{message}"
+        output = TEMPLATE.format(pid=pid, dt=dt, message=message)
+        # if self.disable_output_buffering:
+        print(output, flush=True)
+        # else:
+        #     self.log(output)
+

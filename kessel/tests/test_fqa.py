@@ -135,7 +135,7 @@ class TestFqa(unittest.TestCase):
         m1 = Message(payload='hello world')
         m1 = fqa.enqueue(m1)
 
-        dq_1 = fqa.dequeue_next()
+        dq_1 = fqa.dequeue()
         self.assertEqual(dq_1.payload, 'hello world')
         self.assertEqual(dq_1.id, m1.id)
 
@@ -152,7 +152,7 @@ class TestFqa(unittest.TestCase):
         self.assertTrue(fqa._does_message_exist(m1.id))
         self.assertFalse(fqa._does_lock_exist(m1.id))
 
-        dq_1 = fqa.dequeue_next()
+        dq_1 = fqa.dequeue()
         # messsage should exist, lock should exist
         self.assertTrue(fqa._does_message_exist(m1.id))
         self.assertTrue(fqa._does_lock_exist(m1.id))
@@ -172,7 +172,7 @@ class TestFqa(unittest.TestCase):
         self.assertTrue(fqa._does_message_exist(m1.id))
         self.assertFalse(fqa._does_lock_exist(m1.id))
 
-        dq_1 = fqa.dequeue_next()
+        dq_1 = fqa.dequeue()
         # messsage should exist, lock should exist
         self.assertTrue(fqa._does_message_exist(m1.id))
         self.assertTrue(fqa._does_lock_exist(m1.id))
