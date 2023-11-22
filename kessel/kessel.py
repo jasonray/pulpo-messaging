@@ -73,9 +73,9 @@ class FileQueueAdapter(QueueAdapter):
     def enqueue(self, message: Message) -> Message:
         message_id = self._create_message_id()
         message._id = message_id
-        path_file = self._create_new_message_file_path(message_id)
-        self._save_message_to_file(message=message, path_file=path_file)
-        self.log(f'fqa.enqueue [id={message._id}][file_path={path_file}]')
+        message_file_path=self._get_message_file_path(message_id=message_id)
+        self._save_message_to_file(message=message, path_file=message_file_path)
+        self.log(f'fqa.enqueue [id={message._id}][file_path={message_file_path}]')
         Statman.gauge('fqa.enqueue').increment()
         return message
 
@@ -174,11 +174,6 @@ class FileQueueAdapter(QueueAdapter):
 
     def _create_message_id(self):
         return f"{time.time()}-{uuid.uuid4()}"
-
-    def _create_new_message_file_path(self, message_id):
-        file_name = message_id + '.message'
-        path_file = os.path.join(self._base_path, file_name)
-        return path_file
 
     def _get_message_file_list(self, directory) -> os.DirEntry:
         self.log(f'scanning directory {directory}')
