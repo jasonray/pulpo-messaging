@@ -60,18 +60,22 @@ class QueueAdapter():
 
 class FileQueueAdapter(QueueAdapter):
     _base_path = None
+    _lock_path = None
 
     def __init__(self, base_path):
         super().__init__()
         self.log('FileQueueAdapter init')
         self._base_path = base_path
         os.makedirs(name=self._base_path, mode=0o777, exist_ok=True)
+        self._lock_path=os.path.join(self._base_path, 'lock')
+        os.makedirs(name=self._lock_path, mode=0o777, exist_ok=True)
 
     def enqueue(self, message: Message) -> Message:
         message_id = self._create_message_id()
+        message._id = message_id
         path_file = self._create_new_message_file_path(message_id)
         self._save_message_to_file(message=message, path_file=path_file)
-        message._id = message_id
+        self.log(f'fqa.enqueue [id={message._id}][file_path={path_file}]')
         Statman.gauge('fqa.enqueue').increment()
         return message
 
@@ -143,28 +147,30 @@ class FileQueueAdapter(QueueAdapter):
     # https://docs.python.org/3/tutorial/inputoutput.html#saving-structured-data-with-json
     def _save_message_to_file(self, message:Message, path_file:str):
         serialized_message = str(message)
-        self.log(f'_save_message_to_file {message.id} [{path_file}]')
+        self.log(f'_save_message_to_file [id={message.id}][{path_file}]')
         with open(file=path_file, encoding="utf-8", mode='w') as f:
             f.write(serialized_message)
 
-    def _lock_file(self, path_file_name)->str:
-        lock_path_file_name = path_file_name + '.lock'
-        # lock_path = Path(lock_path_file_name)
-
-        # lock_file_path = self._get_message_file_path(message_id=message_id)
-        # message_file_path = self._get_lock_file_path(message_id=message_id)
-        # os.rename(src=lock_file_path, dest=message_file_path)
-
+    def _lock_file(self, message_file_path)->str:
+        (message_path, message_file_name) = os.path.split(message_file_path)
+        lock_file_path = os.path.join( self._lock_path, message_file_name + '.lock' )
+        self.log(f'_lock_file [message_path={message_path}][message_file_name={message_file_name}][lock_file_path={lock_file_path}]')
 
         try:
-            self.log(f'attempt to lock with lock file: [{path_file_name}]=>[{lock_path_file_name}]')
-            os.rename(src=path_file_name, dst=lock_path_file_name)
+            self.log(f'attempt to lock with lock file: [{message_file_path}]=>[{lock_file_path}]')
+            os.rename(src=message_file_path, dst=lock_file_path)
         except FileExistsError:
-            Statman.gauge('fqa.lock-check.exists.failed-lock').increment()
-            self.log('failed to lock')
+            Statman.gauge('fqa.lock-check.exists.failed-lock.FileExistsError').increment()
+            self.log('failed to lock (FileExistsError)')
+            return None
+        except FileNotFoundError:
+            Statman.gauge('fqa.lock-check.exists.failed-lock.FileNotFoundError').increment()
+            self.log('failed to lock (FileNotFoundError)')
             return None
 
-        return lock_path_file_name
+
+
+        return lock_file_path
 
     def _create_message_id(self):
         return f"{time.time()}-{uuid.uuid4()}"
@@ -192,11 +198,10 @@ class FileQueueAdapter(QueueAdapter):
         return path
 
     def _get_lock_file_path(self, message_id) -> str:
-        self.log(f'_get_lock_file_path {message_id}')
-        message_file_path = self._get_message_file_path(message_id=message_id) 
-        lock_file_path = message_file_path+'.lock'
-        self.log(f'_get_lock_file_path [id:{message_id}]=>[message_file_path:{message_file_path}]=>[lock_file_path:{lock_file_path}]')
-        return lock_file_path
+        file_name = f'{message_id}.message.lock'
+        path = os.path.join(self._lock_path, file_name)
+        self.log(f'_get_lock_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
+        return path
 
     def _trim(self, text):
         text = str(text)
@@ -295,23 +300,50 @@ class Kessel():
         self.log('starting kessel')
         continue_processing=True
         iterations_with_no_messages = 0
+        Statman.stopwatch('kessel.message_streak_tm', autostart=True)
         while continue_processing:
-            self.log('begin dequeue')
+            self.log('kessel init begin dequeue')
+            
             message = self.queue_adapter.dequeue()
+            Statman.gauge('kessel.dequeue-attempts').increment()
             if message:
+                Statman.gauge('kessel.dequeue').increment()
+                Statman.gauge('kessel.message_streak_cnt').increment()
                 self.log(f'received message {message.id}')
                 self.log('this would be the point to delegate to handler')
                 self.queue_adapter.commit(message)
+                Statman.gauge('kessel.messages_processed').increment()
                 self.log('commit complete')
             else:
-                self.log('no message available, sleep')
+                self.log('no message available')
                 iterations_with_no_messages += 1
-                if iterations_with_no_messages > 12:
+
+                Statman.stopwatch('kessel.message_streak_tm').stop()
+                self.print_metrics()
+
+                if iterations_with_no_messages > 3:
                     self.log('no message available, shutdown')
                     continue_processing=False
                 else:
                     self.log('no message available, sleep')
                     time.sleep(5)
+                    Statman.gauge('kessel.message_streak_cnt').value=0
+                    Statman.stopwatch('kessel.message_streak_tm').reset()
+                    Statman.stopwatch('kessel.message_streak_tm').start()
+
+    def print_metrics(self):
+        self.log('kessel metric report:')
+        self.print_metric('kessel.messages_processed')
+        self.print_metric('kessel.dequeue-attempts')
+        self.print_metric('kessel.dequeue')
+        self.print_metric('fqa.lock-check.exists.failed-lock.FileExistsError')
+        self.print_metric('fqa.lock-check.exists.failed-lock.FileNotFoundError')
+        self.print_metric('kessel.message_streak_cnt')
+        self.print_metric('kessel.message_streak_tm')
+
+    def print_metric(self, metric_name):
+        self.log('- ' + str( Statman.get( metric_name) ) )
+
 
     def log(self, *argv):
         message = ""

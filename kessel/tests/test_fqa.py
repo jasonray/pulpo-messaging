@@ -123,3 +123,16 @@ class TestFqa(unittest.TestCase):
         fqa = self.file_queue_adapter_factory()
         self.assertIsNotNone(fqa)
 
+    # these test cases test private implementation and will need to be adjusted if impementation changes
+    def test_get_lock_file_path(self):
+        base_path = 'tmp/kessel/unit-test/imaginary'
+        expected_lock_path = 'tmp/kessel/unit-test/imaginary/lock'
+        message_id = '123'
+        expected_lock_file_path = 'tmp/kessel/unit-test/imaginary/lock/123.message.lock'
+
+        fqa =  FileQueueAdapter(base_path )
+        self.assertEqual(fqa._lock_path , expected_lock_path)
+        
+        lock_file_path = fqa._get_lock_file_path(message_id=message_id)
+        self.assertEquals(lock_file_path, expected_lock_file_path)
+
