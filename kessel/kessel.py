@@ -42,9 +42,6 @@ class Message():
 
 class QueueAdapter():
 
-    def __init__(self):
-        self.log('QueueAdapter init')
-
     def enqueue(self, message: Message) -> Message:
         pass
 
