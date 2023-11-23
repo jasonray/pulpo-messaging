@@ -25,7 +25,9 @@ def get_unique_base_path(tag: str = None):
 class TestFqaCompliance(unittest.TestCase):
 
     def queue_adapter_factory(self) -> QueueAdapter:
-        return FileQueueAdapter(base_path=get_unique_base_path('fqa-compliance'))
+        options = {}
+        options['base_path']=get_unique_base_path('fqa-compliance')
+        return FileQueueAdapter(options=options)
 
     def test_enqueue_dequeue_message(self):
         qa = self.queue_adapter_factory()
@@ -117,7 +119,9 @@ class TestFqaCompliance(unittest.TestCase):
 class TestFqa(unittest.TestCase):
 
     def file_queue_adapter_factory(self, tag: str = 'fqa') -> FileQueueAdapter:
-        return FileQueueAdapter(base_path=get_unique_base_path(tag))
+        options = {}
+        options['base_path']=get_unique_base_path('fqa-compliance')
+        return FileQueueAdapter(options=options)
 
     def test_construct(self):
         fqa = self.file_queue_adapter_factory()
@@ -125,25 +129,20 @@ class TestFqa(unittest.TestCase):
 
     # these test cases test private implementation and will need to be adjusted if impementation changes
     def test_get_lock_file_path(self):
-        base_path = 'tmp/kessel/unit-test/imaginary'
+        config = {}
+        config['base_path'] = 'tmp/kessel/unit-test/imaginary'
+        expected_message_path = 'tmp/kessel/unit-test/imaginary'
         expected_lock_path = 'tmp/kessel/unit-test/imaginary/lock'
         message_id = '123'
         expected_lock_file_path = 'tmp/kessel/unit-test/imaginary/lock/123.message.lock'
+        expected_message_file_path = 'tmp/kessel/unit-test/imaginary/123.message'
 
-        fqa = FileQueueAdapter(base_path)
-        self.assertEqual(fqa._lock_path, expected_lock_path)
+        fqa = FileQueueAdapter(config)
+        self.assertEqual(fqa.config.base_path, expected_message_path)
+        self.assertEqual(fqa.config.lock_path, expected_lock_path)
 
         lock_file_path = fqa._get_lock_file_path(message_id=message_id)
         self.assertEquals(lock_file_path, expected_lock_file_path)
-
-    def test_get_lock_file_path(self):
-        base_path = 'tmp/kessel/unit-test/imaginary'
-        expected_lock_path = 'tmp/kessel/unit-test/imaginary/lock'
-        message_id = '123'
-        expected_message_file_path = 'tmp/kessel/unit-test/imaginary/123.message'
-
-        fqa = FileQueueAdapter(base_path)
-        self.assertEqual(fqa._lock_path, expected_lock_path)
 
         message_file_path = fqa._get_message_file_path(message_id=message_id)
         self.assertEquals(message_file_path, expected_message_file_path)

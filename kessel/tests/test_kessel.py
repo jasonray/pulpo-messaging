@@ -14,5 +14,8 @@ class TestKessel(unittest.TestCase):
     def test_config_shutdown_after_number_of_empty_iterations(self):
         config = {}
         config['shutdown_after_number_of_empty_iterations'] = 10
+        config['queue_adapter_type'] = 'FileQueueAdapter'
+        config['file_queue_adapter'] = {}
+        config['file_queue_adapter']['base_path']='/tmp/kessel/fqa'
         kessel = Kessel(config)
-        self.assertEqual(kessel.shutdown_after_number_of_empty_iterations,10)
+        self.assertEqual(kessel.config.shutdown_after_number_of_empty_iterations,10)

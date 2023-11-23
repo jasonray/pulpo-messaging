@@ -38,6 +38,22 @@ class Message():
     def payload(self):
         return self._payload
 
+class Config():
+    __options = None
+
+    def __init__(self, options: typing.Dict=None):
+        if not options:
+            self.__options = {}
+        elif isinstance(options, dict):
+            self.__options = options
+        elif isinstance(options, Config):
+            self.__options = options.__options
+
+    def option(self, key: str, default_value: typing.Any = None):
+        option_value = self.__options.get(key)
+        if option_value is not None:
+            return option_value
+        return default_value    
 
 class QueueAdapter():
 
@@ -53,18 +69,36 @@ class QueueAdapter():
     def rollback(self, message: Message) -> Message:
         pass
 
+class FileQueueAdapterConfig(Config):
+
+    def __init__(self, options: typing.Dict=None):
+        super(FileQueueAdapterConfig, self).__init__(options)
+
+    @property
+    def base_path(self:Config) -> str:
+        return self.option('base_path', '/tmp/kessel/')    
+
+    @property
+    def lock_path(self:Config) -> str:
+        return os.path.join(self.base_path, 'lock')
 
 class FileQueueAdapter(QueueAdapter):
-    _base_path = None
-    _lock_path = None
+    _config=None
 
-    def __init__(self, base_path):
+    def __init__(self, options:typing.Dict):
         super().__init__()
         self.log('FileQueueAdapter init')
-        self._base_path = base_path
-        os.makedirs(name=self._base_path, mode=0o777, exist_ok=True)
-        self._lock_path = os.path.join(self._base_path, 'lock')
-        os.makedirs(name=self._lock_path, mode=0o777, exist_ok=True)
+
+        self._config = FileQueueAdapterConfig(options)
+        self._create_message_directories()
+
+    def _create_message_directories(self):
+        os.makedirs(name=self.config.base_path , mode=0o777, exist_ok=True)
+        os.makedirs(name=self.config.lock_path, mode=0o777, exist_ok=True)
+
+    @property
+    def config(self) -> FileQueueAdapterConfig:
+        return self._config
 
     def enqueue(self, message: Message) -> Message:
         message_id = self._create_message_id()
@@ -82,22 +116,13 @@ class FileQueueAdapter(QueueAdapter):
         self.log('begin dequeue')
 
         lock_file_path = None
-        # entries = os.listdir(path=self._base_path)
-        entries = self._get_message_file_list(self._base_path)
-        # skip_entries = random.randint(0,10)
+        entries = self._get_message_file_list(self.config.base_path)
 
         for file in entries:
-            # if skip_entries>0:
-            #     self.log(f'expiremental.  Will skip {skip_entries}')
-            #     for file in entries:
-            #         skip_entries =- 1
-            #         if skip_entries<=0:
-            #             break
-
             # self.log(f'checking file name: {file.name}')
             # # in future, this is where I would test for delay and maybe TTL
             # self.log('file meets criteria')
-            # message_path_file = os.path.join(self._base_path, file)
+            # message_path_file = os.path.join(self.config.base_path, file)
 
             self.log(f'attempt to lock message: {file.path}')
             lock_file_path = self._lock_file(file.path)
@@ -157,7 +182,7 @@ class FileQueueAdapter(QueueAdapter):
 
     def _lock_file(self, message_file_path) -> str:
         (message_path, message_file_name) = os.path.split(message_file_path)
-        lock_file_path = os.path.join(self._lock_path, message_file_name + '.lock')
+        lock_file_path = os.path.join(self.config.lock_path, message_file_name + '.lock')
         self.log(
             f'_lock_file [message_path={message_path}][message_file_name={message_file_name}][lock_file_path={lock_file_path}]'
         )
@@ -192,14 +217,14 @@ class FileQueueAdapter(QueueAdapter):
 
     def _get_message_file_path(self, message_id) -> str:
         file_name = f'{message_id}.message'
-        path = os.path.join(self._base_path, file_name)
+        path = os.path.join(self.config.base_path, file_name)
         self.log(
             f'_get_message_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
     def _get_lock_file_path(self, message_id) -> str:
         file_name = f'{message_id}.message.lock'
-        path = os.path.join(self._lock_path, file_name)
+        path = os.path.join(self.config.lock_path, file_name)
         self.log(f'_get_lock_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
@@ -282,29 +307,36 @@ class FileQueueAdapter(QueueAdapter):
         #     self.log(output)
 
 
-class Kessel():
-    _queue_adapter = None
-    __options = None
 
-    def __init__(self, options: typing.Dict):
-        self.log('init queue adapter')
+class KesselConfig(Config):
 
-        if not options:
-            options = {}
-        self.__options = options
-
-        self._queue_adapter = FileQueueAdapter('/tmp/kessel/fqa')
-
-    def option(self, key: str, default_value: typing.Any = None):
-        option_value = self.__options.get(key)
-        if option_value is not None:
-            return option_value
-        return default_value
-
+    def __init__(self, options: typing.Dict=None):
+        super(KesselConfig, self).__init__(options)
 
     @property
     def shutdown_after_number_of_empty_iterations(self) -> int:
         return self.option('shutdown_after_number_of_empty_iterations',5)
+
+    @property
+    def queue_adapter_type(self) -> str:
+        return self.option('queue_adapter_type',None)
+
+class Kessel():
+    _queue_adapter = None
+    _config = None
+
+    def __init__(self, options: typing.Dict):
+        self.log('init queue adapter')
+        self._config = KesselConfig(options)
+
+        if self.config.queue_adapter_type=='FileQueueAdapter':
+            self._queue_adapter = FileQueueAdapter(options['file_queue_adapter'])
+        else:
+            raise Exception('invalid queue adapter type')
+
+    @property 
+    def config(self) -> KesselConfig:
+        return self._config
 
     @property
     def queue_adapter(self) -> QueueAdapter:
@@ -339,7 +371,7 @@ class Kessel():
                 Statman.stopwatch('kessel.message_streak_tm').stop()
                 self.print_metrics()
 
-                if iterations_with_no_messages > self.shutdown_after_number_of_empty_iterations:
+                if iterations_with_no_messages > self.config.shutdown_after_number_of_empty_iterations:
                     self.log('no message available, shutdown')
                     continue_processing = False
                 else:
