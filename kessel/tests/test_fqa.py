@@ -32,7 +32,7 @@ class TestFqaCompliance(unittest.TestCase):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
-        dq_1 = qa.dequeue_next()
+        dq_1 = qa.dequeue()
 
         self.assertEqual(dq_1.payload, 'hello world')
         self.assertEqual(dq_1.id, m1.id)
@@ -42,10 +42,10 @@ class TestFqaCompliance(unittest.TestCase):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
-        dq_1 = qa.dequeue_next()
+        dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
 
-        dq_2 = qa.dequeue_next()
+        dq_2 = qa.dequeue()
         self.assertIsNone(dq_2)
 
     def test_dequeue_skip_locked_message_with_2(self):
@@ -61,14 +61,14 @@ class TestFqaCompliance(unittest.TestCase):
         print('enqueue complete', m2.id)
 
         print('first dequeue, expect m1')
-        dq1 = qa.dequeue_next()
+        dq1 = qa.dequeue()
         self.assertEqual(dq1.payload, m1.payload)
         print('second dequeue, expect m2')
-        dq2 = qa.dequeue_next()
+        dq2 = qa.dequeue()
         self.assertEqual(dq2.payload, m2.payload)
 
         # because message is locked, should not be able to dequeue
-        dq3 = qa.dequeue_next()
+        dq3 = qa.dequeue()
         self.assertIsNone(dq3)
 
     def test_commit_removes_message(self):
@@ -76,20 +76,20 @@ class TestFqaCompliance(unittest.TestCase):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
-        dq_1 = qa.dequeue_next()
+        dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
 
         # at this point, m1 should exist and be locked
 
         # because message is locked, it should not be available for dequeue
-        dq_2 = qa.dequeue_next()
+        dq_2 = qa.dequeue()
         self.assertIsNone(dq_2)
 
         qa.commit(dq_1)
 
         # at this point, m1 should not exist
 
-        dq_3 = qa.dequeue_next()
+        dq_3 = qa.dequeue()
         self.assertIsNone(dq_3)
 
     def test_rollback_removes_lock(self):
@@ -97,20 +97,20 @@ class TestFqaCompliance(unittest.TestCase):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
-        dq_1 = qa.dequeue_next()
+        dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
 
         # at this point, m1 should exist and be locked
 
         # because message is locked, it should not be available for dequeue
-        dq_2 = qa.dequeue_next()
+        dq_2 = qa.dequeue()
         self.assertIsNone(dq_2)
 
         qa.rollback(dq_1)
 
         # at this point, m1 should exist and be available for dequeue
 
-        dq_3 = qa.dequeue_next()
+        dq_3 = qa.dequeue()
         self.assertIsNotNone(dq_3)
 
 
@@ -123,131 +123,27 @@ class TestFqa(unittest.TestCase):
         fqa = self.file_queue_adapter_factory()
         self.assertIsNotNone(fqa)
 
-    def test_publish_message(self):
-        fqa = self.file_queue_adapter_factory()
-        m = Message(payload='hello world')
-        m = fqa.enqueue(m)
+    # these test cases test private implementation and will need to be adjusted if impementation changes
+    def test_get_lock_file_path(self):
+        base_path = 'tmp/kessel/unit-test/imaginary'
+        expected_lock_path = 'tmp/kessel/unit-test/imaginary/lock'
+        message_id = '123'
+        expected_lock_file_path = 'tmp/kessel/unit-test/imaginary/lock/123.message.lock'
 
-        self.assertTrue(fqa._does_message_exist(m.id))
+        fqa = FileQueueAdapter(base_path)
+        self.assertEqual(fqa._lock_path, expected_lock_path)
 
-    def test_dequeue_message(self):
-        fqa = self.file_queue_adapter_factory()
-        m1 = Message(payload='hello world')
-        m1 = fqa.enqueue(m1)
+        lock_file_path = fqa._get_lock_file_path(message_id=message_id)
+        self.assertEquals(lock_file_path, expected_lock_file_path)
 
-        dq_1 = fqa.dequeue_next()
-        self.assertEqual(dq_1.payload, 'hello world')
-        self.assertEqual(dq_1.id, m1.id)
+    def test_get_lock_file_path(self):
+        base_path = 'tmp/kessel/unit-test/imaginary'
+        expected_lock_path = 'tmp/kessel/unit-test/imaginary/lock'
+        message_id = '123'
+        expected_message_file_path = 'tmp/kessel/unit-test/imaginary/123.message'
 
-        # messsage should exist, lock should exist
-        self.assertTrue(fqa._does_message_exist(m1.id))
-        self.assertTrue(fqa._does_lock_exist(m1.id))
+        fqa = FileQueueAdapter(base_path)
+        self.assertEqual(fqa._lock_path, expected_lock_path)
 
-    def test_commit_removes_message(self):
-        fqa = self.file_queue_adapter_factory()
-        m1 = Message(payload='hello world')
-        m1 = fqa.enqueue(m1)
-
-        # messsage should exist, lock should not exist
-        self.assertTrue(fqa._does_message_exist(m1.id))
-        self.assertFalse(fqa._does_lock_exist(m1.id))
-
-        dq_1 = fqa.dequeue_next()
-        # messsage should exist, lock should exist
-        self.assertTrue(fqa._does_message_exist(m1.id))
-        self.assertTrue(fqa._does_lock_exist(m1.id))
-
-        fqa.commit(dq_1)
-
-        # messsage should not exist, lock not should exist
-        self.assertFalse(fqa._does_message_exist(m1.id))
-        self.assertFalse(fqa._does_lock_exist(m1.id))
-
-    def test_rollback_removes_lock(self):
-        fqa = self.file_queue_adapter_factory()
-        m1 = Message(payload='hello world')
-        m1 = fqa.enqueue(m1)
-
-        # messsage should exist, lock should not exist
-        self.assertTrue(fqa._does_message_exist(m1.id))
-        self.assertFalse(fqa._does_lock_exist(m1.id))
-
-        dq_1 = fqa.dequeue_next()
-        # messsage should exist, lock should exist
-        self.assertTrue(fqa._does_message_exist(m1.id))
-        self.assertTrue(fqa._does_lock_exist(m1.id))
-
-        fqa.rollback(dq_1)
-
-        # messsage should exist, lock not should exist
-        self.assertTrue(fqa._does_message_exist(m1.id))
-        self.assertFalse(fqa._does_lock_exist(m1.id))
-
-    def get_message_content(self, path_file):
-        with open(file=path_file, encoding="utf-8", mode='r') as f:
-            contents = f.read()
-        return contents
-
-    # def test_enqueue_dequeue_x100(self):
-    #     self.run_pref_test(100,False)
-
-    # def test_enqueue_dequeue_x1000(self):
-    #     self.run_pref_test(1000,False)
-
-    # def test_enqueue_dequeue_x10000(self):
-    #     self.run_pref_test(1000,False)
-
-    # def test_enqueue_dequeue_with_commit_x100(self):
-    #     self.run_pref_test(100,True)
-    #     1/0
-
-    # def test_enqueue_dequeue_with_commit_x1000(self):
-    #     self.run_pref_test(1000,True)
-
-    # def test_enqueue_dequeue_with_commit_x10000(self):
-    #     self.run_pref_test(10000,True)
-    #     1/0
-
-    # def run_pref_test(self, number_of_iterations:int, commit_messages: bool):
-    #     Statman.reset()
-
-    #     messages = []
-    #     fqa = self.file_queue_adapter_factory(f'pref-n{number_of_iterations}-c{commit_messages}')
-
-    #     sw_enqueue=Stopwatch(name=f'fqa.perf-test.n{number_of_iterations}:c{commit_messages}.enqueue', enable_history=True)
-    #     for i in range(0, number_of_iterations):
-    #         sw_enqueue.start()
-    #         m = Message(payload=f'm{i}')
-    #         fqa.enqueue(m)
-    #         messages.append(m)
-    #         sw_enqueue.stop()
-
-    #     sw_process=Stopwatch(name=f'fqa.perf-test.n{number_of_iterations}:c{commit_messages}.process', enable_history=True)
-    #     for i in range(0, number_of_iterations):
-    #         sw_process.start()
-    #         dq_m = fqa.dequeue_next()
-    #         self.assertIsNotNone(dq_m)
-    #         if commit_messages:
-    #             fqa.commit(message=dq_m)
-
-    #         m = messages[i]
-    #         self.assertEqual(dq_m.id, m.id)
-    #         sw_process.stop()
-
-    #     dq_m = fqa.dequeue_next()
-    #     self.assertIsNone(dq_m)
-
-    #     print(Statman.gauge('fqa.enqueue'))
-    #     print(Statman.gauge('fqa.dequeue'))
-    #     print(Statman.gauge('fqa.commit'))
-    #     print(Statman.gauge('fqa.rollback'))
-    #     print('* enqueue')
-    #     print(sw_enqueue.history.count())
-    #     print(sw_enqueue.history.average_value())
-    #     print(sw_enqueue.history.max_value())
-    #     print(sw_enqueue.history.min_value())
-    #     print('* process')
-    #     print(sw_process.history.count())
-    #     print(sw_process.history.average_value())
-    #     print(sw_process.history.max_value())
-    #     print(sw_process.history.min_value())
+        message_file_path = fqa._get_message_file_path(message_id=message_id)
+        self.assertEquals(message_file_path, expected_message_file_path)

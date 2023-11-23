@@ -1,7 +1,7 @@
 import os
 import uuid
 import time
-from pathlib import Path
+import datetime
 from statman import Statman
 
 
@@ -40,9 +40,6 @@ class Message():
 
 class QueueAdapter():
 
-    def __init__(self):
-        print('QueueAdapter init')
-
     def enqueue(self, message: Message) -> Message:
         pass
 
@@ -58,55 +55,64 @@ class QueueAdapter():
 
 class FileQueueAdapter(QueueAdapter):
     _base_path = None
+    _lock_path = None
 
     def __init__(self, base_path):
         super().__init__()
-        print('FileQueueAdapter init')
+        self.log('FileQueueAdapter init')
         self._base_path = base_path
         os.makedirs(name=self._base_path, mode=0o777, exist_ok=True)
+        self._lock_path = os.path.join(self._base_path, 'lock')
+        os.makedirs(name=self._lock_path, mode=0o777, exist_ok=True)
 
     def enqueue(self, message: Message) -> Message:
         message_id = self._create_message_id()
-        path_file = self._create_new_message_file_path(message_id)
-        self._save_message_to_file(message=message, path_file=path_file)
         message._id = message_id
+        message_file_path = self._get_message_file_path(message_id=message_id)
+        self._save_message_to_file(message=message, path_file=message_file_path)
+        self.log(f'fqa.enqueue [id={message._id}][file_path={message_file_path}]')
         Statman.gauge('fqa.enqueue').increment()
         return message
 
-    def dequeue_next(self) -> Message:
+    def dequeue(self) -> Message:
         # if there is a message ready for dequeue, return it
         # if no message, return Nothing
 
-        print('begin dequeue')
+        self.log('begin dequeue')
 
-        message_path_file = None
+        lock_file_path = None
         # entries = os.listdir(path=self._base_path)
         entries = self._get_message_file_list(self._base_path)
-        print('scanning directory:', entries)
+        # skip_entries = random.randint(0,10)
+
         for file in entries:
-            print(f'checking file name: {file.name}')
+            # if skip_entries>0:
+            #     self.log(f'expiremental.  Will skip {skip_entries}')
+            #     for file in entries:
+            #         skip_entries =- 1
+            #         if skip_entries<=0:
+            #             break
 
-            # in future, this is where I would test for delay and maybe TTL
-            print('file meets criteria')
+            # self.log(f'checking file name: {file.name}')
+            # # in future, this is where I would test for delay and maybe TTL
+            # self.log('file meets criteria')
             # message_path_file = os.path.join(self._base_path, file)
-            print(f'attempt to lock message: {file.path}')
-            if self._lock_file(file.path):
-                print('locked message')
-                message_path_file = file.path
-            else:
-                print('failed to lock message')
-                message_path_file = None
 
-            if message_path_file:
+            self.log(f'attempt to lock message: {file.path}')
+            lock_file_path = self._lock_file(file.path)
+            if lock_file_path:  # pylint: disable=no-else-break
+                self.log('locked message')
                 break
+            else:
+                self.log('failed to lock message')
 
         m = None
-        if message_path_file:
-            print(f'load message: {message_path_file}')
-            m = self._load_message_from_file(file_path=message_path_file)
+        if lock_file_path:
+            self.log(f'load message (dq): {lock_file_path}')
+            m = self._load_message_from_file(file_path=lock_file_path)
             Statman.gauge('fqa.dequeue').increment()
         else:
-            print('no message found')
+            self.log('no message found')
 
         return m
 
@@ -114,6 +120,7 @@ class FileQueueAdapter(QueueAdapter):
         return self._load_message_from_file(self._get_message_file_path(message_id))
 
     def _load_message_from_file(self, file_path):
+        self.log(f'load message [file_path:{file_path}]')
         m = None
         with open(file=file_path, encoding="utf-8", mode='r') as f:
             header = f.readline()
@@ -121,57 +128,58 @@ class FileQueueAdapter(QueueAdapter):
             payload = f.readline()
             payload = self._trim(payload)
 
+        self.log(f'load message id from file path [file_path:{file_path}]')
         message_id = self._get_message_id_from_file_path(file_path)
+        self.log(f'extracted message id [file_path:{file_path}]=>[id:{message_id}]')
         m = Message(payload=payload, header=header)
         m._id = message_id
         return m
 
     def _get_message_id_from_file_path(self, message_file_path):
-        (message_path, message_file_name) = os.path.split(message_file_path)
+        (message_path, message_file_name) = os.path.split(message_file_path)  #pylint: disable=unused-variable
         return self._get_message_id_from_file_name(message_file_name)
 
     def _get_message_id_from_file_name(self, message_file_name):
         # todo: pretty weak approach, might try to get better way
         # like message id in message
-        return message_file_name.replace('.message', '')
+        buffer = message_file_name
+        buffer = buffer.replace('.message', '')
+        buffer = buffer.replace('.lock', '')
+        return buffer
 
     # https://docs.python.org/3/tutorial/inputoutput.html#saving-structured-data-with-json
-    def _save_message_to_file(self, message, path_file):
+    def _save_message_to_file(self, message: Message, path_file: str):
         serialized_message = str(message)
+        self.log(f'_save_message_to_file [id={message.id}][{path_file}]')
         with open(file=path_file, encoding="utf-8", mode='w') as f:
             f.write(serialized_message)
 
-    def _lock_file(self, path_file_name):
-        lock_path_file_name = path_file_name + '.lock'
-        lock_path = Path(lock_path_file_name)
+    def _lock_file(self, message_file_path) -> str:
+        (message_path, message_file_name) = os.path.split(message_file_path)
+        lock_file_path = os.path.join(self._lock_path, message_file_name + '.lock')
+        self.log(
+            f'_lock_file [message_path={message_path}][message_file_name={message_file_name}][lock_file_path={lock_file_path}]'
+        )
 
-        print('attempt to lock with lock file: ', lock_path_file_name)
-
-        # this is an early way to check if lock already exists
-        if os.path.exists(lock_path_file_name):
-            print('lock exists on message, unable to mark')
-            Statman.gauge('fqa.lock-check.exists.check').increment()
-            return False
-
-        print('touch to create lock')
         try:
-            lock_path.touch()
+            self.log(f'attempt to lock with lock file: [{message_file_path}]=>[{lock_file_path}]')
+            os.rename(src=message_file_path, dst=lock_file_path)
         except FileExistsError:
-            Statman.gauge('fqa.lock-check.exists.failed-touch').increment()
-            print('failed to lock, lock already exists')
-            return False
+            Statman.gauge('fqa.lock-check.exists.failed-lock.FileExistsError').increment()
+            self.log('failed to lock (FileExistsError)')
+            return None
+        except FileNotFoundError:
+            Statman.gauge('fqa.lock-check.exists.failed-lock.FileNotFoundError').increment()
+            self.log('failed to lock (FileNotFoundError)')
+            return None
 
-        return True
+        return lock_file_path
 
     def _create_message_id(self):
         return f"{time.time()}-{uuid.uuid4()}"
 
-    def _create_new_message_file_path(self, message_id):
-        file_name = message_id + '.message'
-        path_file = os.path.join(self._base_path, file_name)
-        return path_file
-
     def _get_message_file_list(self, directory) -> os.DirEntry:
+        self.log(f'scanning directory {directory}')
         with os.scandir(directory) as entries:
             sorted_entries = sorted(entries, key=lambda entry: entry.name)
 
@@ -184,10 +192,15 @@ class FileQueueAdapter(QueueAdapter):
     def _get_message_file_path(self, message_id) -> str:
         file_name = f'{message_id}.message'
         path = os.path.join(self._base_path, file_name)
+        self.log(
+            f'_get_message_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
     def _get_lock_file_path(self, message_id) -> str:
-        return self._get_message_file_path(message_id=message_id) + '.lock'
+        file_name = f'{message_id}.message.lock'
+        path = os.path.join(self._lock_path, file_name)
+        self.log(f'_get_lock_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
+        return path
 
     def _trim(self, text):
         text = str(text)
@@ -206,10 +219,10 @@ class FileQueueAdapter(QueueAdapter):
         else:
             raise Exception('commit expects message object')
 
-        print(f'commit {message_id}')
-        self._delete_message(message_id=message_id)
+        self.log(f'commit {message_id}')
+        # self._delete_message(message_id=message_id)
         self._delete_lock(message_id=message_id)
-        print(f'commit complete {message_id}')
+        self.log(f'commit complete {message_id}')
         Statman.gauge('fqa.commit').increment()
 
     def rollback(self, message: Message):
@@ -222,18 +235,26 @@ class FileQueueAdapter(QueueAdapter):
         else:
             raise Exception('rollback expects message object')
 
-        print(f'rollback {message_id}')
-        self._delete_lock(message_id=message_id)
-        print(f'rollback complete {message_id}')
+        self.log(f'rollback [id={message_id}]')
+        self._rollback_lock(message_id=message_id)
+        self.log(f'rollback complete [id={message_id}]')
         Statman.gauge('fqa.rollback').increment()
 
-    def _delete_lock(self, message_id: str):
-        print(f'remove lock {message_id}')
+    def _rollback_lock(self, message_id: str):
+        self.log(f'rollback lock [id={message_id}]')
         lock_file_path = self._get_lock_file_path(message_id=message_id)
+        message_file_path = self._get_message_file_path(message_id=message_id)
+        self.log(f'move file [{lock_file_path}]=>[{message_file_path}]')
+        os.rename(src=lock_file_path, dst=message_file_path)
+
+    def _delete_lock(self, message_id: str):
+        self.log(f'remove lock {message_id}')
+        lock_file_path = self._get_lock_file_path(message_id=message_id)
+        self.log(f'delete file {lock_file_path}')
         os.remove(lock_file_path)
 
     def _delete_message(self, message_id: str):
-        print(f'remove message {message_id}')
+        self.log(f'remove message {message_id}')
         lock_file_path = self._get_message_file_path(message_id=message_id)
         os.remove(lock_file_path)
 
@@ -242,3 +263,99 @@ class FileQueueAdapter(QueueAdapter):
 
     def _does_message_exist(self, messsage_id) -> bool:
         return os.path.exists(self._get_message_file_path(message_id=messsage_id))
+
+    def log(self, *argv):
+        message = ""
+        for arg in argv:
+            if not arg is None:
+                message += ' ' + str(arg)
+
+        pid = os.getpid()
+        dt = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
+
+        TEMPLATE = "[p:{pid}]\t[{dt}]\t{message}"
+        output = TEMPLATE.format(pid=pid, dt=dt, message=message)
+        # if self.disable_output_buffering:
+        print(output, flush=True)
+        # else:
+        #     self.log(output)
+
+
+class Kessel():
+    _queue_adapter = None
+
+    def __init__(self):
+        self.log('init queue adapter')
+        self._queue_adapter = FileQueueAdapter('/tmp/kessel/fqa')
+
+    @property
+    def queue_adapter(self) -> QueueAdapter:
+        return self._queue_adapter
+
+    def publish(self, message: Message) -> Message:
+        self.log('publish message to queue adapter')
+        return self.queue_adapter.enqueue(message)
+
+    def initialize(self) -> Message:
+        self.log('starting kessel')
+        continue_processing = True
+        iterations_with_no_messages = 0
+        Statman.stopwatch('kessel.message_streak_tm', autostart=True)
+        while continue_processing:
+            self.log('kessel init begin dequeue')
+
+            message = self.queue_adapter.dequeue()
+            Statman.gauge('kessel.dequeue-attempts').increment()
+            if message:
+                Statman.gauge('kessel.dequeue').increment()
+                Statman.gauge('kessel.message_streak_cnt').increment()
+                self.log(f'received message {message.id}')
+                self.log('this would be the point to delegate to handler')
+                self.queue_adapter.commit(message)
+                Statman.gauge('kessel.messages_processed').increment()
+                self.log('commit complete')
+            else:
+                self.log('no message available')
+                iterations_with_no_messages += 1
+
+                Statman.stopwatch('kessel.message_streak_tm').stop()
+                self.print_metrics()
+
+                if iterations_with_no_messages > 3:
+                    self.log('no message available, shutdown')
+                    continue_processing = False
+                else:
+                    self.log('no message available, sleep')
+                    time.sleep(5)
+                    Statman.gauge('kessel.message_streak_cnt').value = 0
+                    Statman.stopwatch('kessel.message_streak_tm').reset()
+                    Statman.stopwatch('kessel.message_streak_tm').start()
+
+    def print_metrics(self):
+        self.log('kessel metric report:')
+        self.print_metric('kessel.messages_processed')
+        self.print_metric('kessel.dequeue-attempts')
+        self.print_metric('kessel.dequeue')
+        self.print_metric('fqa.lock-check.exists.failed-lock.FileExistsError')
+        self.print_metric('fqa.lock-check.exists.failed-lock.FileNotFoundError')
+        self.print_metric('kessel.message_streak_cnt')
+        self.print_metric('kessel.message_streak_tm')
+
+    def print_metric(self, metric_name):
+        self.log('- ' + str(Statman.get(metric_name)))
+
+    def log(self, *argv):
+        message = ""
+        for arg in argv:
+            if not arg is None:
+                message += ' ' + str(arg)
+
+        pid = os.getpid()
+        dt = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
+
+        TEMPLATE = "[p:{pid}]\t[{dt}]\t{message}"
+        output = TEMPLATE.format(pid=pid, dt=dt, message=message)
+        # if self.disable_output_buffering:
+        print(output, flush=True)
+        # else:
+        #     self.log(output)
