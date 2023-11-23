@@ -105,7 +105,7 @@ class FileQueueAdapter(QueueAdapter):
             if lock_file_path:
                 self.log('locked message')
                 break
-            else:
+            else:  # pylint: disable=no-else-break
                 self.log('failed to lock message')
 
         m = None
