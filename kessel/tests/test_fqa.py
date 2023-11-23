@@ -130,9 +130,9 @@ class TestFqa(unittest.TestCase):
         message_id = '123'
         expected_lock_file_path = 'tmp/kessel/unit-test/imaginary/lock/123.message.lock'
 
-        fqa =  FileQueueAdapter(base_path )
-        self.assertEqual(fqa._lock_path , expected_lock_path)
-        
+        fqa = FileQueueAdapter(base_path)
+        self.assertEqual(fqa._lock_path, expected_lock_path)
+
         lock_file_path = fqa._get_lock_file_path(message_id=message_id)
         self.assertEquals(lock_file_path, expected_lock_file_path)
 
@@ -142,11 +142,8 @@ class TestFqa(unittest.TestCase):
         message_id = '123'
         expected_message_file_path = 'tmp/kessel/unit-test/imaginary/123.message'
 
-        fqa =  FileQueueAdapter(base_path )
-        self.assertEqual(fqa._lock_path , expected_lock_path)
-        
+        fqa = FileQueueAdapter(base_path)
+        self.assertEqual(fqa._lock_path, expected_lock_path)
+
         message_file_path = fqa._get_message_file_path(message_id=message_id)
         self.assertEquals(message_file_path, expected_message_file_path)
-
-
-

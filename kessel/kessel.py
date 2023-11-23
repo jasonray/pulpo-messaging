@@ -7,7 +7,6 @@ from pathlib import Path
 from statman import Statman
 
 
-
 class Message():
     # - priority
     # - delay
@@ -68,13 +67,13 @@ class FileQueueAdapter(QueueAdapter):
         self.log('FileQueueAdapter init')
         self._base_path = base_path
         os.makedirs(name=self._base_path, mode=0o777, exist_ok=True)
-        self._lock_path=os.path.join(self._base_path, 'lock')
+        self._lock_path = os.path.join(self._base_path, 'lock')
         os.makedirs(name=self._lock_path, mode=0o777, exist_ok=True)
 
     def enqueue(self, message: Message) -> Message:
         message_id = self._create_message_id()
         message._id = message_id
-        message_file_path=self._get_message_file_path(message_id=message_id)
+        message_file_path = self._get_message_file_path(message_id=message_id)
         self._save_message_to_file(message=message, path_file=message_file_path)
         self.log(f'fqa.enqueue [id={message._id}][file_path={message_file_path}]')
         Statman.gauge('fqa.enqueue').increment()
@@ -149,21 +148,23 @@ class FileQueueAdapter(QueueAdapter):
         # todo: pretty weak approach, might try to get better way
         # like message id in message
         buffer = message_file_name
-        buffer=buffer.replace('.message', '')
-        buffer=buffer.replace('.lock', '')
+        buffer = buffer.replace('.message', '')
+        buffer = buffer.replace('.lock', '')
         return buffer
 
     # https://docs.python.org/3/tutorial/inputoutput.html#saving-structured-data-with-json
-    def _save_message_to_file(self, message:Message, path_file:str):
+    def _save_message_to_file(self, message: Message, path_file: str):
         serialized_message = str(message)
         self.log(f'_save_message_to_file [id={message.id}][{path_file}]')
         with open(file=path_file, encoding="utf-8", mode='w') as f:
             f.write(serialized_message)
 
-    def _lock_file(self, message_file_path)->str:
+    def _lock_file(self, message_file_path) -> str:
         (message_path, message_file_name) = os.path.split(message_file_path)
-        lock_file_path = os.path.join( self._lock_path, message_file_name + '.lock' )
-        self.log(f'_lock_file [message_path={message_path}][message_file_name={message_file_name}][lock_file_path={lock_file_path}]')
+        lock_file_path = os.path.join(self._lock_path, message_file_name + '.lock')
+        self.log(
+            f'_lock_file [message_path={message_path}][message_file_name={message_file_name}][lock_file_path={lock_file_path}]'
+        )
 
         try:
             self.log(f'attempt to lock with lock file: [{message_file_path}]=>[{lock_file_path}]')
@@ -176,8 +177,6 @@ class FileQueueAdapter(QueueAdapter):
             Statman.gauge('fqa.lock-check.exists.failed-lock.FileNotFoundError').increment()
             self.log('failed to lock (FileNotFoundError)')
             return None
-
-
 
         return lock_file_path
 
@@ -198,7 +197,8 @@ class FileQueueAdapter(QueueAdapter):
     def _get_message_file_path(self, message_id) -> str:
         file_name = f'{message_id}.message'
         path = os.path.join(self._base_path, file_name)
-        self.log(f'_get_message_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
+        self.log(
+            f'_get_message_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
     def _get_lock_file_path(self, message_id) -> str:
@@ -268,7 +268,7 @@ class FileQueueAdapter(QueueAdapter):
 
     def _does_message_exist(self, messsage_id) -> bool:
         return os.path.exists(self._get_message_file_path(message_id=messsage_id))
-    
+
     def log(self, *argv):
         message = ""
         for arg in argv:
@@ -285,6 +285,7 @@ class FileQueueAdapter(QueueAdapter):
         # else:
         #     self.log(output)
 
+
 class Kessel():
     _queue_adapter = None
 
@@ -295,19 +296,19 @@ class Kessel():
     @property
     def queue_adapter(self) -> QueueAdapter:
         return self._queue_adapter
-    
-    def publish(self, message:Message) -> Message:
+
+    def publish(self, message: Message) -> Message:
         self.log('publish message to queue adapter')
         return self.queue_adapter.enqueue(message)
-    
+
     def initialize(self) -> Message:
         self.log('starting kessel')
-        continue_processing=True
+        continue_processing = True
         iterations_with_no_messages = 0
         Statman.stopwatch('kessel.message_streak_tm', autostart=True)
         while continue_processing:
             self.log('kessel init begin dequeue')
-            
+
             message = self.queue_adapter.dequeue()
             Statman.gauge('kessel.dequeue-attempts').increment()
             if message:
@@ -327,11 +328,11 @@ class Kessel():
 
                 if iterations_with_no_messages > 3:
                     self.log('no message available, shutdown')
-                    continue_processing=False
+                    continue_processing = False
                 else:
                     self.log('no message available, sleep')
                     time.sleep(5)
-                    Statman.gauge('kessel.message_streak_cnt').value=0
+                    Statman.gauge('kessel.message_streak_cnt').value = 0
                     Statman.stopwatch('kessel.message_streak_tm').reset()
                     Statman.stopwatch('kessel.message_streak_tm').start()
 
@@ -346,8 +347,7 @@ class Kessel():
         self.print_metric('kessel.message_streak_tm')
 
     def print_metric(self, metric_name):
-        self.log('- ' + str( Statman.get( metric_name) ) )
-
+        self.log('- ' + str(Statman.get(metric_name)))
 
     def log(self, *argv):
         message = ""
@@ -364,4 +364,3 @@ class Kessel():
         print(output, flush=True)
         # else:
         #     self.log(output)
-
