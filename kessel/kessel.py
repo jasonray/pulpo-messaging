@@ -136,7 +136,7 @@ class FileQueueAdapter(QueueAdapter):
         return m
 
     def _get_message_id_from_file_path(self, message_file_path):
-        (message_path, message_file_name) = os.path.split(message_file_path)
+        (message_path, message_file_name) = os.path.split(message_file_path)  #pylint: disable=unused-variable
         return self._get_message_id_from_file_name(message_file_name)
 
     def _get_message_id_from_file_name(self, message_file_name):
