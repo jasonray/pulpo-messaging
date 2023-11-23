@@ -2,6 +2,7 @@ import os
 import uuid
 import time
 import datetime
+import typing
 from statman import Statman
 
 
@@ -283,10 +284,27 @@ class FileQueueAdapter(QueueAdapter):
 
 class Kessel():
     _queue_adapter = None
+    __options = None
 
-    def __init__(self):
+    def __init__(self, options: typing.Dict):
         self.log('init queue adapter')
+
+        if not options:
+            options = {}
+        self.__options = options
+
         self._queue_adapter = FileQueueAdapter('/tmp/kessel/fqa')
+
+    def option(self, key: str, default_value: typing.Any = None):
+        option_value = self.__options.get(key)
+        if option_value is not None:
+            return option_value
+        return default_value
+
+
+    @property
+    def shutdown_after_number_of_empty_iterations(self) -> int:
+        return self.option('shutdown_after_number_of_empty_iterations',5)
 
     @property
     def queue_adapter(self) -> QueueAdapter:
@@ -296,7 +314,7 @@ class Kessel():
         self.log('publish message to queue adapter')
         return self.queue_adapter.enqueue(message)
 
-    def initialize(self) -> Message:
+    def initialize(self, options: typing.Dict) -> Message:
         self.log('starting kessel')
         continue_processing = True
         iterations_with_no_messages = 0
@@ -321,7 +339,7 @@ class Kessel():
                 Statman.stopwatch('kessel.message_streak_tm').stop()
                 self.print_metrics()
 
-                if iterations_with_no_messages > 3:
+                if iterations_with_no_messages > self.shutdown_after_number_of_empty_iterations:
                     self.log('no message available, shutdown')
                     continue_processing = False
                 else:
