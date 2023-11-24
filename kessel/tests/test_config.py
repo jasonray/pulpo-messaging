@@ -55,3 +55,17 @@ class TestKessel(unittest.TestCase):
         self.assertEqual(config.get('shutdown_after_number_of_empty_iterations'),7)
         self.assertEqual(config.get('file_queue_adapter.base_path'),'/tmp/kessel/fqa')
         self.assertEqual(config.get('file_queue_adapter').get('base_path'),'/tmp/kessel/fqa')
+
+    def test_load_config_from_file_then_apply_args(self):
+        config = Config(json_file_path='./kessel-config.json')
+        self.assertEqual(config.get('shutdown_after_number_of_empty_iterations'),7)
+        self.assertEqual(config.get('file_queue_adapter.base_path'),'/tmp/kessel/fqa')
+
+        args={}
+        args['shutdown_after_number_of_empty_iterations']=10
+        args['file_queue_adapter.base_path']='/t/k/fqa'
+
+        config.process_args(args)
+
+        self.assertEqual(config.get('file_queue_adapter.base_path'),'/t/k/fqa')
+        self.assertEqual(config.get('file_queue_adapter').get('base_path'),'/t/k/fqa')

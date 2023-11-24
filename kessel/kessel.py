@@ -4,6 +4,7 @@ import time
 import datetime
 import typing
 import json
+import argparse
 from statman import Statman
 
 
@@ -53,6 +54,22 @@ class Config():
             self.__options = options
         elif isinstance(options, Config):
             self.__options = options.__options
+
+    def process_args(self, args: typing.Dict):
+        if args:
+            print(f'processing args [{args}]')
+            if isinstance(args, argparse.Namespace):
+                args=vars(args)
+                print(f'converted args to dictionary [{args}]')
+
+            for arg in args:
+                print(f'processing args [arg={arg}]')
+                # value = getattr(args, arg)
+                value = args.get(arg)
+                print(f'processing args [arg={arg}][value={value}]')
+                if value:
+                    print(f'set config [key={arg}][value={value}]')
+                    self.set(arg,value)
 
     def _load_options_from_file(self, json_file_path: str=None) -> typing.Dict:
         options= json.load(open(json_file_path, "rb"))
