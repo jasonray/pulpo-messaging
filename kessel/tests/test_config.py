@@ -8,3 +8,9 @@ class TestKessel(unittest.TestCase):
         options['k']='v'
         config = Config(options=options)
         self.assertEqual(config.get('k'), 'v')
+
+    def test_config_get_empty(self):
+        options = {}
+        options['k']='v'
+        config = Config(options=options)
+        self.assertEqual(config.get('k2'), None)
