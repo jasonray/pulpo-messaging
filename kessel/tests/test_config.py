@@ -14,3 +14,10 @@ class TestKessel(unittest.TestCase):
         options['k']='v'
         config = Config(options=options)
         self.assertEqual(config.get('k2'), None)
+
+    def test_config_set(self):
+        options = {}
+        options['k']='v'
+        config = Config()
+        config.set('k','v')
+        self.assertEqual(config.get('k'), 'v')
