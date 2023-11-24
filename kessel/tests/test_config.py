@@ -1,0 +1,10 @@
+import unittest
+from kessel.kessel import Config
+
+class TestKessel(unittest.TestCase):
+
+    def test_config_get(self):
+        options = {}
+        options['k']='v'
+        config = Config(options=options)
+        self.assertEqual(config.get('k'), 'v')
