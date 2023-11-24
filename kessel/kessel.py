@@ -50,13 +50,48 @@ class Config():
             self.__options = options.__options
 
     def get(self, key: str, default_value: typing.Any = None):
-        option_value = self.__options.get(key)
-        if option_value is not None:
-            return option_value
-        return default_value
+        keys = key.split('.')
 
+        value = self.__options
+        for key in keys:
+            if value:
+                if key in value:
+                    value = value[key]
+                else:
+                    value = None
+            else:
+                value = None
+
+        if not value:
+            value = default_value
+
+        return value
+
+
+    # support key=a.b.c where it will create intermediate dictionaries
     def set(self, key: str, value: typing.Any):
-        self.__options[key]=value
+        print('options.set')
+        keys = key.split('.')
+
+        parent = self.__options
+        print(f'options', self.__options)
+        print(f'keys [keys:{keys}][key count:{len(keys)}]')
+        for key_number in range(0, len(keys)-1):
+            key = keys[key_number]
+            print(f'iterate keys [key_num:{key_number}][key={key}][parent={parent}]')
+            if not key in parent:
+                print(f'init item [key={key}][parent={parent}]')
+                parent[key]={}
+                print(f'init item complete [key={key}][parent={parent}]')
+            parent = parent.get(key)
+            print(f'new parent [parent={parent}]')
+            print(f'options l', self.__options)
+
+        last_key = keys[len(keys)-1]
+        print(f'set parent to value [parent={parent}][last_key={last_key}][value={value}]')
+        parent[ last_key]=value
+        print(f'options', self.__options)
+
 
 class QueueAdapter():
 
