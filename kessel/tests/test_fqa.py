@@ -142,7 +142,7 @@ class TestFqa(unittest.TestCase):
         self.assertEqual(fqa.config.lock_path, expected_lock_path)
 
         lock_file_path = fqa._get_lock_file_path(message_id=message_id)
-        self.assertEquals(lock_file_path, expected_lock_file_path)
+        self.assertEqual(lock_file_path, expected_lock_file_path)
 
         message_file_path = fqa._get_message_file_path(message_id=message_id)
-        self.assertEquals(message_file_path, expected_message_file_path)
+        self.assertEqual(message_file_path, expected_message_file_path)
