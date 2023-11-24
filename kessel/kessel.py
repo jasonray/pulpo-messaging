@@ -49,11 +49,14 @@ class Config():
         elif isinstance(options, Config):
             self.__options = options.__options
 
-    def option(self, key: str, default_value: typing.Any = None):
+    def get(self, key: str, default_value: typing.Any = None):
         option_value = self.__options.get(key)
         if option_value is not None:
             return option_value
-        return default_value    
+        return default_value
+
+    def set(self, key: str, value: typing.Any):
+        self.__options[key]=value
 
 class QueueAdapter():
 
@@ -76,7 +79,7 @@ class FileQueueAdapterConfig(Config):
 
     @property
     def base_path(self:Config) -> str:
-        return self.option('base_path', '/tmp/kessel/')    
+        return self.get('base_path', '/tmp/kessel/')    
 
     @property
     def lock_path(self:Config) -> str:
@@ -315,11 +318,11 @@ class KesselConfig(Config):
 
     @property
     def shutdown_after_number_of_empty_iterations(self) -> int:
-        return self.option('shutdown_after_number_of_empty_iterations',5)
+        return self.get('shutdown_after_number_of_empty_iterations',5)
 
     @property
     def queue_adapter_type(self) -> str:
-        return self.option('queue_adapter_type',None)
+        return self.get('queue_adapter_type',None)
 
 class Kessel():
     _queue_adapter = None
@@ -329,8 +332,8 @@ class Kessel():
         self.log('init queue adapter')
         self._config = KesselConfig(options)
 
-        if self.config.queue_adapter_type=='FileQueueAdapter':
-            self._queue_adapter = FileQueueAdapter(options['file_queue_adapter'])
+        if self.config.queue_adapter_type=='FileQueueAdapter':            
+            self._queue_adapter = FileQueueAdapter(self.config.get('file_queue_adapter'))
         else:
             raise Exception('invalid queue adapter type')
 
