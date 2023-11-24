@@ -49,3 +49,9 @@ class TestKessel(unittest.TestCase):
         self.assertIsNone(config.get('k.k2b.k3d'))
         self.assertIsNone(config.get('k.k2b.k3.x'))
         self.assertIsNone(config.get('k.k2b.x.x'))
+
+    def test_load_config_from_file(self):
+        config = Config(json_file_path='./kessel-config.json')
+        self.assertEqual(config.get('shutdown_after_number_of_empty_iterations'),7)
+        self.assertEqual(config.get('file_queue_adapter.base_path'),'/tmp/kessel/fqa')
+        self.assertEqual(config.get('file_queue_adapter').get('base_path'),'/tmp/kessel/fqa')

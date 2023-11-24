@@ -3,6 +3,7 @@ import uuid
 import time
 import datetime
 import typing
+import json
 from statman import Statman
 
 
@@ -42,13 +43,21 @@ class Message():
 class Config():
     __options = None
 
-    def __init__(self, options: typing.Dict = None):
-        if not options:
-            self.__options = {}
-        elif isinstance(options, dict):
+    def __init__(self, options: typing.Dict = None, json_file_path: str=None):
+        if not options and json_file_path:
+            options = self._load_options_from_file(json_file_path=json_file_path)
+        elif not options :
+            options={}
+
+        if isinstance(options, dict):
             self.__options = options
         elif isinstance(options, Config):
             self.__options = options.__options
+
+    def _load_options_from_file(self, json_file_path: str=None) -> typing.Dict:
+        options= json.load(open(json_file_path, "rb"))
+        return options
+
 
     def get(self, key: str, default_value: typing.Any = None):
         keys = key.split('.')
@@ -110,8 +119,8 @@ class QueueAdapter():
 
 class FileQueueAdapterConfig(Config):
 
-    def __init__(self, options: typing.Dict = None):
-        super(FileQueueAdapterConfig, self).__init__(options)
+    def __init__(self, options: typing.Dict = None, json_file_path: str=None) :
+        super(FileQueueAdapterConfig, self).__init__(options=options, json_file_path=json_file_path)
 
     @property
     def base_path(self: Config) -> str:
@@ -349,8 +358,8 @@ class FileQueueAdapter(QueueAdapter):
 
 class KesselConfig(Config):
 
-    def __init__(self, options: typing.Dict = None):
-        super(KesselConfig, self).__init__(options)
+    def __init__(self, options: typing.Dict = None, json_file_path: str=None) :
+        super(KesselConfig, self).__init__(options=options, json_file_path=json_file_path)
 
     @property
     def shutdown_after_number_of_empty_iterations(self) -> int:

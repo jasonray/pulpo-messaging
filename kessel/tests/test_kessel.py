@@ -3,7 +3,7 @@ import uuid
 import os
 import unittest
 import json
-from kessel.kessel import FileQueueAdapter
+from kessel.kessel import FileQueueAdapter, KesselConfig
 from kessel.kessel import QueueAdapter
 from kessel.kessel import Message
 from kessel.kessel import Kessel
@@ -24,8 +24,13 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(kessel.config.get('file_queue_adapter').get('base_path') , '/tmp/kessel/fqa')
 
     def test_load_config_from_file(self):
-        options = json.load(open('./kessel-config.json', 'rb'))  # pylint: disable=consider-using-with
-        print(options)
-        kessel = Kessel(options)
+        config = Config(json_file_path='./kessel-config.json')
+        kessel = Kessel(config)
+        self.assertEqual(kessel.config.shutdown_after_number_of_empty_iterations,7)
+        self.assertEqual(kessel.config.get('file_queue_adapter').get('base_path') , '/tmp/kessel/fqa')
+
+    def test_load_config_from_file_2(self):
+        config = KesselConfig(json_file_path='./kessel-config.json')
+        kessel = Kessel(config)
         self.assertEqual(kessel.config.shutdown_after_number_of_empty_iterations,7)
         self.assertEqual(kessel.config.get('file_queue_adapter').get('base_path') , '/tmp/kessel/fqa')
