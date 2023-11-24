@@ -1,3 +1,7 @@
 {
-    "shutdown_after_number_of_empty_iterations": 5
+    "shutdown_after_number_of_empty_iterations": 7,
+    "queue_adapter_type": "FileQueueAdapter",
+    "file_queue_adapter": {
+        "base_path": "/tmp/kessel/fqa"
+    }
 }

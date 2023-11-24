@@ -115,7 +115,7 @@ class FileQueueAdapterConfig(Config):
 
     @property
     def base_path(self: Config) -> str:
-        return self.get('base_path', '/tmp/kessel/')
+        return self.get('base_path', '/tmp/kessel/default')
 
     @property
     def lock_path(self: Config) -> str:
