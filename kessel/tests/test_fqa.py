@@ -26,7 +26,7 @@ class TestFqaCompliance(unittest.TestCase):
 
     def queue_adapter_factory(self) -> QueueAdapter:
         options = {}
-        options['base_path']=get_unique_base_path('fqa-compliance')
+        options['base_path'] = get_unique_base_path('fqa-compliance')
         return FileQueueAdapter(options=options)
 
     def test_enqueue_dequeue_message(self):
@@ -120,7 +120,7 @@ class TestFqa(unittest.TestCase):
 
     def file_queue_adapter_factory(self, tag: str = 'fqa') -> FileQueueAdapter:
         options = {}
-        options['base_path']=get_unique_base_path('fqa-compliance')
+        options['base_path'] = get_unique_base_path('fqa-compliance')
         return FileQueueAdapter(options=options)
 
     def test_construct(self):

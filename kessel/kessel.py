@@ -38,10 +38,11 @@ class Message():
     def payload(self):
         return self._payload
 
+
 class Config():
     __options = None
 
-    def __init__(self, options: typing.Dict=None):
+    def __init__(self, options: typing.Dict = None):
         if not options:
             self.__options = {}
         elif isinstance(options, dict):
@@ -67,7 +68,6 @@ class Config():
 
         return value
 
-
     # support key=a.b.c where it will create intermediate dictionaries
     def set(self, key: str, value: typing.Any):
         print('options.set')
@@ -76,20 +76,20 @@ class Config():
         parent = self.__options
         print(f'options', self.__options)
         print(f'keys [keys:{keys}][key count:{len(keys)}]')
-        for key_number in range(0, len(keys)-1):
+        for key_number in range(0, len(keys) - 1):
             key = keys[key_number]
             print(f'iterate keys [key_num:{key_number}][key={key}][parent={parent}]')
             if not key in parent:
                 print(f'init item [key={key}][parent={parent}]')
-                parent[key]={}
+                parent[key] = {}
                 print(f'init item complete [key={key}][parent={parent}]')
             parent = parent.get(key)
             print(f'new parent [parent={parent}]')
             print(f'options l', self.__options)
 
-        last_key = keys[len(keys)-1]
+        last_key = keys[len(keys) - 1]
         print(f'set parent to value [parent={parent}][last_key={last_key}][value={value}]')
-        parent[ last_key]=value
+        parent[last_key] = value
         print(f'options', self.__options)
 
 
@@ -107,23 +107,25 @@ class QueueAdapter():
     def rollback(self, message: Message) -> Message:
         pass
 
+
 class FileQueueAdapterConfig(Config):
 
-    def __init__(self, options: typing.Dict=None):
+    def __init__(self, options: typing.Dict = None):
         super(FileQueueAdapterConfig, self).__init__(options)
 
     @property
-    def base_path(self:Config) -> str:
-        return self.get('base_path', '/tmp/kessel/')    
+    def base_path(self: Config) -> str:
+        return self.get('base_path', '/tmp/kessel/')
 
     @property
-    def lock_path(self:Config) -> str:
+    def lock_path(self: Config) -> str:
         return os.path.join(self.base_path, 'lock')
 
-class FileQueueAdapter(QueueAdapter):
-    _config=None
 
-    def __init__(self, options:typing.Dict):
+class FileQueueAdapter(QueueAdapter):
+    _config = None
+
+    def __init__(self, options: typing.Dict):
         super().__init__()
         self.log('FileQueueAdapter init')
 
@@ -131,7 +133,7 @@ class FileQueueAdapter(QueueAdapter):
         self._create_message_directories()
 
     def _create_message_directories(self):
-        os.makedirs(name=self.config.base_path , mode=0o777, exist_ok=True)
+        os.makedirs(name=self.config.base_path, mode=0o777, exist_ok=True)
         os.makedirs(name=self.config.lock_path, mode=0o777, exist_ok=True)
 
     @property
@@ -345,19 +347,19 @@ class FileQueueAdapter(QueueAdapter):
         #     self.log(output)
 
 
-
 class KesselConfig(Config):
 
-    def __init__(self, options: typing.Dict=None):
+    def __init__(self, options: typing.Dict = None):
         super(KesselConfig, self).__init__(options)
 
     @property
     def shutdown_after_number_of_empty_iterations(self) -> int:
-        return self.get('shutdown_after_number_of_empty_iterations',5)
+        return self.get('shutdown_after_number_of_empty_iterations', 5)
 
     @property
     def queue_adapter_type(self) -> str:
-        return self.get('queue_adapter_type',None)
+        return self.get('queue_adapter_type', None)
+
 
 class Kessel():
     _queue_adapter = None
@@ -367,12 +369,12 @@ class Kessel():
         self.log('init queue adapter')
         self._config = KesselConfig(options)
 
-        if self.config.queue_adapter_type=='FileQueueAdapter':            
+        if self.config.queue_adapter_type == 'FileQueueAdapter':
             self._queue_adapter = FileQueueAdapter(self.config.get('file_queue_adapter'))
         else:
             raise Exception('invalid queue adapter type')
 
-    @property 
+    @property
     def config(self) -> KesselConfig:
         return self._config
 

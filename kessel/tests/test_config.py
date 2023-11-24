@@ -1,29 +1,30 @@
 import unittest
 from kessel.kessel import Config
 
+
 class TestKessel(unittest.TestCase):
 
     def test_config_get(self):
         options = {}
-        options['k']='v'
+        options['k'] = 'v'
         config = Config(options=options)
         self.assertEqual(config.get('k'), 'v')
 
     def test_config_get_empty(self):
         options = {}
-        options['k']='v'
+        options['k'] = 'v'
         config = Config(options=options)
         self.assertEqual(config.get('k2'), None)
 
     def test_config_set(self):
         config = Config()
-        config.set('k','v')
+        config.set('k', 'v')
         # print('config', config.__options)
         self.assertEqual(config.get('k'), 'v')
 
     def test_config_manual_nested(self):
         options = {}
-        options['k']={'k2':'v'}
+        options['k'] = {'k2': 'v'}
         config = Config(options)
         self.assertEqual(config.get('k').get('k2'), 'v')
 
