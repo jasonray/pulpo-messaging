@@ -10,7 +10,7 @@ from kessel.kessel import Config
 from statman import Statman
 from statman import Stopwatch
 
-class TestKessel(unittest.TestCase):
+class TestConfig(unittest.TestCase):
 
     def test_config_shutdown_after_number_of_empty_iterations(self):
         config = Config()
