@@ -58,6 +58,9 @@ class Config():
     def process_args(self, args: typing.Dict):
         if args:
             print(f'processing args [{args}]')
+            if isinstance(args, argparse.ArgumentParser):
+                args = args.parse_args()
+                print(f'process command line arguments [{args}]')
             if isinstance(args, argparse.Namespace):
                 args=vars(args)
                 print(f'converted args to dictionary [{args}]')
@@ -386,6 +389,10 @@ class KesselConfig(Config):
     def queue_adapter_type(self) -> str:
         return self.get('queue_adapter_type', None)
 
+    @property
+    def sleep_duration(self) -> int:
+        return self.get('sleep_duration', 5)
+
 
 class Kessel():
     _queue_adapter = None
@@ -412,7 +419,7 @@ class Kessel():
         self.log('publish message to queue adapter')
         return self.queue_adapter.enqueue(message)
 
-    def initialize(self, options: typing.Dict) -> Message:
+    def initialize(self) -> Message:
         self.log('starting kessel')
         continue_processing = True
         iterations_with_no_messages = 0
@@ -442,7 +449,7 @@ class Kessel():
                     continue_processing = False
                 else:
                     self.log('no message available, sleep')
-                    time.sleep(5)
+                    time.sleep( self.config.sleep_duration )
                     Statman.gauge('kessel.message_streak_cnt').value = 0
                     Statman.stopwatch('kessel.message_streak_tm').reset()
                     Statman.stopwatch('kessel.message_streak_tm').start()
