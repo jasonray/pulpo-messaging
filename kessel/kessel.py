@@ -44,11 +44,11 @@ class Message():
 class Config():
     __options = None
 
-    def __init__(self, options: typing.Dict = None, json_file_path: str=None):
+    def __init__(self, options: typing.Dict = None, json_file_path: str = None):
         if not options and json_file_path:
             options = self._load_options_from_file(json_file_path=json_file_path)
-        elif not options :
-            options={}
+        elif not options:
+            options = {}
 
         if isinstance(options, dict):
             self.__options = options
@@ -62,7 +62,7 @@ class Config():
                 args = args.parse_args()
                 print(f'process command line arguments [{args}]')
             if isinstance(args, argparse.Namespace):
-                args=vars(args)
+                args = vars(args)
                 print(f'converted args to dictionary [{args}]')
 
             for arg in args:
@@ -72,12 +72,11 @@ class Config():
                 print(f'processing args [arg={arg}][value={value}]')
                 if value:
                     print(f'set config [key={arg}][value={value}]')
-                    self.set(arg,value)
+                    self.set(arg, value)
 
-    def _load_options_from_file(self, json_file_path: str=None) -> typing.Dict:
-        options= json.load(open(json_file_path, "rb"))
+    def _load_options_from_file(self, json_file_path: str = None) -> typing.Dict:
+        options = json.load(open(json_file_path, "rb"))
         return options
-
 
     def get(self, key: str, default_value: typing.Any = None):
         keys = key.split('.')
@@ -139,8 +138,9 @@ class QueueAdapter():
 
 class FileQueueAdapterConfig(Config):
 
-    def __init__(self, options: typing.Dict = None, json_file_path: str=None) :
-        super(FileQueueAdapterConfig, self).__init__(options=options, json_file_path=json_file_path)
+    def __init__(self, options: typing.Dict = None, json_file_path: str = None):
+        super(FileQueueAdapterConfig, self).__init__(options=options,
+                                                     json_file_path=json_file_path)
 
     @property
     def base_path(self: Config) -> str:
@@ -378,7 +378,7 @@ class FileQueueAdapter(QueueAdapter):
 
 class KesselConfig(Config):
 
-    def __init__(self, options: typing.Dict = None, json_file_path: str=None) :
+    def __init__(self, options: typing.Dict = None, json_file_path: str = None):
         super(KesselConfig, self).__init__(options=options, json_file_path=json_file_path)
 
     @property
@@ -449,7 +449,7 @@ class Kessel():
                     continue_processing = False
                 else:
                     self.log('no message available, sleep')
-                    time.sleep( self.config.sleep_duration )
+                    time.sleep(self.config.sleep_duration)
                     Statman.gauge('kessel.message_streak_cnt').value = 0
                     Statman.stopwatch('kessel.message_streak_tm').reset()
                     Statman.stopwatch('kessel.message_streak_tm').start()
