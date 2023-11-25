@@ -449,7 +449,7 @@ class Kessel():
                 Statman.stopwatch('kessel.message_streak_tm').stop()
                 self.print_metrics()
 
-                if iterations_with_no_messages > self.config.shutdown_after_number_of_empty_iterations:
+                if iterations_with_no_messages >= self.config.shutdown_after_number_of_empty_iterations:
                     self.log('no message available, shutdown')
                     continue_processing = False
                 else:
