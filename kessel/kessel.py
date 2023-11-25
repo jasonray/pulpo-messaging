@@ -392,6 +392,11 @@ class KesselConfig(Config):
     @property
     def sleep_duration(self) -> int:
         return self.get('sleep_duration', 5)
+    
+    @property
+    def enable_output_buffering(self) -> bool:
+        return self.get(key='enable_output_buffering', default_value=False)
+
 
 
 class Kessel():
@@ -438,8 +443,8 @@ class Kessel():
                 Statman.gauge('kessel.messages_processed').increment()
                 self.log('commit complete')
             else:
-                self.log('no message available')
                 iterations_with_no_messages += 1
+                self.log(f'no message available [iteration with no messages = {iterations_with_no_messages}][max = {self.config.shutdown_after_number_of_empty_iterations}]')
 
                 Statman.stopwatch('kessel.message_streak_tm').stop()
                 self.print_metrics()
@@ -478,7 +483,10 @@ class Kessel():
 
         TEMPLATE = "[p:{pid}]\t[{dt}]\t{message}"
         output = TEMPLATE.format(pid=pid, dt=dt, message=message)
-        # if self.disable_output_buffering:
-        print(output, flush=True)
-        # else:
-        #     self.log(output)
+
+        flush=False
+        if self.config:
+            if not self.config.enable_output_buffering:
+                flush=True
+
+        print(output, flush=False)

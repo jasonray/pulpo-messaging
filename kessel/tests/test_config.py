@@ -2,7 +2,7 @@ import unittest
 from kessel.kessel import Config
 
 
-class TestKessel(unittest.TestCase):
+class TestConfig(unittest.TestCase):
 
     def test_config_get(self):
         options = {}
