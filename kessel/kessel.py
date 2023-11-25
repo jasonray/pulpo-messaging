@@ -485,8 +485,7 @@ class Kessel():
         output = TEMPLATE.format(pid=pid, dt=dt, message=message)
 
         flush=False
-        if self.config:
-            if not self.config.enable_output_buffering:
-                flush=True
+        if self.config and not self.config.enable_output_buffering:
+            flush=True
 
         print(output, flush=False)
