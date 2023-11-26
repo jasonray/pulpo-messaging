@@ -222,18 +222,26 @@ class FileQueueAdapter(QueueAdapter):
     def _load_message_from_file(self, file_path):
         self.log(f'load message [file_path:{file_path}]')
         m = None
-        if self.config.message_format == 'body_only':
-            with open(file=file_path, encoding="utf-8", mode='r') as f:
+        with open(file=file_path, encoding="utf-8", mode='r') as f:
+            if self.config.message_format == 'body_only':
                 payload = f.read()
                 payload = self._trim(payload)
-        else:
-            raise Exception(f'invalid message format config setting {self.config.message_format}')
+                message_id = self._get_message_id_from_file_path(file_path)
+                m = Message(payload=payload)
+                self.log(f'load message id from file path [file_path:{file_path}]')
+                m._id = message_id
+                self.log(f'extracted message id [file_path:{file_path}]=>[id:{message_id}]')
+            elif self.config.message_format == 'json':
+                message_parts = json.load(f)
+                payload = message_parts['payload']
+                message_id = message_parts['id']
+                header = message_parts['header']
+                m = Message(payload=payload, header=header)
+                m._id = message_id
+            else:
+                raise Exception(
+                    f'invalid message format config setting {self.config.message_format}')
 
-        self.log(f'load message id from file path [file_path:{file_path}]')
-        message_id = self._get_message_id_from_file_path(file_path)
-        self.log(f'extracted message id [file_path:{file_path}]=>[id:{message_id}]')
-        m = Message(payload=payload)
-        m._id = message_id
         return m
 
     def _get_message_id_from_file_path(self, message_file_path):
@@ -252,9 +260,18 @@ class FileQueueAdapter(QueueAdapter):
     def _save_message_to_file(self, message: Message, path_file: str):
         if self.config.message_format == 'body_only':
             serialized_message = message.payload
+        elif self.config.message_format == 'json':
+            message_parts = {}
+            message_parts['id'] = message.id
+            message_parts['header'] = message.header
+            message_parts['payload'] = message.payload
+            serialized_message = json.dumps(message_parts, indent=2)
         else:
             raise Exception(f'invalid message format config setting {self.config.message_format}')
-        self.log(f'_save_message_to_file [id={message.id}][{path_file}]')
+        self.log(
+            f'_save_message_to_file [id={message.id}][path={path_file}][format={self.config.message_format}]'
+        )
+        self.log(f'_save_message_to_file [{serialized_message}]')
         with open(file=path_file, encoding="utf-8", mode='w') as f:
             f.write(serialized_message)
 
