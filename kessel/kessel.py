@@ -55,7 +55,7 @@ class Config():
         elif isinstance(options, Config):
             self.__options = options.__options
 
-    def process_args(self, args: typing.Dict):
+    def process_args(self, args: dict):
         if args:
             print(f'processing args [{args}]')
             if isinstance(args, argparse.ArgumentParser):
@@ -74,7 +74,7 @@ class Config():
                     print(f'set config [key={arg}][value={value}]')
                     self.set(arg, value)
 
-    def _load_options_from_file(self, json_file_path: str = None) -> typing.Dict:
+    def _load_options_from_file(self, json_file_path: str = None) -> dict:
         options = None
         with open(json_file_path, "rb") as f:
             options = json.load(f)
@@ -140,7 +140,7 @@ class QueueAdapter():
 
 class FileQueueAdapterConfig(Config):
 
-    def __init__(self, options: typing.Dict = None, json_file_path: str = None):
+    def __init__(self, options: dict = None, json_file_path: str = None):
         super(FileQueueAdapterConfig, self).__init__(options=options,
                                                      json_file_path=json_file_path)
 
@@ -156,7 +156,7 @@ class FileQueueAdapterConfig(Config):
 class FileQueueAdapter(QueueAdapter):
     _config = None
 
-    def __init__(self, options: typing.Dict):
+    def __init__(self, options: dict):
         super().__init__()
         self.log('FileQueueAdapter init')
 
@@ -380,7 +380,7 @@ class FileQueueAdapter(QueueAdapter):
 
 class KesselConfig(Config):
 
-    def __init__(self, options: typing.Dict = None, json_file_path: str = None):
+    def __init__(self, options: dict = None, json_file_path: str = None):
         super(KesselConfig, self).__init__(options=options, json_file_path=json_file_path)
 
     @property
@@ -404,7 +404,7 @@ class Kessel():
     _queue_adapter = None
     _config = None
 
-    def __init__(self, options: typing.Dict):
+    def __init__(self, options: dict):
         self.log('init queue adapter')
         self._config = KesselConfig(options)
 
