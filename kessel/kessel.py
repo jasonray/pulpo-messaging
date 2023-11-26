@@ -151,6 +151,10 @@ class FileQueueAdapterConfig(Config):
     def lock_path(self: Config) -> str:
         return os.path.join(self.base_path, 'lock')
 
+    @property
+    def message_format(self: Config) -> str:
+        return self.get('message_format', 'body_only')
+
 
 class FileQueueAdapter(QueueAdapter):
     _config = None
@@ -218,11 +222,14 @@ class FileQueueAdapter(QueueAdapter):
     def _load_message_from_file(self, file_path):
         self.log(f'load message [file_path:{file_path}]')
         m = None
-        with open(file=file_path, encoding="utf-8", mode='r') as f:
-            header = f.readline()
-            header = self._trim(header)
-            payload = f.readline()
-            payload = self._trim(payload)
+        if self.config.message_format=='body_only':
+            with open(file=file_path, encoding="utf-8", mode='r') as f:
+                header = f.readline()
+                header = self._trim(header)
+                payload = f.readline()
+                payload = self._trim(payload)
+        else:
+            raise Exception(f'invalid message format config setting {self.config.message_format}')
 
         self.log(f'load message id from file path [file_path:{file_path}]')
         message_id = self._get_message_id_from_file_path(file_path)
@@ -245,7 +252,10 @@ class FileQueueAdapter(QueueAdapter):
 
     # https://docs.python.org/3/tutorial/inputoutput.html#saving-structured-data-with-json
     def _save_message_to_file(self, message: Message, path_file: str):
-        serialized_message = str(message)
+        if self.config.message_format=='body_only':
+            serialized_message = str(message)
+        else:
+            raise Exception(f'invalid message format config setting {self.config.message_format}')
         self.log(f'_save_message_to_file [id={message.id}][{path_file}]')
         with open(file=path_file, encoding="utf-8", mode='w') as f:
             f.write(serialized_message)
