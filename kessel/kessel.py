@@ -44,7 +44,7 @@ class Message():
 class Config():
     __options = None
 
-    def __init__(self, options: typing.Dict = None, json_file_path: str = None):
+    def __init__(self, options: dict = None, json_file_path: str = None):
         if not options and json_file_path:
             options = self._load_options_from_file(json_file_path=json_file_path)
         elif not options:
