@@ -151,6 +151,10 @@ class FileQueueAdapterConfig(Config):
     def lock_path(self: Config) -> str:
         return os.path.join(self.base_path, 'lock')
 
+    @property
+    def message_format(self: Config) -> str:
+        return self.get('message_format', 'body_only')
+
 
 class FileQueueAdapter(QueueAdapter):
     _config = None
@@ -219,16 +223,25 @@ class FileQueueAdapter(QueueAdapter):
         self.log(f'load message [file_path:{file_path}]')
         m = None
         with open(file=file_path, encoding="utf-8", mode='r') as f:
-            header = f.readline()
-            header = self._trim(header)
-            payload = f.readline()
-            payload = self._trim(payload)
+            if self.config.message_format == 'body_only':
+                payload = f.read()
+                payload = self._trim(payload)
+                message_id = self._get_message_id_from_file_path(file_path)
+                m = Message(payload=payload)
+                self.log(f'load message id from file path [file_path:{file_path}]')
+                m._id = message_id
+                self.log(f'extracted message id [file_path:{file_path}]=>[id:{message_id}]')
+            elif self.config.message_format == 'json':
+                message_parts = json.load(f)
+                payload = message_parts['payload']
+                message_id = message_parts['id']
+                header = message_parts['header']
+                m = Message(payload=payload, header=header)
+                m._id = message_id
+            else:
+                raise Exception(
+                    f'invalid message format config setting {self.config.message_format}')
 
-        self.log(f'load message id from file path [file_path:{file_path}]')
-        message_id = self._get_message_id_from_file_path(file_path)
-        self.log(f'extracted message id [file_path:{file_path}]=>[id:{message_id}]')
-        m = Message(payload=payload, header=header)
-        m._id = message_id
         return m
 
     def _get_message_id_from_file_path(self, message_file_path):
@@ -245,8 +258,20 @@ class FileQueueAdapter(QueueAdapter):
 
     # https://docs.python.org/3/tutorial/inputoutput.html#saving-structured-data-with-json
     def _save_message_to_file(self, message: Message, path_file: str):
-        serialized_message = str(message)
-        self.log(f'_save_message_to_file [id={message.id}][{path_file}]')
+        if self.config.message_format == 'body_only':
+            serialized_message = message.payload
+        elif self.config.message_format == 'json':
+            message_parts = {}
+            message_parts['id'] = message.id
+            message_parts['header'] = message.header
+            message_parts['payload'] = message.payload
+            serialized_message = json.dumps(message_parts, indent=2)
+        else:
+            raise Exception(f'invalid message format config setting {self.config.message_format}')
+        self.log(
+            f'_save_message_to_file [id={message.id}][path={path_file}][format={self.config.message_format}]'
+        )
+        self.log(f'_save_message_to_file [{serialized_message}]')
         with open(file=path_file, encoding="utf-8", mode='w') as f:
             f.write(serialized_message)
 
@@ -435,6 +460,7 @@ class Kessel():
             message = self.queue_adapter.dequeue()
             Statman.gauge('kessel.dequeue-attempts').increment()
             if message:
+                iterations_with_no_messages = 0
                 Statman.gauge('kessel.dequeue').increment()
                 Statman.gauge('kessel.message_streak_cnt').increment()
                 self.log(f'received message {message.id}')
