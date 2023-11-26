@@ -115,7 +115,7 @@ class Config():
                 print(f'init item complete [key={key}][parent={parent}]')
             parent = parent.get(key)
             print(f'new parent [parent={parent}]')
-            print(f'options l', self.__options)
+            print('options l', self.__options)
 
         last_key = keys[len(keys) - 1]
         print(f'set parent to value [parent={parent}][last_key={last_key}][value={value}]')
