@@ -75,9 +75,9 @@ class Config():
                     self.set(arg, value)
 
     def _load_options_from_file(self, json_file_path: str = None) -> typing.Dict:
-        options=None
+        options = None
         with open(json_file_path, "rb") as f:
-            options=json.load(f)
+            options = json.load(f)
         return options
 
     def get(self, key: str, default_value: typing.Any = None):
