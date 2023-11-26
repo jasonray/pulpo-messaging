@@ -460,6 +460,7 @@ class Kessel():
             message = self.queue_adapter.dequeue()
             Statman.gauge('kessel.dequeue-attempts').increment()
             if message:
+                iterations_with_no_messages = 0
                 Statman.gauge('kessel.dequeue').increment()
                 Statman.gauge('kessel.message_streak_cnt').increment()
                 self.log(f'received message {message.id}')
