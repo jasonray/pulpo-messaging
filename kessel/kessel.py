@@ -84,10 +84,10 @@ class Config():
         keys = key.split('.')
 
         value = self.__options
-        for key in keys:
+        for subkey in keys:
             if value:
-                if key in value:
-                    value = value[key]
+                if subkey in value:
+                    value = value[subkey]
                 else:
                     value = None
             else:
