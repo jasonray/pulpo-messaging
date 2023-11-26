@@ -501,7 +501,6 @@ class Kessel():
         self.log('- ' + str(Statman.get(metric_name)))
 
     def log(self, *argv):
-        x = ""
         message = ""
         for arg in argv:
             if not arg is None:
