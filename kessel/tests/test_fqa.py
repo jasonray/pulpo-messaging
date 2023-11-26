@@ -160,6 +160,6 @@ class TestFqa(unittest.TestCase):
 
         dq_1 = qa.dequeue()
 
-        self.assertEqual(dq_1.payload, payload + '.')
+        self.assertEqual(dq_1.payload, payload)
         self.assertEqual(dq_1.id, m1.id)
         self.assertEqual(dq_1.header, m1.header)
