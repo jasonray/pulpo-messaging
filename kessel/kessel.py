@@ -104,7 +104,7 @@ class Config():
         keys = key.split('.')
 
         parent = self.__options
-        print(f'options', self.__options)
+        print('options', self.__options)
         print(f'keys [keys:{keys}][key count:{len(keys)}]')
         for key_number in range(0, len(keys) - 1):
             key = keys[key_number]
