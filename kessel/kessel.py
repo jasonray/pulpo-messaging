@@ -500,7 +500,6 @@ class Kessel():
     def print_metric(self, metric_name):
         self.log('- ' + str(Statman.get(metric_name)))
 
-
     def log(self, *argv):
         message = ""
         for arg in argv:
