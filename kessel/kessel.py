@@ -222,11 +222,9 @@ class FileQueueAdapter(QueueAdapter):
     def _load_message_from_file(self, file_path):
         self.log(f'load message [file_path:{file_path}]')
         m = None
-        if self.config.message_format=='body_only':
+        if self.config.message_format == 'body_only':
             with open(file=file_path, encoding="utf-8", mode='r') as f:
-                header = f.readline()
-                header = self._trim(header)
-                payload = f.readline()
+                payload = f.read()
                 payload = self._trim(payload)
         else:
             raise Exception(f'invalid message format config setting {self.config.message_format}')
@@ -234,7 +232,7 @@ class FileQueueAdapter(QueueAdapter):
         self.log(f'load message id from file path [file_path:{file_path}]')
         message_id = self._get_message_id_from_file_path(file_path)
         self.log(f'extracted message id [file_path:{file_path}]=>[id:{message_id}]')
-        m = Message(payload=payload, header=header)
+        m = Message(payload=payload)
         m._id = message_id
         return m
 
@@ -252,8 +250,8 @@ class FileQueueAdapter(QueueAdapter):
 
     # https://docs.python.org/3/tutorial/inputoutput.html#saving-structured-data-with-json
     def _save_message_to_file(self, message: Message, path_file: str):
-        if self.config.message_format=='body_only':
-            serialized_message = str(message)
+        if self.config.message_format == 'body_only':
+            serialized_message = message.payload
         else:
             raise Exception(f'invalid message format config setting {self.config.message_format}')
         self.log(f'_save_message_to_file [id={message.id}][{path_file}]')
