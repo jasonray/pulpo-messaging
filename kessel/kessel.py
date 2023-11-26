@@ -141,8 +141,7 @@ class QueueAdapter():
 class FileQueueAdapterConfig(Config):
 
     def __init__(self, options: dict = None, json_file_path: str = None):
-        super(FileQueueAdapterConfig, self).__init__(options=options,
-                                                     json_file_path=json_file_path)
+        super().__init__(options=options, json_file_path=json_file_path)
 
     @property
     def base_path(self: Config) -> str:
@@ -381,7 +380,7 @@ class FileQueueAdapter(QueueAdapter):
 class KesselConfig(Config):
 
     def __init__(self, options: dict = None, json_file_path: str = None):
-        super(KesselConfig, self).__init__(options=options, json_file_path=json_file_path)
+        super().__init__(options=options, json_file_path=json_file_path)
 
     @property
     def shutdown_after_number_of_empty_iterations(self) -> int:
