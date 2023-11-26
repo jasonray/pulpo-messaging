@@ -120,7 +120,7 @@ class Config():
         last_key = keys[len(keys) - 1]
         print(f'set parent to value [parent={parent}][last_key={last_key}][value={value}]')
         parent[last_key] = value
-        print(f'options', self.__options)
+        print('options', self.__options)
 
 
 class QueueAdapter():
