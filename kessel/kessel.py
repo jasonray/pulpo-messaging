@@ -491,4 +491,4 @@ class Kessel():
         if self.config and not self.config.enable_output_buffering:
             flush = True
 
-        print(output, flush=False)
+        print(output, flush=flush)
