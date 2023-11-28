@@ -163,3 +163,14 @@ class TestFqa(unittest.TestCase):
         self.assertEqual(dq_1.payload, payload)
         self.assertEqual(dq_1.id, m1.id)
         self.assertEqual(dq_1.header, m1.header)
+
+    def test_skip_x_messages(self):
+        qa = self.file_queue_adapter_factory()
+        qa.config.set('skip_random_messages_range', 100)
+
+        m1 = Message(payload='test', header='h1')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+
+        self.assertEqual(dq_1.id, m1.id)
