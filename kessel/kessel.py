@@ -5,6 +5,7 @@ import datetime
 import typing
 import json
 import argparse
+import random
 from statman import Statman
 
 
@@ -155,6 +156,11 @@ class FileQueueAdapterConfig(Config):
     def message_format(self: Config) -> str:
         return self.get('message_format', 'body_only')
 
+    @property
+    def skip_random_messages_range(self: Config) -> int:
+        value = self.get('skip_random_messages_range', 0)
+        return int(value)
+
 
 class FileQueueAdapter(QueueAdapter):
     _config = None
@@ -191,6 +197,10 @@ class FileQueueAdapter(QueueAdapter):
 
         lock_file_path = None
         entries = self._get_message_file_list(self.config.base_path)
+        
+        skip_messages = random.randint(0, self.config.skip_random_messages_range  )
+        i = 0
+        last_file = None
 
         for file in entries:
             # self.log(f'checking file name: {file.name}')
@@ -198,13 +208,31 @@ class FileQueueAdapter(QueueAdapter):
             # self.log('file meets criteria')
             # message_path_file = os.path.join(self.config.base_path, file)
 
+            if (i>=skip_messages):
+                last_file = None
+                self.log(f'attempt to lock message: {file.path}')
+                lock_file_path = self._lock_file(file.path)
+                if lock_file_path:  # pylint: disable=no-else-break
+                    self.log('locked message')
+                    break
+                else:
+                    self.log('failed to lock message')
+            else:
+                # self.log(f'skip message [i={i}][skip={skip_messages}]')
+                last_file = file
+            
+            i += 1
+
+        if last_file and not lock_file_path:
+            file = last_file
+            self.log('skipped all messages, trying last message from loop')
             self.log(f'attempt to lock message: {file.path}')
             lock_file_path = self._lock_file(file.path)
             if lock_file_path:  # pylint: disable=no-else-break
                 self.log('locked message')
-                break
             else:
                 self.log('failed to lock message')
+
 
         m = None
         if lock_file_path:
@@ -454,6 +482,7 @@ class Kessel():
         continue_processing = True
         iterations_with_no_messages = 0
         Statman.stopwatch('kessel.message_streak_tm', autostart=True)
+        Statman.calculation('kessel.message_streak_messages_per_s').function = lambda : Statman.gauge('kessel.message_streak_cnt').value / Statman.stopwatch('kessel.message_streak_tm').value
         while continue_processing:
             self.log('kessel init begin dequeue')
 
@@ -475,7 +504,7 @@ class Kessel():
                 )
 
                 Statman.stopwatch('kessel.message_streak_tm').stop()
-                self.print_metrics()
+                Statman.report(output_stdout=False, log_method=self.log)
 
                 if iterations_with_no_messages >= self.config.shutdown_after_number_of_empty_iterations:
                     self.log('no message available, shutdown')
@@ -483,22 +512,8 @@ class Kessel():
                 else:
                     self.log('no message available, sleep')
                     time.sleep(self.config.sleep_duration)
-                    Statman.gauge('kessel.message_streak_cnt').value = 0
-                    Statman.stopwatch('kessel.message_streak_tm').reset()
                     Statman.stopwatch('kessel.message_streak_tm').start()
-
-    def print_metrics(self):
-        self.log('kessel metric report:')
-        self.print_metric('kessel.messages_processed')
-        self.print_metric('kessel.dequeue-attempts')
-        self.print_metric('kessel.dequeue')
-        self.print_metric('fqa.lock-check.exists.failed-lock.FileExistsError')
-        self.print_metric('fqa.lock-check.exists.failed-lock.FileNotFoundError')
-        self.print_metric('kessel.message_streak_cnt')
-        self.print_metric('kessel.message_streak_tm')
-
-    def print_metric(self, metric_name):
-        self.log('- ' + str(Statman.get(metric_name)))
+                    Statman.gauge('kessel.message_streak_cnt').value=0
 
     def log(self, *argv):
         message = ""

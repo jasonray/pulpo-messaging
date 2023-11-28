@@ -42,4 +42,4 @@ else:
     publish()
 
 Statman.stopwatch(name='publish-sample-messages.timing').print()
-print(Statman.stopwatch(name='publish-sample-messages.published-messages'))
+Statman.report(output_stdout=True)
