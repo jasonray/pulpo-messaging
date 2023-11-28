@@ -197,8 +197,8 @@ class FileQueueAdapter(QueueAdapter):
 
         lock_file_path = None
         entries = self._get_message_file_list(self.config.base_path)
-        
-        skip_messages = random.randint(0, self.config.skip_random_messages_range  )
+
+        skip_messages = random.randint(0, self.config.skip_random_messages_range)
         i = 0
         last_file = None
 
@@ -208,7 +208,7 @@ class FileQueueAdapter(QueueAdapter):
             # self.log('file meets criteria')
             # message_path_file = os.path.join(self.config.base_path, file)
 
-            if (i>=skip_messages):
+            if (i >= skip_messages):
                 last_file = None
                 self.log(f'attempt to lock message: {file.path}')
                 lock_file_path = self._lock_file(file.path)
@@ -220,7 +220,7 @@ class FileQueueAdapter(QueueAdapter):
             else:
                 # self.log(f'skip message [i={i}][skip={skip_messages}]')
                 last_file = file
-            
+
             i += 1
 
         if last_file and not lock_file_path:
@@ -232,7 +232,6 @@ class FileQueueAdapter(QueueAdapter):
                 self.log('locked message')
             else:
                 self.log('failed to lock message')
-
 
         m = None
         if lock_file_path:
@@ -482,7 +481,10 @@ class Kessel():
         continue_processing = True
         iterations_with_no_messages = 0
         Statman.stopwatch('kessel.message_streak_tm', autostart=True)
-        Statman.calculation('kessel.message_streak_messages_per_s').function = lambda : Statman.gauge('kessel.message_streak_cnt').value / Statman.stopwatch('kessel.message_streak_tm').value
+        Statman.calculation(
+            'kessel.message_streak_messages_per_s').function = lambda: Statman.gauge(
+                'kessel.message_streak_cnt').value / Statman.stopwatch('kessel.message_streak_tm'
+                                                                       ).value
         while continue_processing:
             self.log('kessel init begin dequeue')
 
@@ -513,7 +515,7 @@ class Kessel():
                     self.log('no message available, sleep')
                     time.sleep(self.config.sleep_duration)
                     Statman.stopwatch('kessel.message_streak_tm').start()
-                    Statman.gauge('kessel.message_streak_cnt').value=0
+                    Statman.gauge('kessel.message_streak_cnt').value = 0
 
     def log(self, *argv):
         message = ""

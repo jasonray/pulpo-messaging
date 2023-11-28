@@ -166,7 +166,7 @@ class TestFqa(unittest.TestCase):
 
     def test_skip_x_messages(self):
         qa = self.file_queue_adapter_factory()
-        qa.config.set('skip_random_messages_range',100)
+        qa.config.set('skip_random_messages_range', 100)
 
         m1 = Message(payload='test', header='h1')
         m1 = qa.enqueue(m1)
