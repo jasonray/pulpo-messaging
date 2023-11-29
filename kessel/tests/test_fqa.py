@@ -148,7 +148,7 @@ class TestFqa(unittest.TestCase):
         self.assertEqual(message_file_path, expected_message_file_path)
 
     def test_json_format(self):
-        qa = self.file_queue_adapter_factory(tag='json')
+        qa = self.file_queue_adapter_factory()
         qa.config.set('message_format', 'json')
 
         payload = 'hello world \n'
@@ -174,3 +174,18 @@ class TestFqa(unittest.TestCase):
         dq_1 = qa.dequeue()
 
         self.assertEqual(dq_1.id, m1.id)
+
+    def test_commit_moves_message_to_processed_directory(self):
+        qa = self.file_queue_adapter_factory()
+        qa.config.set('message_format', 'json')
+        qa.config.set('enable_history', True)
+
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        qa.commit(dq_1)
+
+        expected_historical_message_file_path = os.path.join(qa.config.history_path, dq_1.id + '.message')
+        print('expected_historical_message_file_path: ', expected_historical_message_file_path)
+        self.assertTrue(os.path.exists(expected_historical_message_file_path), "Historical message does not exist.")
