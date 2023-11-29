@@ -371,7 +371,7 @@ class KesselConfig(Config):
 
     @property
     def shutdown_after_number_of_empty_iterations(self) -> int:
-        return self.get('shutdown_after_number_of_empty_iterations', 5)
+        return self.getAsInt('shutdown_after_number_of_empty_iterations', 5)
 
     @property
     def queue_adapter_type(self) -> str:
