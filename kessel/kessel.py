@@ -383,7 +383,7 @@ class KesselConfig(Config):
 
     @property
     def enable_output_buffering(self) -> bool:
-        return self.get(key='enable_output_buffering', default_value=False)
+        return self.getAsBool(key='enable_output_buffering', default_value=False)
 
 
 class Kessel():
