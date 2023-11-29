@@ -281,8 +281,7 @@ class FileQueueAdapter(QueueAdapter):
                 m = Message(payload=payload, header=header)
                 m._id = message_id
             else:
-                raise Exception(
-                    f'invalid message format config setting {self.config.message_format}')
+                raise Exception(f'invalid message format config setting {self.config.message_format}')
 
         return m
 
@@ -310,9 +309,7 @@ class FileQueueAdapter(QueueAdapter):
             serialized_message = json.dumps(message_parts, indent=2)
         else:
             raise Exception(f'invalid message format config setting {self.config.message_format}')
-        self.log(
-            f'_save_message_to_file [id={message.id}][path={path_file}][format={self.config.message_format}]'
-        )
+        self.log(f'_save_message_to_file [id={message.id}][path={path_file}][format={self.config.message_format}]')
         self.log(f'_save_message_to_file [{serialized_message}]')
         with open(file=path_file, encoding="utf-8", mode='w') as f:
             f.write(serialized_message)
@@ -320,9 +317,7 @@ class FileQueueAdapter(QueueAdapter):
     def _lock_file(self, message_file_path) -> str:
         (message_path, message_file_name) = os.path.split(message_file_path)
         lock_file_path = os.path.join(self.config.lock_path, message_file_name + '.lock')
-        self.log(
-            f'_lock_file [message_path={message_path}][message_file_name={message_file_name}][lock_file_path={lock_file_path}]'
-        )
+        self.log(f'_lock_file [message_path={message_path}][message_file_name={message_file_name}][lock_file_path={lock_file_path}]')
 
         try:
             self.log(f'attempt to lock with lock file: [{message_file_path}]=>[{lock_file_path}]')
@@ -355,15 +350,13 @@ class FileQueueAdapter(QueueAdapter):
     def _get_message_file_path(self, message_id) -> str:
         file_name = f'{message_id}.message'
         path = os.path.join(self.config.base_path, file_name)
-        self.log(
-            f'_get_message_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
+        self.log(f'_get_message_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
     def _get_history_file_path(self, message_id) -> str:
         file_name = f'{message_id}.message'
         path = os.path.join(self.config.history_path, file_name)
-        self.log(
-            f'_get_history_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
+        self.log(f'_get_history_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
     def _get_lock_file_path(self, message_id) -> str:
@@ -512,10 +505,7 @@ class Kessel():
         continue_processing = True
         iterations_with_no_messages = 0
         Statman.stopwatch('kessel.message_streak_tm', autostart=True)
-        Statman.calculation(
-            'kessel.message_streak_messages_per_s').function = lambda: Statman.gauge(
-                'kessel.message_streak_cnt').value / Statman.stopwatch('kessel.message_streak_tm'
-                                                                       ).value
+        Statman.calculation('kessel.message_streak_messages_per_s').function = lambda: Statman.gauge('kessel.message_streak_cnt').value / Statman.stopwatch('kessel.message_streak_tm').value
         while continue_processing:
             self.log('kessel init begin dequeue')
 
@@ -532,9 +522,7 @@ class Kessel():
                 self.log('commit complete')
             else:
                 iterations_with_no_messages += 1
-                self.log(
-                    f'no message available [iteration with no messages = {iterations_with_no_messages}][max = {self.config.shutdown_after_number_of_empty_iterations}]'
-                )
+                self.log(f'no message available [iteration with no messages = {iterations_with_no_messages}][max = {self.config.shutdown_after_number_of_empty_iterations}]')
 
                 Statman.stopwatch('kessel.message_streak_tm').stop()
                 Statman.report(output_stdout=False, log_method=self.log)
