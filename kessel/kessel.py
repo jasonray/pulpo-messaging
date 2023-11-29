@@ -57,6 +57,16 @@ class LowerCaseHandler(Handler):
 
     def handle(self, payload: str):
         return payload.lower()
+    
+class EchoHandler(Handler):
+
+    def handle(self, payload: str):
+        destination_directory = '/tmp/kessel/outbound'
+        destination_filename = f'{uuid.uuid4}.echo.txt'
+        destination_file_path = os.path.join(destination_directory, destination_filename)
+        print(f'EchoHandler write to {destination_file_path}')
+        with open(file=destination_file_path, encoding="utf-8", mode='w') as f:
+            f.write(destination_file_path)
 
 
 class QueueAdapter():
