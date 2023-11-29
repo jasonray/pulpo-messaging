@@ -4,6 +4,7 @@
     "file_queue_adapter": {
         "base_path": "/tmp/kessel/fqa",
         "skip_random_messages_range": 0,
-        "message_format": "json"
+        "message_format": "json",
+        "enable_history": "True"
     }
 }

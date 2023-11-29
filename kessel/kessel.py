@@ -153,6 +153,10 @@ class FileQueueAdapterConfig(Config):
         return os.path.join(self.base_path, 'lock')
 
     @property
+    def history_path(self: Config) -> str:
+        return os.path.join(self.base_path, 'history')
+
+    @property
     def message_format(self: Config) -> str:
         return self.get('message_format', 'body_only')
 
@@ -160,6 +164,16 @@ class FileQueueAdapterConfig(Config):
     def skip_random_messages_range(self: Config) -> int:
         value = self.get('skip_random_messages_range', 0)
         return int(value)
+
+    @property
+    def enable_history(self: Config) -> bool:
+        value = None
+        boolean_string = self.get('enable_history', "False")
+        if boolean_string=="True":
+            value = True
+        else:
+            value=False
+        return value
 
 
 class FileQueueAdapter(QueueAdapter):
@@ -175,6 +189,7 @@ class FileQueueAdapter(QueueAdapter):
     def _create_message_directories(self):
         os.makedirs(name=self.config.base_path, mode=0o777, exist_ok=True)
         os.makedirs(name=self.config.lock_path, mode=0o777, exist_ok=True)
+        os.makedirs(name=self.config.history_path, mode=0o777, exist_ok=True)
 
     @property
     def config(self) -> FileQueueAdapterConfig:
@@ -344,6 +359,13 @@ class FileQueueAdapter(QueueAdapter):
             f'_get_message_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
+    def _get_history_file_path(self, message_id) -> str:
+        file_name = f'{message_id}.message'
+        path = os.path.join(self.config.history_path, file_name)
+        self.log(
+            f'_get_history_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
+        return path
+
     def _get_lock_file_path(self, message_id) -> str:
         file_name = f'{message_id}.message.lock'
         path = os.path.join(self.config.lock_path, file_name)
@@ -368,8 +390,10 @@ class FileQueueAdapter(QueueAdapter):
             raise Exception('commit expects message object')
 
         self.log(f'commit {message_id}')
-        # self._delete_message(message_id=message_id)
-        self._delete_lock(message_id=message_id)
+        if self.config.enable_history:
+            self._move_to_history(message_id=message_id)
+        else:
+            self._delete_lock(message_id=message_id)
         self.log(f'commit complete {message_id}')
         Statman.gauge('fqa.commit').increment()
 
@@ -400,6 +424,13 @@ class FileQueueAdapter(QueueAdapter):
         lock_file_path = self._get_lock_file_path(message_id=message_id)
         self.log(f'delete file {lock_file_path}')
         os.remove(lock_file_path)
+
+    def _move_to_history(self, message_id: str):
+        self.log(f'move lock to history {message_id}')
+        lock_file_path = self._get_lock_file_path(message_id=message_id)
+        message_file_path = self._get_history_file_path(message_id=message_id)
+        self.log(f'move file [{lock_file_path}]=>[{message_file_path}]')
+        os.rename(src=lock_file_path, dst=message_file_path)
 
     def _delete_message(self, message_id: str):
         self.log(f'remove message {message_id}')
