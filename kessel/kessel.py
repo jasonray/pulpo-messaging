@@ -167,13 +167,7 @@ class FileQueueAdapterConfig(Config):
 
     @property
     def enable_history(self: Config) -> bool:
-        value = None
-        boolean_string = self.get('enable_history', "False")
-        if boolean_string == "True" or boolean_string == True:
-            value = True
-        else:
-            value = False
-        return value
+        return bool(self.get('enable_history', "False"))
 
 
 class FileQueueAdapter(QueueAdapter):
@@ -243,7 +237,7 @@ class FileQueueAdapter(QueueAdapter):
             self.log('skipped all messages, trying last message from loop')
             self.log(f'attempt to lock message: {file.path}')
             lock_file_path = self._lock_file(file.path)
-            if lock_file_path:  # pylint: disable=no-else-break
+            if lock_file_path:
                 self.log('locked message')
             else:
                 self.log('failed to lock message')
