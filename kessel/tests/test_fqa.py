@@ -148,7 +148,7 @@ class TestFqa(unittest.TestCase):
         self.assertEqual(message_file_path, expected_message_file_path)
 
     def test_json_format(self):
-        qa = self.file_queue_adapter_factory(tag='json')
+        qa = self.file_queue_adapter_factory()
         qa.config.set('message_format', 'json')
 
         payload = 'hello world \n'
