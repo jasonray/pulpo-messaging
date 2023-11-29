@@ -1,2 +1,2 @@
 statman == 1.2.0
-pulpo-config == 1.0.0
+pulpo-config == 1.1.0

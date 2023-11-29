@@ -84,7 +84,7 @@ class FileQueueAdapterConfig(Config):
 
     @property
     def enable_history(self: Config) -> bool:
-        return bool(self.get('enable_history', "False"))
+        return self.getAsBool('enable_history', "False")
 
 
 class FileQueueAdapter(QueueAdapter):
