@@ -1,5 +1,5 @@
 import unittest
-from kessel.kessel import Config
+from pulpo_config import Config
 
 
 class TestConfig(unittest.TestCase):
