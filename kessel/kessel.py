@@ -169,10 +169,10 @@ class FileQueueAdapterConfig(Config):
     def enable_history(self: Config) -> bool:
         value = None
         boolean_string = self.get('enable_history', "False")
-        if boolean_string=="True":
+        if boolean_string == "True":
             value = True
         else:
-            value=False
+            value = False
         return value
 
 
