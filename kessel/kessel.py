@@ -81,7 +81,6 @@ class FileQueueAdapterConfig(Config):
     def skip_random_messages_range(self: Config) -> int:
         return self.getAsInt('skip_random_messages_range', 0)
 
-
     @property
     def enable_history(self: Config) -> bool:
         return self.getAsBool('enable_history', "False")
