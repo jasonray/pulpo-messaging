@@ -2,9 +2,7 @@ import os
 import uuid
 import time
 import datetime
-import typing
 import json
-import argparse
 import random
 from statman import Statman
 from pulpo_config import Config
