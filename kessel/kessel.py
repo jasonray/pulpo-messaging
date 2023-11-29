@@ -41,6 +41,24 @@ class Message():
         return self._payload
 
 
+class Handler():
+
+    def handle(payload: str):
+        pass
+
+
+class UpperCaseHandler(Handler):
+
+    def handle(self, payload: str):
+        return payload.upper()
+
+
+class LowerCaseHandler(Handler):
+
+    def handle(self, payload: str):
+        return payload.lower()
+
+
 class QueueAdapter():
 
     def enqueue(self, message: Message) -> Message:
