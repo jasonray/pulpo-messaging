@@ -379,7 +379,7 @@ class KesselConfig(Config):
 
     @property
     def sleep_duration(self) -> int:
-        return self.get('sleep_duration', 5)
+        return self.getAsInt('sleep_duration', 5)
 
     @property
     def enable_output_buffering(self) -> bool:
