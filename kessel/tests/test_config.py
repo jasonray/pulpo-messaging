@@ -1,6 +1,7 @@
 import unittest
 from pulpo_config import Config
 
+
 class TestConfig(unittest.TestCase):
 
     def test_config_get(self):

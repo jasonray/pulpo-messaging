@@ -42,6 +42,7 @@ class Message():
     def payload(self):
         return self._payload
 
+
 class QueueAdapter():
 
     def enqueue(self, message: Message) -> Message:
