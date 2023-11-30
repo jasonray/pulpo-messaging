@@ -16,11 +16,13 @@ class Message():
 
     _id = None
     _payload = None
+    _type = None
     _header = None
 
-    def __init__(self, payload=None, header=None):
+    def __init__(self, payload=None, header=None, type=None):
         self._payload = payload
         self._header = header
+        self._type = type
 
     def __str__(self):
         serialized = ''
@@ -35,6 +37,10 @@ class Message():
     @property
     def header(self):
         return self._header
+
+    @property
+    def type(self):
+        return self._type
 
     @property
     def payload(self):
@@ -54,12 +60,12 @@ class PayloadHandler():
     def config(self) -> Config:
         return self._config
 
+
 class EchoHandler(PayloadHandler):
 
     def __init__(self, options: dict = None):
         super().__init__(options=options)
         os.makedirs(name=self.destination_directory, mode=0o777, exist_ok=True)
-
 
     def handle(self, payload: str):
         print('EchoHandler.handle')
@@ -73,18 +79,19 @@ class EchoHandler(PayloadHandler):
     def destination_directory(self) -> str:
         return self.config.get('destination_directory', '/tmp/kessel/EchoHandler-output')
 
+
 class UpperCaseHandler(EchoHandler):
 
     def handle(self, payload: str):
         print('UpperCaseHandler.handle')
-        EchoHandler.handle(self,payload.upper())
+        EchoHandler.handle(self, payload.upper())
 
 
 class LowerCaseHandler(EchoHandler):
 
     def handle(self, payload: str):
         print('LowerCaseHandler.handle')
-        EchoHandler.handle(self,payload.lower())
+        EchoHandler.handle(self, payload.lower())
 
 
 class QueueAdapter():
@@ -234,7 +241,8 @@ class FileQueueAdapter(QueueAdapter):
                 payload = message_parts['payload']
                 message_id = message_parts['id']
                 header = message_parts['header']
-                m = Message(payload=payload, header=header)
+                type = message_parts['type']
+                m = Message(payload=payload, header=header, type=type)
                 m._id = message_id
             else:
                 raise Exception(f'invalid message format config setting {self.config.message_format}')
@@ -261,6 +269,7 @@ class FileQueueAdapter(QueueAdapter):
             message_parts = {}
             message_parts['id'] = message.id
             message_parts['header'] = message.header
+            message_parts['type'] = message.type
             message_parts['payload'] = message.payload
             serialized_message = json.dumps(message_parts, indent=2)
         else:
@@ -409,6 +418,19 @@ class FileQueueAdapter(QueueAdapter):
         #     self.log(output)
 
 
+class HandlerRegistry():
+    _registry = None
+
+    def __init__(self):
+        self._registry = {}
+
+    def register(self, type: str, handler: PayloadHandler):
+        self._registry[type] = handler
+
+    def get(self, type: str) -> PayloadHandler:
+        return self._registry.get(type)
+
+
 class KesselConfig(Config):
 
     def __init__(self, options: dict = None, json_file_path: str = None):
@@ -434,6 +456,7 @@ class KesselConfig(Config):
 class Kessel():
     _queue_adapter = None
     _config = None
+    _handler_registry = None
 
     def __init__(self, options: dict):
         self.log('init queue adapter')
@@ -444,6 +467,11 @@ class Kessel():
         else:
             raise Exception('invalid queue adapter type')
 
+        self._handler_registry = HandlerRegistry()
+        self.handler_registry.register('echo', EchoHandler(self.config.get('echo_handler')))
+        self.handler_registry.register('lower', LowerCaseHandler(self.config.get('lower_handler')))
+        self.handler_registry.register('upper', UpperCaseHandler(self.config.get('upper_handler')))
+
     @property
     def config(self) -> KesselConfig:
         return self._config
@@ -451,6 +479,10 @@ class Kessel():
     @property
     def queue_adapter(self) -> QueueAdapter:
         return self._queue_adapter
+    
+    @property
+    def handler_registry(self) -> HandlerRegistry:
+        return self._handler_registry
 
     def publish(self, message: Message) -> Message:
         self.log('publish message to queue adapter')
@@ -471,8 +503,15 @@ class Kessel():
                 iterations_with_no_messages = 0
                 Statman.gauge('kessel.dequeue').increment()
                 Statman.gauge('kessel.message_streak_cnt').increment()
-                self.log(f'received message {message.id}')
-                self.log('this would be the point to delegate to handler')
+                self.log(f'received message {message.id} {message.type}')
+
+                handler = self.handler_registry.get(message.type)
+                self.log(f'handler: {handler}')
+                if handler is None:
+                    self.log(f'WARNING no handler for message type {message.type}')
+                else:
+                    handler.handle(payload=message.payload)
+
                 self.queue_adapter.commit(message)
                 Statman.gauge('kessel.messages_processed').increment()
                 self.log('commit complete')

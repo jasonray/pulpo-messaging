@@ -6,5 +6,14 @@
         "skip_random_messages_range": 0,
         "message_format": "json",
         "enable_history": "True"
+    },
+    "echo_handler": {
+        "destination_directory": "/tmp/kessel/echo"
+    },
+    "lower_handler": {
+        "destination_directory": "/tmp/kessel/lower"
+    },
+    "upper_handler": {
+        "destination_directory": "/tmp/kessel/upper"
     }
 }

@@ -9,6 +9,7 @@ from statman import Statman
 from statman import Stopwatch
 from .unittest_helper import get_unique_base_path
 
+
 class TestFqaCompliance(unittest.TestCase):
 
     def queue_adapter_factory(self) -> QueueAdapter:
