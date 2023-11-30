@@ -2,6 +2,7 @@ from kessel.kessel import Message
 from kessel.kessel import Kessel
 from kessel.kessel import KesselConfig
 from statman import Statman
+import random
 import argparse
 import time
 
@@ -25,10 +26,24 @@ else:
 config.process_args(args)
 kessel = Kessel(config)
 
+def create_random_message(payload: str):
+    message_type_number = random.randint(1,3)
+    message_type = None
+    if message_type_number == 1:
+        message_type ='echo'
+        Statman.gauge(name='publish-sample-messages.published-messages.echo').increment()
+    elif message_type_number == 2:
+        message_type ='lower'
+        Statman.gauge(name='publish-sample-messages.published-messages.lower').increment()
+    elif message_type_number == 3:
+        message_type ='upper'
+        Statman.gauge(name='publish-sample-messages.published-messages.upper').increment()
+    return Message(payload=payload, type=message_type)
+
 def publish():
     Statman.stopwatch(name='publish-sample-messages.timing', autostart=True)
     for i in range(0, args.number_of_messages):
-        m = Message(payload=f'hello world {i}')
+        m = create_random_message(payload=f'HellO WorlD {i}')
         kessel.publish(m)
         Statman.gauge(name='publish-sample-messages.published-messages').increment()
     Statman.stopwatch(name='publish-sample-messages.timing').stop()
