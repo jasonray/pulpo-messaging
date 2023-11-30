@@ -7,20 +7,7 @@ from kessel.kessel import QueueAdapter
 from kessel.kessel import Message
 from statman import Statman
 from statman import Stopwatch
-
-_kessel_root_directory = '/tmp/kessel/unit-test'
-_timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-
-
-def get_unique_base_path(tag: str = None):
-    path = _kessel_root_directory
-    path = os.path.join(path, _timestamp)
-    if tag:
-        path = os.path.join(path, tag)
-
-    path = os.path.join(path, str(uuid.uuid4()))
-    return path
-
+from .unittest_helper import get_unique_base_path
 
 class TestFqaCompliance(unittest.TestCase):
 
