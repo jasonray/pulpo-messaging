@@ -1,6 +1,11 @@
 all: default
 
-clean: 
+clean: clean-output clean-test
+
+clean-output: 
+	rm -rf /tmp/kessel
+
+clean-test: 
 	rm -rf /tmp/kessel/unit-test/
 
 deps:
@@ -21,7 +26,7 @@ lint: check-format
 lint-no-error: 
 	pylint --exit-zero -r n kessel
 
-test: build dev_deps
+test: clean-test build dev_deps
 	python3 -m pytest -v --durations=0
 
 build: deps
