@@ -241,8 +241,8 @@ class FileQueueAdapter(QueueAdapter):
                 payload = message_parts['payload']
                 message_id = message_parts['id']
                 header = message_parts['header']
-                type = message_parts['type']
-                m = Message(payload=payload, header=header, type=type)
+                request_type = message_parts['request_type']
+                m = Message(payload=payload, header=header, request_type=request_type)
                 m._id = message_id
             else:
                 raise Exception(f'invalid message format config setting {self.config.message_format}')
@@ -427,8 +427,8 @@ class HandlerRegistry():
     def register(self, type: str, handler: PayloadHandler):
         self._registry[type] = handler
 
-    def get(self, type: str) -> PayloadHandler:
-        return self._registry.get(type)
+    def get(self, message_type: str) -> PayloadHandler:
+        return self._registry.get(message_type)
 
 
 class KesselConfig(Config):

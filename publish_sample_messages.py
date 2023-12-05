@@ -27,18 +27,18 @@ config.process_args(args)
 kessel = Kessel(config)
 
 def create_random_message(payload: str):
-    message_type_number = random.randint(1,3)
-    message_type = None
-    if message_type_number == 1:
-        message_type ='echo'
+    request_type_number = random.randint(1,3)
+    request_type = None
+    if request_type_number == 1:
+        request_type ='echo'
         Statman.gauge(name='publish-sample-messages.published-messages.echo').increment()
-    elif message_type_number == 2:
-        message_type ='lower'
+    elif request_type_number == 2:
+        request_type ='lower'
         Statman.gauge(name='publish-sample-messages.published-messages.lower').increment()
-    elif message_type_number == 3:
-        message_type ='upper'
+    elif request_type_number == 3:
+        request_type ='upper'
         Statman.gauge(name='publish-sample-messages.published-messages.upper').increment()
-    return Message(payload=payload, type=message_type)
+    return Message(payload=payload, request_type=request_type)
 
 def publish():
     Statman.stopwatch(name='publish-sample-messages.timing', autostart=True)
