@@ -16,13 +16,13 @@ class Message():
 
     _id = None
     _payload = None
-    _type = None
+    _request_type = None
     _header = None
 
-    def __init__(self, payload=None, header=None, type=None):
+    def __init__(self, payload=None, header=None, request_type=None):
         self._payload = payload
         self._header = header
-        self._type = type
+        self._request_type = request_type
 
     def __str__(self):
         serialized = ''
@@ -39,8 +39,8 @@ class Message():
         return self._header
 
     @property
-    def type(self):
-        return self._type
+    def request_type(self):
+        return self._request_type
 
     @property
     def payload(self):
@@ -269,7 +269,7 @@ class FileQueueAdapter(QueueAdapter):
             message_parts = {}
             message_parts['id'] = message.id
             message_parts['header'] = message.header
-            message_parts['type'] = message.type
+            message_parts['type'] = message.request_type
             message_parts['payload'] = message.payload
             serialized_message = json.dumps(message_parts, indent=2)
         else:
@@ -504,12 +504,12 @@ class Kessel():
                 iterations_with_no_messages = 0
                 Statman.gauge('kessel.dequeue').increment()
                 Statman.gauge('kessel.message_streak_cnt').increment()
-                self.log(f'received message {message.id} {message.type}')
+                self.log(f'received message {message.id} {message.request_type}')
 
-                handler = self.handler_registry.get(message.type)
+                handler = self.handler_registry.get(message.request_type)
                 self.log(f'handler: {handler}')
                 if handler is None:
-                    self.log(f'WARNING no handler for message type {message.type}')
+                    self.log(f'WARNING no handler for message type {message.request_type}')
                 else:
                     handler.handle(payload=message.payload)
 
