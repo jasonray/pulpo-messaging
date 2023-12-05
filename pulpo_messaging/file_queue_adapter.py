@@ -165,7 +165,7 @@ class FileQueueAdapter(QueueAdapter):
     # https://docs.python.org/3/tutorial/inputoutput.html#saving-structured-data-with-json
     def _save_message_to_file(self, message: Message, path_file: str):
         if self.config.message_format == 'body_only':
-            serialized_message = message.payload
+            serialized_message = message.payload.get('body')
         elif self.config.message_format == 'json':
             message_parts = {}
             message_parts['id'] = message.id
