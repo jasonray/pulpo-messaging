@@ -146,4 +146,4 @@ class Kessel():
             self.log('starting kessel')
 
     def log(self, *argv):
-        logger.log(argv, flush=self.config.enable_output_buffering)
+        logger.log(*argv, flush=self.config.enable_output_buffering)
