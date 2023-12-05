@@ -1,7 +1,7 @@
 import os
 import uuid
 
-from kessel.payload_handler import PayloadHandler
+from .payload_handler import PayloadHandler
 
 
 class EchoHandler(PayloadHandler):

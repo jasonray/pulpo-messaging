@@ -3,11 +3,11 @@ from statman import Statman
 from pulpo_config import Config
 from art import text2art
 from kessel import logger
-from kessel.file_queue_adapter import FileQueueAdapter
-from kessel.message import Message
-from kessel.payload_handler import PayloadHandler
-from kessel.queue_adapter import QueueAdapter
-from kessel.sample_handlers import EchoHandler, LowerCaseHandler, UpperCaseHandler
+from .file_queue_adapter import FileQueueAdapter
+from .message import Message
+from .payload_handler import PayloadHandler
+from .queue_adapter import QueueAdapter
+from .sample_handlers import EchoHandler, LowerCaseHandler, UpperCaseHandler
 
 
 class HandlerRegistry():

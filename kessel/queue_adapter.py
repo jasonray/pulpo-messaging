@@ -1,4 +1,4 @@
-from kessel.message import Message
+from .message import Message
 
 
 class QueueAdapter():
