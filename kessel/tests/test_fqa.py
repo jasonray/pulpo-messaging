@@ -1,25 +1,9 @@
-import datetime
-import uuid
 import os
 import unittest
 from kessel.kessel import FileQueueAdapter
 from kessel.kessel import QueueAdapter
 from kessel.kessel import Message
-from statman import Statman
-from statman import Stopwatch
-
-_kessel_root_directory = '/tmp/kessel/unit-test'
-_timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-
-
-def get_unique_base_path(tag: str = None):
-    path = _kessel_root_directory
-    path = os.path.join(path, _timestamp)
-    if tag:
-        path = os.path.join(path, tag)
-
-    path = os.path.join(path, str(uuid.uuid4()))
-    return path
+from .unittest_helper import get_unique_base_path
 
 
 class TestFqaCompliance(unittest.TestCase):
@@ -130,12 +114,13 @@ class TestFqa(unittest.TestCase):
     # these test cases test private implementation and will need to be adjusted if impementation changes
     def test_get_lock_file_path(self):
         config = {}
-        config['base_path'] = 'tmp/kessel/unit-test/imaginary'
-        expected_message_path = 'tmp/kessel/unit-test/imaginary'
-        expected_lock_path = 'tmp/kessel/unit-test/imaginary/lock'
+        base_path = get_unique_base_path()
+        config['base_path'] = base_path
+        expected_message_path = base_path
+        expected_lock_path = f'{base_path}/lock'
         message_id = '123'
-        expected_lock_file_path = 'tmp/kessel/unit-test/imaginary/lock/123.message.lock'
-        expected_message_file_path = 'tmp/kessel/unit-test/imaginary/123.message'
+        expected_message_file_path = f'{base_path}/123.message'
+        expected_lock_file_path = f'{base_path}/lock/123.message.lock'
 
         fqa = FileQueueAdapter(config)
         self.assertEqual(fqa.config.base_path, expected_message_path)
