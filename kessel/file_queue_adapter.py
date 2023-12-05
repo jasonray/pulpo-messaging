@@ -4,7 +4,7 @@ import time
 import datetime
 import json
 import random
-from kessel import log_utility
+from kessel import logger
 from statman import Statman
 from pulpo_config import Config
 from kessel.message import Message
@@ -304,4 +304,4 @@ class FileQueueAdapter(QueueAdapter):
         return os.path.exists(self._get_message_file_path(message_id=messsage_id))
 
     def log(self, *argv):
-        log_utility.log(argv, flush=True)
+        logger.log(argv, flush=True)

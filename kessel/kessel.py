@@ -1,7 +1,7 @@
 import os
 import time
 import datetime
-from kessel import log_utility
+from kessel import logger
 from statman import Statman
 from pulpo_config import Config
 from art import text2art
@@ -148,4 +148,4 @@ class Kessel():
             self.log('starting kessel')
 
     def log(self, *argv):
-        log_utility.log(argv, flush=self.config.enable_output_buffering)
+        logger.log(argv, flush=self.config.enable_output_buffering)
