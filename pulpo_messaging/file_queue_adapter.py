@@ -143,7 +143,7 @@ class FileQueueAdapter(QueueAdapter):
                 message_id = message_parts['id']
                 header = message_parts['header']
                 request_type = message_parts['request_type']
-                m = Message(payload=payload, header=header, request_type=request_type)
+                m = Message(payload=payload, headers=header, request_type=request_type)
                 m._id = message_id
             else:
                 raise Exception(f'invalid message format config setting {self.config.message_format}')
