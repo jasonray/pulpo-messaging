@@ -5,9 +5,9 @@ import json
 import random
 from statman import Statman
 from pulpo_config import Config
-from kessel import logger
-from kessel.message import Message
-from kessel.queue_adapter import QueueAdapter
+from pulpo_messaging import logger
+from pulpo_messaging.message import Message
+from pulpo_messaging.queue_adapter import QueueAdapter
 
 
 class FileQueueAdapterConfig(Config):

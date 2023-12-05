@@ -1,6 +1,6 @@
-from kessel.kessel import Message
-from kessel.kessel import Kessel
-from kessel.kessel import KesselConfig
+from pulpo_messaging.kessel import Message
+from pulpo_messaging.kessel import Pulpo
+from pulpo_messaging.kessel import PulpoConfig
 from statman import Statman
 import random
 import argparse
@@ -19,12 +19,12 @@ args = parser.parse_args()
 config = None
 if args.config:
     print('load config from file', args.config)
-    config = KesselConfig(json_file_path=args.config)
+    config = PulpoConfig(json_file_path=args.config)
 else:
-    config = KesselConfig()
+    config = PulpoConfig()
 
 config.process_args(args)
-kessel = Kessel(config)
+kessel = Pulpo(config)
 
 def create_random_message(payload: str):
     request_type_number = random.randint(1,3)
