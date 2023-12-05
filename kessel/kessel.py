@@ -479,7 +479,7 @@ class Kessel():
     @property
     def queue_adapter(self) -> QueueAdapter:
         return self._queue_adapter
-    
+
     @property
     def handler_registry(self) -> HandlerRegistry:
         return self._handler_registry
@@ -493,7 +493,8 @@ class Kessel():
         continue_processing = True
         iterations_with_no_messages = 0
         Statman.stopwatch('kessel.message_streak_tm', autostart=True)
-        Statman.calculation('kessel.message_streak_messages_per_s').calculation_function = lambda: Statman.gauge('kessel.message_streak_cnt').value / Statman.stopwatch('kessel.message_streak_tm').value
+        Statman.calculation(
+            'kessel.message_streak_messages_per_s').calculation_function = lambda: Statman.gauge('kessel.message_streak_cnt').value / Statman.stopwatch('kessel.message_streak_tm').value
         while continue_processing:
             self.log('kessel init begin dequeue')
 
