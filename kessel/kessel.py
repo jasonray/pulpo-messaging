@@ -269,7 +269,7 @@ class FileQueueAdapter(QueueAdapter):
             message_parts = {}
             message_parts['id'] = message.id
             message_parts['header'] = message.header
-            message_parts['type'] = message.request_type
+            message_parts['request_type'] = message.request_type
             message_parts['payload'] = message.payload
             serialized_message = json.dumps(message_parts, indent=2)
         else:
