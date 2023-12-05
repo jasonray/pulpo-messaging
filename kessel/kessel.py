@@ -1,17 +1,15 @@
 import os
-import uuid
 import time
 import datetime
-import json
-import random
+from kessel import log_utility
+from statman import Statman
+from pulpo_config import Config
+from art import text2art
 from kessel.file_queue_adapter import FileQueueAdapter
 from kessel.message import Message
 from kessel.payload_handler import PayloadHandler
 from kessel.queue_adapter import QueueAdapter
 from kessel.sample_handlers import EchoHandler, LowerCaseHandler, UpperCaseHandler
-from statman import Statman
-from pulpo_config import Config
-from art import text2art
 
 
 class HandlerRegistry():
@@ -150,19 +148,4 @@ class Kessel():
             self.log('starting kessel')
 
     def log(self, *argv):
-        message = ""
-        for arg in argv:
-            if not arg is None:
-                message += ' ' + str(arg)
-
-        pid = os.getpid()
-        dt = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
-
-        TEMPLATE = "[p:{pid}]\t[{dt}]\t{message}"
-        output = TEMPLATE.format(pid=pid, dt=dt, message=message)
-
-        flush = False
-        if self.config and not self.config.enable_output_buffering:
-            flush = True
-
-        print(output, flush=flush)
+        log_utility.log(argv, flush=self.config.enable_output_buffering)
