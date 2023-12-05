@@ -424,8 +424,8 @@ class HandlerRegistry():
     def __init__(self):
         self._registry = {}
 
-    def register(self, type: str, handler: PayloadHandler):
-        self._registry[type] = handler
+    def register(self, request_type: str, handler: PayloadHandler):
+        self._registry[request_type] = handler
 
     def get(self, message_type: str) -> PayloadHandler:
         return self._registry.get(message_type)
