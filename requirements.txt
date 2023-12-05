@@ -1,2 +1,3 @@
 statman == 1.3.2
 pulpo-config == 1.3.0
+art == 6.1
