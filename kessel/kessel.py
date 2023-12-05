@@ -1,8 +1,8 @@
 import time
-from kessel import logger
 from statman import Statman
 from pulpo_config import Config
 from art import text2art
+from kessel import logger
 from kessel.file_queue_adapter import FileQueueAdapter
 from kessel.message import Message
 from kessel.payload_handler import PayloadHandler
