@@ -1,12 +1,11 @@
 import os
 import uuid
 import time
-import datetime
 import json
 import random
-from kessel import logger
 from statman import Statman
 from pulpo_config import Config
+from kessel import logger
 from kessel.message import Message
 from kessel.queue_adapter import QueueAdapter
 
