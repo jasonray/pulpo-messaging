@@ -6,7 +6,7 @@ import json
 import random
 from statman import Statman
 from pulpo_config import Config
-
+from art import text2art
 
 class Message():
     # - priority
@@ -84,6 +84,7 @@ class FileQueueAdapterConfig(Config):
     @property
     def enable_history(self: Config) -> bool:
         return self.getAsBool('enable_history', "False")
+
 
 
 class FileQueueAdapter(QueueAdapter):
@@ -384,19 +385,17 @@ class KesselConfig(Config):
     def enable_output_buffering(self) -> bool:
         return self.getAsBool(key='enable_output_buffering', default_value=False)
 
+    @property
+    def enable_banner(self: Config) -> bool:
+        return self.getAsBool('enable_banner', "False")
+
 
 class Kessel():
     _queue_adapter = None
     _config = None
 
     def __init__(self, options: dict):
-        self.log('init queue adapter')
         self._config = KesselConfig(options)
-
-        if self.config.queue_adapter_type == 'FileQueueAdapter':
-            self._queue_adapter = FileQueueAdapter(self.config.get('file_queue_adapter'))
-        else:
-            raise Exception('invalid queue adapter type')
 
     @property
     def config(self) -> KesselConfig:
@@ -411,9 +410,16 @@ class Kessel():
         return self.queue_adapter.enqueue(message)
 
     def initialize(self) -> Message:
-        self.log('starting kessel')
+        self.print_banner()
         continue_processing = True
         iterations_with_no_messages = 0
+
+        self.log('init queue adapter')
+        if self.config.queue_adapter_type == 'FileQueueAdapter':
+            self._queue_adapter = FileQueueAdapter(self.config.get('file_queue_adapter'))
+        else:
+            raise Exception('invalid queue adapter type')
+
         Statman.stopwatch('kessel.message_streak_tm', autostart=True)
         Statman.calculation('kessel.message_streak_messages_per_s').function = lambda: Statman.gauge('kessel.message_streak_cnt').value / Statman.stopwatch('kessel.message_streak_tm').value
         while continue_processing:
@@ -445,6 +451,14 @@ class Kessel():
                     time.sleep(self.config.sleep_duration)
                     Statman.stopwatch('kessel.message_streak_tm').start()
                     Statman.gauge('kessel.message_streak_cnt').value = 0
+
+    def print_banner(self):
+        if self.config.enable_banner:            
+            banner=text2art("kessel",font='block',chr_ignore=True)
+            print(banner)
+        else:
+            self.log('starting kessel')
+
 
     def log(self, *argv):
         message = ""
