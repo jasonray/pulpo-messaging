@@ -13,7 +13,6 @@ class TestConfig(unittest.TestCase):
     def test_config_set(self):
         config = Config()
         config.set('k', 'v')
-        # print('config', config.__options)
         self.assertEqual(config.get('k'), 'v')
 
     def test_config_set_nested(self):
@@ -23,15 +22,15 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(config.get('k.k2a.k3'), 'v1')
 
     def test_load_config_from_file(self):
-        config = Config(json_file_path='./kessel-config.json')
+        config = Config(json_file_path='./pulpo-config.json')
         self.assertEqual(config.get('shutdown_after_number_of_empty_iterations'), 7)
-        self.assertEqual(config.get('file_queue_adapter.base_path'), '/tmp/kessel/fqa')
-        self.assertEqual(config.get('file_queue_adapter').get('base_path'), '/tmp/kessel/fqa')
+        self.assertEqual(config.get('file_queue_adapter.base_path'), '/tmp/pulpo/fqa')
+        self.assertEqual(config.get('file_queue_adapter').get('base_path'), '/tmp/pulpo/fqa')
 
     def test_load_config_from_file_then_apply_args(self):
-        config = Config(json_file_path='./kessel-config.json')
+        config = Config(json_file_path='./pulpo-config.json')
         self.assertEqual(config.get('shutdown_after_number_of_empty_iterations'), 7)
-        self.assertEqual(config.get('file_queue_adapter.base_path'), '/tmp/kessel/fqa')
+        self.assertEqual(config.get('file_queue_adapter.base_path'), '/tmp/pulpo/fqa')
 
         args = {}
         args['shutdown_after_number_of_empty_iterations'] = 10

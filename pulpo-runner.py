@@ -1,7 +1,7 @@
 import argparse
 import json
-from kessel.kessel import KesselConfig
-from kessel.kessel import Kessel
+from pulpo_messaging.kessel import PulpoConfig
+from pulpo_messaging.kessel import Pulpo
 from statman import Statman
 
 parser = argparse.ArgumentParser(description='Kessel-Runner')
@@ -15,12 +15,12 @@ args = parser.parse_args()
 config = None
 if args.config:
     print('load config from file', args.config)
-    config = KesselConfig(json_file_path=args.config)
+    config = PulpoConfig(json_file_path=args.config)
 else:
-    config = KesselConfig()
+    config = PulpoConfig()
 
 config.process_args(args)
 print('kessel config: [{config}]')
 
-kessel = Kessel(config)
+kessel = Pulpo(config)
 kessel.initialize()

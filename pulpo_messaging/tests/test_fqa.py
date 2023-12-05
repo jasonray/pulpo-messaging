@@ -1,8 +1,8 @@
 import os
 import unittest
-from kessel.kessel import FileQueueAdapter
-from kessel.kessel import QueueAdapter
-from kessel.kessel import Message
+from pulpo_messaging.kessel import FileQueueAdapter
+from pulpo_messaging.kessel import QueueAdapter
+from pulpo_messaging.kessel import Message
 from .unittest_helper import get_unique_base_path
 
 

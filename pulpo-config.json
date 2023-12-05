@@ -5,18 +5,18 @@
         "enable":true
     },
     "file_queue_adapter": {
-        "base_path": "/tmp/kessel/fqa",
+        "base_path": "/tmp/pulpo/fqa",
         "skip_random_messages_range": 0,
         "message_format": "json",
         "enable_history": "True"
     },
     "echo_handler": {
-        "destination_directory": "/tmp/kessel/echo"
+        "destination_directory": "/tmp/pulpo/echo"
     },
     "lower_handler": {
-        "destination_directory": "/tmp/kessel/lower"
+        "destination_directory": "/tmp/pulpo/lower"
     },
     "upper_handler": {
-        "destination_directory": "/tmp/kessel/upper"
+        "destination_directory": "/tmp/pulpo/upper"
     }
 }

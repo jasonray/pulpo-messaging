@@ -2,7 +2,7 @@ import time
 from statman import Statman
 from pulpo_config import Config
 from art import text2art
-from kessel import logger
+from pulpo_messaging import logger
 from .file_queue_adapter import FileQueueAdapter
 from .message import Message
 from .payload_handler import PayloadHandler
@@ -23,7 +23,7 @@ class HandlerRegistry():
         return self._registry.get(message_type)
 
 
-class KesselConfig(Config):
+class PulpoConfig(Config):
 
     def __init__(self, options: dict = None, json_file_path: str = None):
         super().__init__(options=options, json_file_path=json_file_path)
@@ -57,13 +57,13 @@ class KesselConfig(Config):
         return self.get('banner.font', 'block')
 
 
-class Kessel():
+class Pulpo():
     _queue_adapter = None
     _config = None
     _handler_registry = None
 
     def __init__(self, options: dict):
-        self._config = KesselConfig(options)
+        self._config = PulpoConfig(options)
 
         self.log('init queue adapter')
         if self.config.queue_adapter_type == 'FileQueueAdapter':
@@ -77,7 +77,7 @@ class Kessel():
         self.handler_registry.register('upper', UpperCaseHandler(self.config.get('upper_handler')))
 
     @property
-    def config(self) -> KesselConfig:
+    def config(self) -> PulpoConfig:
         return self._config
 
     @property

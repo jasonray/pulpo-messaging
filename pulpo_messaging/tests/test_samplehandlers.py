@@ -1,6 +1,6 @@
 import unittest
 from pulpo_config import Config
-from kessel import UpperCaseHandler, LowerCaseHandler, EchoHandler
+from pulpo_messaging import UpperCaseHandler, LowerCaseHandler, EchoHandler
 from .unittest_helper import get_unique_base_path
 
 
