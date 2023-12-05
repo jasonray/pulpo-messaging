@@ -6,6 +6,7 @@ import json
 import random
 from statman import Statman
 from pulpo_config import Config
+from art import text2art
 
 
 class Message():
@@ -452,6 +453,18 @@ class KesselConfig(Config):
     def enable_output_buffering(self) -> bool:
         return self.getAsBool(key='enable_output_buffering', default_value=False)
 
+    @property
+    def enable_banner(self: Config) -> bool:
+        return self.getAsBool('banner.enable', "False")
+
+    @property
+    def banner_name(self: Config) -> bool:
+        return self.get('banner.name', 'kessel')
+
+    @property
+    def banner_font(self: Config) -> bool:
+        return self.get('banner.font', 'block')
+
 
 class Kessel():
     _queue_adapter = None
@@ -459,9 +472,9 @@ class Kessel():
     _handler_registry = None
 
     def __init__(self, options: dict):
-        self.log('init queue adapter')
         self._config = KesselConfig(options)
 
+        self.log('init queue adapter')
         if self.config.queue_adapter_type == 'FileQueueAdapter':
             self._queue_adapter = FileQueueAdapter(self.config.get('file_queue_adapter'))
         else:
@@ -489,9 +502,10 @@ class Kessel():
         return self.queue_adapter.enqueue(message)
 
     def initialize(self) -> Message:
-        self.log('starting kessel')
+        self.print_banner()
         continue_processing = True
         iterations_with_no_messages = 0
+
         Statman.stopwatch('kessel.message_streak_tm', autostart=True)
         Statman.calculation(
             'kessel.message_streak_messages_per_s').calculation_function = lambda: Statman.gauge('kessel.message_streak_cnt').value / Statman.stopwatch('kessel.message_streak_tm').value
@@ -531,6 +545,14 @@ class Kessel():
                     time.sleep(self.config.sleep_duration)
                     Statman.stopwatch('kessel.message_streak_tm').start()
                     Statman.gauge('kessel.message_streak_cnt').value = 0
+
+    def print_banner(self):
+        print(f'print_banner {self.config.enable_banner=}')
+        if self.config.enable_banner:
+            banner = text2art(self.config.banner_name, font=self.config.banner_font, chr_ignore=True)
+            print(banner)
+        else:
+            self.log('starting kessel')
 
     def log(self, *argv):
         message = ""
