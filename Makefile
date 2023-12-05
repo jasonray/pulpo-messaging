@@ -3,10 +3,10 @@ all: default
 clean: clean-output clean-test
 
 clean-output: 
-	rm -rf /tmp/kessel
+	rm -rf /tmp/pulpo
 
 clean-test: 
-	rm -rf /tmp/kessel/unit-test/
+	rm -rf /tmp/pulpo/unit-test/
 
 deps:
 	pip install -r requirements.txt
@@ -15,16 +15,16 @@ dev_deps:
 	pip install -r requirements-dev.txt
 
 check-format: dev_deps
-	yapf -rd kessel
+	yapf -rd pulpo_messaging
 
 format: dev_deps
-	yapf -ri kessel
+	yapf -ri pulpo_messaging
 
 lint: check-format
-	pylint -r n kessel
+	pylint -r n pulpo_messaging
 
 lint-no-error: 
-	pylint --exit-zero -r n kessel
+	pylint --exit-zero -r n pulpo_messaging
 
 test: clean-test build dev_deps
 	python3 -m pytest -v --durations=0
