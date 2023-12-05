@@ -20,7 +20,7 @@ class TestFqaCompliance(unittest.TestCase):
 
         dq_1 = qa.dequeue()
 
-        self.assertEqual(dq_1.payload, 'hello world')
+        self.assertEqual(dq_1.body, 'hello world')
         self.assertEqual(dq_1.id, m1.id)
 
     def test_dequeue_skip_locked_message_with_1(self):
@@ -136,16 +136,16 @@ class TestFqa(unittest.TestCase):
         qa = self.file_queue_adapter_factory()
         qa.config.set('message_format', 'json')
 
-        payload = 'hello world \n'
-        payload += 'this statment has a "quote" - watch out \n'
-        payload += "this statment has a 'single quote' \n"
-        payload += "\t this starts with a tab \n"
-        m1 = Message(payload=payload, headers='h1')
+        body = 'hello world \n'
+        body += 'this statment has a "quote" - watch out \n'
+        body += "this statment has a 'single quote' \n"
+        body += "\t this starts with a tab \n"
+        m1 = Message(payload=body, headers='h1')
         m1 = qa.enqueue(m1)
 
         dq_1 = qa.dequeue()
 
-        self.assertEqual(dq_1.payload, payload)
+        self.assertEqual(dq_1.body, body)
         self.assertEqual(dq_1.id, m1.id)
         self.assertEqual(dq_1.header, m1.header)
 

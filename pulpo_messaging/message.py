@@ -6,15 +6,15 @@ class Message():
 
     _id = None
     _payload = None
-    _request_type = None
     _header = None
 
     def __init__(self, payload=None, headers=None, request_type=None):
-        self._payload = payload
+        self._payload = {}
+        self.attach_payload(payload=payload)
         self._header = {}
-        self.attach_headers(headers)
+        self.attach_headers(headers=headers)
 
-        self._request_type = request_type
+        self.attach_header(key="request_type", value=request_type)
 
     def __str__(self):
         serialized = ''
@@ -30,13 +30,23 @@ class Message():
     def header(self) -> dict:
         return self._header
 
+    def header_item(self, key: str):
+        return self.header.get(key)
+
     @property
     def request_type(self):
-        return self._request_type
+        return self.header.get("request_type")
 
     @property
     def payload(self):
         return self._payload
+
+    @property
+    def body(self):
+        return self.payload.get("body")
+
+    def payload_item(self, key: str):
+        return self.payload.get(key)
 
     def attach_headers(self, headers):
         if isinstance(headers, dict):
@@ -45,6 +55,15 @@ class Message():
         else:
             self.attach_header(key=headers)
 
+    def attach_header(self, key: str, value: str = None):
+        self.header[key] = value
 
-    def attach_header(self, key:str, value:str=None):
-        self.header[key]=value
+    def attach_payload(self, payload):
+        if isinstance(payload, dict):
+            for key in payload:
+                self.attach_payload_item(key=key, value=payload[key])
+        else:
+            self.attach_payload_item(key='body', value=payload)
+
+    def attach_payload_item(self, key: str, value: str = None):
+        self.payload[key] = value
