@@ -11,20 +11,6 @@ from pulpo_config import Config
 from art import text2art
 
 
-class UpperCaseHandler(echo_handler):
-
-    def handle(self, payload: str):
-        print('UpperCaseHandler.handle')
-        EchoHandler.handle(self, payload.upper())
-
-
-class LowerCaseHandler(EchoHandler):
-
-    def handle(self, payload: str):
-        print('LowerCaseHandler.handle')
-        EchoHandler.handle(self, payload.lower())
-
-
 class QueueAdapter():
 
     def enqueue(self, message: Message) -> Message:
