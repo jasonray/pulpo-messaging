@@ -303,4 +303,4 @@ class FileQueueAdapter(QueueAdapter):
         return os.path.exists(self._get_message_file_path(message_id=messsage_id))
 
     def log(self, *argv):
-        logger.log(argv, flush=True)
+        logger.log(*argv, flush=True)
