@@ -1,6 +1,4 @@
-import os
 import time
-import datetime
 from kessel import logger
 from statman import Statman
 from pulpo_config import Config
