@@ -140,7 +140,7 @@ class TestFqa(unittest.TestCase):
         payload += 'this statment has a "quote" - watch out \n'
         payload += "this statment has a 'single quote' \n"
         payload += "\t this starts with a tab \n"
-        m1 = Message(payload=payload, header='h1')
+        m1 = Message(payload=payload, headers='h1')
         m1 = qa.enqueue(m1)
 
         dq_1 = qa.dequeue()
@@ -153,7 +153,7 @@ class TestFqa(unittest.TestCase):
         qa = self.file_queue_adapter_factory()
         qa.config.set('skip_random_messages_range', 100)
 
-        m1 = Message(payload='test', header='h1')
+        m1 = Message(payload='test', headers='h1')
         m1 = qa.enqueue(m1)
 
         dq_1 = qa.dequeue()
