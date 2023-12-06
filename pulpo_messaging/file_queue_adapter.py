@@ -263,7 +263,6 @@ class FileQueueAdapter(QueueAdapter):
         if isinstance(message, Message):
             message_id = message.id
         elif isinstance(message, str):
-            # not really the right way to commit a message but it will work
             message_id = message
         else:
             raise Exception('rollback expects message object')
