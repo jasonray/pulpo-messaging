@@ -18,10 +18,7 @@ class Message():
         self.attach_header(key="request_type", value=request_type)
 
     def __str__(self):
-        serialized = ''
-        serialized += 'm1.0 \n'
-        serialized += '' + self.payload
-        return serialized
+        return f"{self.header}\n{self.payload}"
 
     @property
     def id(self):
