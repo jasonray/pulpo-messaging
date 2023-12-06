@@ -11,6 +11,8 @@ from pulpo_messaging.queue_adapter import QueueAdapter
 
 
 class FileQueueAdapterConfig(Config):
+    MODE_READ_WRITE='0o770'
+    MODE_READ_WRITE_EXECUTE='0o777'
 
     def __init__(self, options: dict = None, json_file_path: str = None):
         super().__init__(options=options, json_file_path=json_file_path)
@@ -51,9 +53,9 @@ class FileQueueAdapter(QueueAdapter):
         self._create_message_directories()
 
     def _create_message_directories(self):
-        os.makedirs(name=self.config.base_path, mode=0o777, exist_ok=True)
-        os.makedirs(name=self.config.lock_path, mode=0o777, exist_ok=True)
-        os.makedirs(name=self.config.history_path, mode=0o777, exist_ok=True)
+        os.makedirs(name=self.config.base_path, mode=self.MODE_READ_WRITE, exist_ok=True)
+        os.makedirs(name=self.config.lock_path, mode=self.MODE_READ_WRITE, exist_ok=True)
+        os.makedirs(name=self.config.history_path, mode=self.MODE_READ_WRITE, exist_ok=True)
 
     @property
     def config(self) -> FileQueueAdapterConfig:
