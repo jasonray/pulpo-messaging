@@ -72,6 +72,7 @@ class Message():
         last_key = keys[len(keys) - 1]
         parent[last_key] = value
 
+
     @property
     def id(self):
         return self.get("id")
@@ -132,6 +133,7 @@ class Message():
         return self.get(fqk)
 
     def set_payload_item(self, payload):
+
         if isinstance(payload, dict):
             for key in payload:
                 self.attach_payload_item(key=key, value=payload[key])
