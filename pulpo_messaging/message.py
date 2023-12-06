@@ -72,7 +72,6 @@ class Message():
         last_key = keys[len(keys) - 1]
         parent[last_key] = value
 
-
     @property
     def id(self):
         return self.get("id")
