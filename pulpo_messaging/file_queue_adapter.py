@@ -11,8 +11,6 @@ from pulpo_messaging.queue_adapter import QueueAdapter
 
 
 class FileQueueAdapterConfig(Config):
-    MODE_READ_WRITE='0o770'
-    MODE_READ_WRITE_EXECUTE='0o777'
 
     def __init__(self, options: dict = None, json_file_path: str = None):
         super().__init__(options=options, json_file_path=json_file_path)
@@ -43,6 +41,9 @@ class FileQueueAdapterConfig(Config):
 
 
 class FileQueueAdapter(QueueAdapter):
+    MODE_READ_WRITE = 0o770
+    MODE_READ_WRITE_EXECUTE = 0o777
+
     _config = None
 
     def __init__(self, options: dict):
