@@ -97,7 +97,7 @@ class FileQueueAdapter(QueueAdapter):
                 m = self._load_message_from_file(file_path=file)
 
                 now = datetime.datetime.now()
-                self.log(f'verifying {m.delay=} vs {now=} => {m.delay > now}')
+                self.log(f'verifying {m.delay=} vs {now=}')
                 if m.delay and m.delay > now:
                     self.log('message delayed, do not process yet')
                 else:
