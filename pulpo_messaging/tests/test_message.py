@@ -1,11 +1,5 @@
-import os
 import unittest
-import time
-from pulpo_messaging.kessel import FileQueueAdapter
-from pulpo_messaging.kessel import QueueAdapter
 from pulpo_messaging.kessel import Message
-from .unittest_helper import get_unique_base_path
-from datetime import timedelta
 
 
 class TestMessage(unittest.TestCase):
@@ -43,7 +37,7 @@ class TestMessage(unittest.TestCase):
         self.assertEqual(m.get('header.request_type'), 'rt')
 
     def test_message_id(self):
-        m = Message(id=123)
+        m = Message(message_id=123)
         print(f'{m}')
         self.assertEqual(m.id, 123)
 

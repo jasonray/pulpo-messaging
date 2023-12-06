@@ -1,11 +1,11 @@
 import os
 import unittest
 import time
+from datetime import timedelta
 from pulpo_messaging.kessel import FileQueueAdapter
 from pulpo_messaging.kessel import QueueAdapter
 from pulpo_messaging.kessel import Message
 from .unittest_helper import get_unique_base_path
-from datetime import timedelta
 
 
 class TestFqaCompliance(unittest.TestCase):

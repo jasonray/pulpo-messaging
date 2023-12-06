@@ -11,7 +11,7 @@ class Message():
 
     _components = None
 
-    def __init__(self, id=None, payload=None, headers=None, request_type=None, delay=None, components: dict = None):
+    def __init__(self, message_id=None, payload=None, headers=None, request_type=None, delay=None, components: dict = None):
         if components:
             print('load from components')
             self._components = components
@@ -21,8 +21,8 @@ class Message():
 
         self._header = {}
 
-        if id:
-            self.id = id
+        if message_id:
+            self.id = message_id
         if payload:
             self.set_payload_item(payload=payload)
         if headers:
@@ -55,7 +55,7 @@ class Message():
     def getAsDate(self, key: str):
         value = self.get(key)
         if isinstance(value, str):
-            value = datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f')
+            return datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f')
         return value
 
     def set(self, key: str, value: typing.Any):
