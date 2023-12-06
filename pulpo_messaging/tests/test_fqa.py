@@ -144,7 +144,7 @@ class TestFqa(unittest.TestCase):
         body += "\t this starts with a tab \n"
         m1 = Message(payload=body, headers='h1')
         m1 = qa.enqueue(m1)
-        self.assertIsNotNone( m1.id)
+        self.assertIsNotNone(m1.id)
 
         dq_1 = qa.dequeue()
         print(f'dq={dq_1}')
@@ -184,11 +184,14 @@ class TestFqa(unittest.TestCase):
         m1 = Message(payload='hello world', delay=timedelta(seconds=5))
         m1 = qa.enqueue(m1)
 
+        print('attempt to dequeue, expect message not yet available')
         dq_1 = qa.dequeue()
         self.assertIsNone(dq_1, 'Because message was enqueue with a delay, the message should not have been dequeued at this time')
 
+        print('pause 5 seconds')
         time.sleep(5)
 
+        print('attempt to dequeue, expect message is available')
         dq_2 = qa.dequeue()
-        self.assertIsNone(dq_2)
+        self.assertIsNotNone(dq_2)
         self.assertEqual(dq_2.id, m1.id)

@@ -3,6 +3,7 @@ import uuid
 import time
 import json
 import random
+import datetime
 from statman import Statman
 from pulpo_config import Config
 from pulpo_messaging import logger
@@ -94,15 +95,19 @@ class FileQueueAdapter(QueueAdapter):
 
                 self.log(f'checking if file on delay {file}')
                 m = self._load_message_from_file(file_path=file)
-                self.log(f'{m.delay=}')
 
-                self.log(f'attempt to lock message: {file.path}')
-                lock_file_path = self._lock_file(file.path)
-                if lock_file_path:  # pylint: disable=no-else-break
-                    self.log('locked message')
-                    break
+                now = datetime.datetime.now()
+                self.log(f'verifying {m.delay=} vs {now=} => {m.delay > now}')
+                if m.delay and m.delay > now:
+                    self.log('message delayed, do not process yet')
                 else:
-                    self.log('failed to lock message')
+                    self.log(f'attempt to lock message: {file.path}')
+                    lock_file_path = self._lock_file(file.path)
+                    if lock_file_path:  # pylint: disable=no-else-break
+                        self.log('locked message')
+                        break
+                    else:
+                        self.log('failed to lock message')
             else:
                 # self.log(f'skip message [i={i}][skip={skip_messages}]')
                 last_file = file
@@ -172,12 +177,8 @@ class FileQueueAdapter(QueueAdapter):
         if self.config.message_format == 'body_only':
             serialized_message = message.payload.get('body')
         elif self.config.message_format == 'json':
-            message_parts = {}
-            message_parts['id'] = message.id
-            message_parts['header'] = message.header
-            message_parts['payload'] = message.payload
             self.log(f'save message to file {path_file=} m={str(message)}')
-            serialized_message = json.dumps(message_parts, indent=2, default=str)
+            serialized_message = json.dumps(message._components, indent=2, default=str)
         else:
             raise Exception(f'invalid message format config setting {self.config.message_format}')
         self.log(f'_save_message_to_file [id={message.id}][path={path_file}][format={self.config.message_format}]')

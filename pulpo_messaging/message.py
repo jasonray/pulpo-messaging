@@ -11,7 +11,7 @@ class Message():
 
     _components = None
 
-    def __init__(self, id=None, payload=None, headers=None, request_type=None, delay=None, components:dict =None):
+    def __init__(self, id=None, payload=None, headers=None, request_type=None, delay=None, components: dict = None):
         if components:
             print('load from components')
             self._components = components
@@ -22,20 +22,21 @@ class Message():
         self._header = {}
 
         if id:
-            self.id=id
+            self.id = id
         if payload:
             self.set_payload_item(payload=payload)
         if headers:
             self.set_header_item(headers=headers)
         if request_type:
-            self.request_type=request_type
+            self.request_type = request_type
         if delay:
-            self.delay=delay
+            self.delay = delay
 
     def __str__(self):
         return str(self._components)
-    
+
     def get(self, key: str):
+        print(f'message.get {key=}')
         keys = key.split('.')
 
         value = self._components
@@ -48,9 +49,17 @@ class Message():
             else:
                 value = None
 
+        print(f'message.get {key=} => {value=}')
+        return value
+
+    def getAsDate(self, key: str):
+        value = self.get(key)
+        if isinstance(value, str):
+            value = datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f')
         return value
 
     def set(self, key: str, value: typing.Any):
+        print(f'message.set {key=} {value=}')
         keys = key.split('.')
 
         parent = self._components
@@ -66,7 +75,7 @@ class Message():
     @property
     def id(self):
         return self.get("id")
-    
+
     @id.setter
     def id(self, value):
         self.set("id", value)
@@ -77,7 +86,7 @@ class Message():
 
     def get_header_item(self, key: str):
         fqk = f'header.{key}'
-        self.get(fqk)
+        return self.get(fqk)
 
     def set_header_item(self, headers):
         if isinstance(headers, dict):
@@ -88,19 +97,23 @@ class Message():
 
     def attach_header(self, key: str, value: str = None):
         fqk = f'header.{key}'
-        self.set(fqk,value)
+        self.set(fqk, value)
 
     @property
     def delay(self):
-        self.get_header_item('delay')
+        fqk = 'header.delay'
+        return self.getAsDate(fqk)
 
     @delay.setter
     def delay(self, value):
         if isinstance(value, timedelta):
-            delta_dt = datetime.datetime.now() + timedelta(seconds=15)
+            print('setting delay as timedelta')
+            delta_dt = datetime.datetime.now() + value
         else:
+            print('setting delay as date')
             delta_dt = value
-        self.attach_header('delay', delta_dt)
+        fqk = 'header.delay'
+        self.set(fqk, delta_dt)
 
     @property
     def request_type(self):
@@ -127,7 +140,7 @@ class Message():
 
     def attach_payload_item(self, key: str, value: str = None):
         fqk = f'payload.{key}'
-        self.set(fqk,value)
+        self.set(fqk, value)
 
     @property
     def body(self):

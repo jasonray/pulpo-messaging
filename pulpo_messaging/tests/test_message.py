@@ -46,3 +46,8 @@ class TestMessage(unittest.TestCase):
         m = Message(id=123)
         print(f'{m}')
         self.assertEqual(m.id, 123)
+
+    def test_message_delay(self):
+        m = Message(delay=123)
+        print(f'{m}')
+        self.assertEqual(m.delay, 123)
