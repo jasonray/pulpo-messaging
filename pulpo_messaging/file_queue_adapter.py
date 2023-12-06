@@ -3,6 +3,7 @@ import uuid
 import time
 import json
 import random
+import datetime
 from statman import Statman
 from pulpo_config import Config
 from pulpo_messaging import logger
@@ -29,7 +30,7 @@ class FileQueueAdapterConfig(Config):
 
     @property
     def message_format(self: Config) -> str:
-        return self.get('message_format', 'body_only')
+        return self.get('message_format', 'json')
 
     @property
     def skip_random_messages_range(self: Config) -> int:
@@ -63,11 +64,10 @@ class FileQueueAdapter(QueueAdapter):
         return self._config
 
     def enqueue(self, message: Message) -> Message:
-        message_id = self._create_message_id()
-        message._id = message_id
-        message_file_path = self._get_message_file_path(message_id=message_id)
+        message.id = self._create_message_id()
+        message_file_path = self._get_message_file_path(message_id=message.id)
         self._save_message_to_file(message=message, path_file=message_file_path)
-        self.log(f'fqa.enqueue [id={message._id}][file_path={message_file_path}]')
+        self.log(f'fqa.enqueue [id={message.id}][file_path={message_file_path}]')
         Statman.gauge('fqa.enqueue').increment()
         return message
 
@@ -92,13 +92,22 @@ class FileQueueAdapter(QueueAdapter):
 
             if (i >= skip_messages):
                 last_file = None
-                self.log(f'attempt to lock message: {file.path}')
-                lock_file_path = self._lock_file(file.path)
-                if lock_file_path:  # pylint: disable=no-else-break
-                    self.log('locked message')
-                    break
+
+                self.log(f'checking if file on delay {file}')
+                m = self._load_message_from_file(file_path=file)
+
+                now = datetime.datetime.now()
+                self.log(f'verifying {m.delay=} vs {now=}')
+                if m.delay and m.delay > now:
+                    self.log('message delayed, do not process yet')
                 else:
-                    self.log('failed to lock message')
+                    self.log(f'attempt to lock message: {file.path}')
+                    lock_file_path = self._lock_file(file.path)
+                    if lock_file_path:  # pylint: disable=no-else-break
+                        self.log('locked message')
+                        break
+                    else:
+                        self.log('failed to lock message')
             else:
                 # self.log(f'skip message [i={i}][skip={skip_messages}]')
                 last_file = file
@@ -138,16 +147,14 @@ class FileQueueAdapter(QueueAdapter):
                 message_id = self._get_message_id_from_file_path(file_path)
                 m = Message(payload=payload)
                 self.log(f'load message id from file path [file_path:{file_path}]')
-                m._id = message_id
-                self.log(f'extracted message id [file_path:{file_path}]=>[id:{message_id}]')
+                m.id = message_id
+                self.log(f'extracted message id [file_path:{file_path}]=>[id:{m.id}]')
             elif self.config.message_format == 'json':
-                message_parts = json.load(f)
-                payload = message_parts['payload']
-                message_id = message_parts['id']
-                header = message_parts['header']
-                request_type = message_parts['request_type']
-                m = Message(payload=payload, headers=header, request_type=request_type)
-                m._id = message_id
+                message_components = json.load(f)
+                print('load from message components', message_components)
+                m = Message(components=message_components)
+                print(f'loaded {m.id=}')
+                self.log(f'loaded message from file {file_path=} m={str(m)}')
             else:
                 raise Exception(f'invalid message format config setting {self.config.message_format}')
 
@@ -170,12 +177,8 @@ class FileQueueAdapter(QueueAdapter):
         if self.config.message_format == 'body_only':
             serialized_message = message.payload.get('body')
         elif self.config.message_format == 'json':
-            message_parts = {}
-            message_parts['id'] = message.id
-            message_parts['header'] = message.header
-            message_parts['request_type'] = message.request_type
-            message_parts['payload'] = message.payload
-            serialized_message = json.dumps(message_parts, indent=2)
+            self.log(f'save message to file {path_file=} m={str(message)}')
+            serialized_message = json.dumps(message._components, indent=2, default=str)
         else:
             raise Exception(f'invalid message format config setting {self.config.message_format}')
         self.log(f'_save_message_to_file [id={message.id}][path={path_file}][format={self.config.message_format}]')
