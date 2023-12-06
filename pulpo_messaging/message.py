@@ -10,8 +10,9 @@ class Message():
 
     def __init__(self, payload=None, headers=None, request_type=None):
         self._payload = {}
-        self.attach_payload(payload=payload)
         self._header = {}
+
+        self.attach_payload(payload=payload)
         self.attach_headers(headers=headers)
 
         self.attach_header(key="request_type", value=request_type)
