@@ -36,7 +36,7 @@ class TestConfig(unittest.TestCase):
         args['shutdown_after_number_of_empty_iterations'] = 10
         args['file_queue_adapter.base_path'] = '/t/k/fqa'
 
-        config.process_args(args)
+        config.fromArgumentParser(args)
 
         self.assertEqual(config.get('file_queue_adapter.base_path'), '/t/k/fqa')
         self.assertEqual(config.get('file_queue_adapter').get('base_path'), '/t/k/fqa')
