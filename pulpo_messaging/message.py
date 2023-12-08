@@ -12,41 +12,38 @@ class Message():
     _components = None
 
     def __init__(self, message_id=None, body: dict = None, payload=None, header: dict = None, request_type=None, delay=None, components: dict = None):
-        if components:
-            print('load from components')
-            self._components = components
-            print(f'id={self.id}')
-        else:
-            self._components = {}
+        self._components = {}
 
+        if components:
+            self._components = components
         if message_id:
             self.id = message_id
         if body:
-            for key in body:
-                self.set_body_item(key=key, value=body[key])
+            self.__store_body(body)
         if payload:
-            print(f'setting payload: {payload}')
             self.set_body_item(key='payload', value=payload)
         if header:
-            if isinstance(header, dict):
-                for key in header:
-                    self.set_header_item(key=key, value=header[key])
-            elif isinstance(header, set):
-                for key in header:
-                    print(f'processing headers: {key=}')
-                    self.set_header_item(key=key, value=None)
+            self.__store_header(header)
         if request_type:
             self.request_type = request_type
         if delay:
             self.delay = delay
 
-        # if not self.body:
-        #     self.set('body',{})
-        # if not self.header:
-        #     self.set('header',{})
-
     def __str__(self):
         return str(self._components)
+
+    def __store_header(self, header):
+        if isinstance(header, dict):
+            for key in header:
+                self.set_header_item(key=key, value=header[key])
+        elif isinstance(header, set):
+            for key in header:
+                print(f'processing headers: {key=}')
+                self.set_header_item(key=key, value=None)
+
+    def __store_body(self, body):
+        for key in body:
+            self.set_body_item(key=key, value=body[key])
 
     def get(self, key: str):
         print(f'message.get {key=}')
