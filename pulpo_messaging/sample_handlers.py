@@ -1,7 +1,8 @@
 import os
 import uuid
-
+import random
 from .payload_handler import PayloadHandler
+from .payload_handler import RequestResult
 
 
 class EchoHandler(PayloadHandler):
@@ -35,3 +36,40 @@ class UpperCaseHandler(EchoHandler):
     def handle(self, payload: str):
         print('UpperCaseHandler.handle')
         EchoHandler.handle(self, payload.upper())
+
+
+class AlwaysSucceedHandler(EchoHandler):
+
+    def handle(self, payload: str):
+        print('AlwaysSucceedHandler.handle')
+        result = RequestResult.success_factory()
+        print(f'AlwaysSucceedHandler {result=}')
+        return result
+
+
+class AlwaysFailHandler(EchoHandler):
+
+    def handle(self, payload: str):
+        print('AlwaysFailHandler.handle')
+        result = RequestResult.fatal_factory(error='something unexpected occurred')
+        return result
+
+
+class AlwaysTransientFailureHandler(EchoHandler):
+
+    def handle(self, payload: str):
+        print('AlwaysTransientFailureHandler.handle')
+        result = RequestResult.transient_factory(error='something occurred, but if you try again in a moment it may succeed')
+        return result
+
+
+class FiftyFiftyHandler(EchoHandler):
+
+    def handle(self, payload: str):
+        print('FiftyFiftyHandler.handle')
+        result = random.randint(0, 1)
+        if result:
+            result = RequestResult.success_factory()
+        else:
+            result = RequestResult.transient_factory(error='FiftyFiftyHandler failed, try again')
+        return result
