@@ -148,17 +148,17 @@ class Pulpo():
         self.log(f'processing complete: {result=}')
 
         if result.isSuccess:
-            self.queue_adapter.commit(message)
+            self.queue_adapter.commit(message=message, is_success=True)
             Statman.gauge('kessel.messages.success').increment()
             Statman.gauge('kessel.commit').increment()
             self.log('commit complete')
         elif result.isTransient:
-            self.queue_adapter.rollback(message)
+            self.queue_adapter.rollback(message=message)
             Statman.gauge('kessel.messages.transient').increment()
             Statman.gauge('kessel.rollback').increment()
             self.log('rollback complete')
         elif result.isFatal:
-            self.queue_adapter.commit(message)
+            self.queue_adapter.commit(message=message, is_success=False)
             Statman.gauge('kessel.messages.fatal').increment()
             Statman.gauge('kessel.commit').increment()
             self.log('commit complete')

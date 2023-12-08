@@ -202,7 +202,7 @@ class TestFqa(unittest.TestCase):
         dq_1 = qa.dequeue()
         qa.commit(dq_1)
 
-        expected_historical_message_file_path = os.path.join(qa.config.history_path, dq_1.id + '.message')
+        expected_historical_message_file_path = os.path.join(qa.config.history_success_path, dq_1.id + '.message')
         print('expected_historical_message_file_path: ', expected_historical_message_file_path)
         self.assertTrue(os.path.exists(expected_historical_message_file_path), "Historical message does not exist.")
 
@@ -260,3 +260,15 @@ class TestFqa(unittest.TestCase):
 
         dq_3 = qa.dequeue()
         self.assertIsNone(dq_3)
+
+    def test_commit_failure_removes_message(self):
+        qa = self.file_queue_adapter_factory()
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+        qa.commit(message=dq_1, is_success=False)
+
+        dq_2 = qa.dequeue()
+        self.assertIsNone(dq_2)
