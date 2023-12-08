@@ -11,7 +11,7 @@ class Message():
 
     _components = None
 
-    def __init__(self, message_id=None, body: dict = None, payload=None, headers: dict = None, request_type=None, delay=None, components: dict = None):
+    def __init__(self, message_id=None, body: dict = None, payload=None, header: dict = None, request_type=None, delay=None, components: dict = None):
         if components:
             print('load from components')
             self._components = components
@@ -27,12 +27,12 @@ class Message():
         if payload:
             print(f'setting payload: {payload}')
             self.set_body_item(key='payload', value=payload)
-        if headers:
-            if isinstance(headers, dict):
-                for key in headers:
-                    self.set_header_item(key=key, value=headers[key])
-            elif isinstance(headers, set):
-                for key in headers:
+        if header:
+            if isinstance(header, dict):
+                for key in header:
+                    self.set_header_item(key=key, value=header[key])
+            elif isinstance(header, set):
+                for key in header:
                     print(f'processing headers: {key=}')
                     self.set_header_item(key=key, value=None)
         if request_type:

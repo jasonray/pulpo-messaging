@@ -72,8 +72,8 @@ class TestMessage(unittest.TestCase):
         self.assertEqual(m.delay, 123)
 
     def test_message_header_constructor(self):
-        h = {'k1': 'v1', 'k2': 'v2', 'h1':None}
-        m = Message(headers=h)
+        h = {'k1': 'v1', 'k2': 'v2', 'h1': None}
+        m = Message(header=h)
 
         self.assertEqual(m.header.get('k1'), 'v1')
         self.assertEqual(m.header.get('k2'), 'v2')
