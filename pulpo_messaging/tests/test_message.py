@@ -87,3 +87,13 @@ class TestMessage(unittest.TestCase):
         self.assertEqual(m.header.get('k1'), 'v1')
         self.assertEqual(m.header.get('k2'), 'v2')
         self.assertEqual(m.header.get('h1'), None)
+
+    def test_message_attempts(self):
+        m = Message()
+        m.attempts = 3
+        print(f'{m}')
+        self.assertEqual(m.attempts, 3)
+
+        m.attempts = 5
+        print(f'{m}')
+        self.assertEqual(m.attempts, 5)

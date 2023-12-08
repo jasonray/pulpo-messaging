@@ -29,7 +29,7 @@ lint: check-format
 lint-no-error: 
 	pylint --exit-zero -r n pulpo_messaging
 
-test: clean-test build dev_deps
+test: build dev_deps
 	python3 -m pytest -v --durations=0
 
 build: deps

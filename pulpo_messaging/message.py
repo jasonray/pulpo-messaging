@@ -94,7 +94,7 @@ class Message():
     def header(self) -> dict:
         return self.get('header')
 
-    def get_header_item(self, key: str):
+    def get_header_item(self, key: str) -> str:
         fqk = f'header.{key}'
         return self.get(fqk)
 
@@ -125,6 +125,20 @@ class Message():
     @request_type.setter
     def request_type(self, value):
         self.set_header_item('request_type', value)
+
+    @property
+    def attempts(self) -> int:
+        print('get attempts')
+        header_item = self.get_header_item('attempts')
+        if header_item is None:
+            value = 0
+        else:
+            value = int(header_item)
+        return value
+
+    @attempts.setter
+    def attempts(self, value: int):
+        self.set_header_item('attempts', value)
 
     def get_body_item(self, key: str):
         fqk = f'body.{key}'

@@ -9,7 +9,7 @@ class QueueAdapter():
     def dequeue(self) -> Message:
         pass
 
-    def commit(self, message: Message) -> Message:
+    def commit(self, message: Message, is_success: bool = True) -> Message:
         pass
 
     def rollback(self, message: Message) -> Message:

@@ -62,11 +62,16 @@ class Pulpo():
     _config = None
     _handler_registry = None
 
-    def __init__(self, options: dict):
+    def __init__(self, options: dict = None, queue_adapter=None):
         self._config = PulpoConfig(options)
 
         self.log('init queue adapter')
-        if self.config.queue_adapter_type == 'FileQueueAdapter':
+        if queue_adapter:
+            if isinstance(queue_adapter, QueueAdapter):
+                self._queue_adapter = queue_adapter
+            else:
+                raise Exception('invalid queue adapter')
+        elif self.config.queue_adapter_type == 'FileQueueAdapter':
             self._queue_adapter = FileQueueAdapter(self.config.get('file_queue_adapter'))
         else:
             raise Exception('invalid queue adapter type')
@@ -108,7 +113,7 @@ class Pulpo():
 
             if message:
                 iterations_with_no_messages = 0
-                self.process_one_message(message)
+                self.handle_message(message)
             else:
                 iterations_with_no_messages += 1
                 self.log(f'no message available [iteration with no messages = {iterations_with_no_messages}][max = {self.config.shutdown_after_number_of_empty_iterations}]')
@@ -125,7 +130,7 @@ class Pulpo():
                     Statman.stopwatch('kessel.message_streak_tm').start()
                     Statman.gauge('kessel.message_streak_cnt').value = 0
 
-    def process_one_message(self, message):
+    def handle_message(self, message) -> RequestResult:
         Statman.gauge('kessel.dequeue').increment()
         Statman.gauge('kessel.message_streak_cnt').increment()
 
@@ -135,26 +140,34 @@ class Pulpo():
         if handler is None:
             self.log(f'WARNING no handler for message type {message.request_type}')
             result = RequestResult.fatal_factory(f'WARNING no handler for message type {message.request_type}')
-        elif isinstance(handler , PayloadHandler):
+        elif isinstance(handler, PayloadHandler):
             result = handler.handle(payload=message.payload)
         else:
             self.log(f'WARNING unexpected handler {message.request_type} {handler}')
             result = RequestResult.fatal_factory(f'WARNING unexpected handler {message.request_type} {handler}')
+        self.log(f'processing complete: {result=}')
 
         if result.isSuccess:
-            self.queue_adapter.commit(message)
+            self.queue_adapter.commit(message=message, is_success=True)
             Statman.gauge('kessel.messages.success').increment()
+            Statman.gauge('kessel.commit').increment()
+            self.log('commit complete')
         elif result.isTransient:
-            self.queue_adapter.rollback(message)
+            self.queue_adapter.rollback(message=message)
             Statman.gauge('kessel.messages.transient').increment()
+            Statman.gauge('kessel.rollback').increment()
+            self.log('rollback complete')
         elif result.isFatal:
-            self.queue_adapter.commit(message)
+            self.queue_adapter.commit(message=message, is_success=False)
             Statman.gauge('kessel.messages.fatal').increment()
+            Statman.gauge('kessel.commit').increment()
+            self.log('commit complete')
         else:
             pass
 
         Statman.gauge('kessel.messages_processed').increment()
-        self.log('commit complete')
+
+        return RequestResult
 
     def print_banner(self):
         print(f'print_banner {self.config.enable_banner=}')

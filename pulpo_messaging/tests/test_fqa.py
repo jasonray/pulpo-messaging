@@ -125,9 +125,15 @@ class TestFqaCompliance(unittest.TestCase):
 
 class TestFqa(unittest.TestCase):
 
-    def file_queue_adapter_factory(self, tag: str = 'fqa') -> FileQueueAdapter:
+    def file_queue_adapter_factory(self, tag: str = 'fqa', additional_options=None) -> FileQueueAdapter:
         options = {}
         options['base_path'] = get_unique_base_path(tag)
+
+        if additional_options:
+            for key in additional_options:
+                value = additional_options.get(key)
+                options[key] = value
+
         return FileQueueAdapter(options=options)
 
     def test_construct(self):
@@ -196,7 +202,7 @@ class TestFqa(unittest.TestCase):
         dq_1 = qa.dequeue()
         qa.commit(dq_1)
 
-        expected_historical_message_file_path = os.path.join(qa.config.history_path, dq_1.id + '.message')
+        expected_historical_message_file_path = os.path.join(qa.config.history_success_path, dq_1.id + '.message')
         print('expected_historical_message_file_path: ', expected_historical_message_file_path)
         self.assertTrue(os.path.exists(expected_historical_message_file_path), "Historical message does not exist.")
 
@@ -216,3 +222,53 @@ class TestFqa(unittest.TestCase):
         dq_2 = qa.dequeue()
         self.assertIsNotNone(dq_2)
         self.assertEqual(dq_2.id, m1.id)
+
+    def test_rollback_increments_attempts(self):
+        qa = self.file_queue_adapter_factory()
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+        self.assertEqual(dq_1.attempts, 0)
+
+        qa.rollback(dq_1)
+
+        dq_3 = qa.dequeue()
+        self.assertIsNotNone(dq_3)
+        self.assertEqual(dq_3.attempts, 1)
+
+        qa.rollback(dq_3)
+
+        dq_4 = qa.dequeue()
+        self.assertIsNotNone(dq_4)
+        self.assertEqual(dq_4.attempts, 2)
+
+    def test_message_exceeds_attempts_unavailable(self):
+        qa = self.file_queue_adapter_factory(additional_options={"max_number_of_attempts": 2})
+
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+        qa.rollback(dq_1)
+
+        dq_2 = qa.dequeue()
+        self.assertIsNotNone(dq_2)
+        qa.rollback(dq_2)
+
+        dq_3 = qa.dequeue()
+        self.assertIsNone(dq_3)
+
+    def test_commit_failure_removes_message(self):
+        qa = self.file_queue_adapter_factory()
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+        qa.commit(message=dq_1, is_success=False)
+
+        dq_2 = qa.dequeue()
+        self.assertIsNone(dq_2)

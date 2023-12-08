@@ -25,8 +25,12 @@ class FileQueueAdapterConfig(Config):
         return os.path.join(self.base_path, 'lock')
 
     @property
-    def history_path(self: Config) -> str:
-        return os.path.join(self.base_path, 'history')
+    def history_success_path(self: Config) -> str:
+        return os.path.join(self.base_path, 'history', 'success')
+
+    @property
+    def history_failure_path(self: Config) -> str:
+        return os.path.join(self.base_path, 'history', 'failure')
 
     @property
     def message_format(self: Config) -> str:
@@ -39,6 +43,10 @@ class FileQueueAdapterConfig(Config):
     @property
     def enable_history(self: Config) -> bool:
         return self.getAsBool('enable_history', "False")
+
+    @property
+    def max_number_of_attempts(self: Config) -> bool:
+        return self.getAsInt('max_number_of_attempts', 0)
 
 
 class FileQueueAdapter(QueueAdapter):
@@ -57,7 +65,8 @@ class FileQueueAdapter(QueueAdapter):
     def _create_message_directories(self):
         os.makedirs(name=self.config.base_path, mode=self.MODE_READ_WRITE, exist_ok=True)
         os.makedirs(name=self.config.lock_path, mode=self.MODE_READ_WRITE, exist_ok=True)
-        os.makedirs(name=self.config.history_path, mode=self.MODE_READ_WRITE, exist_ok=True)
+        os.makedirs(name=self.config.history_success_path, mode=self.MODE_READ_WRITE, exist_ok=True)
+        os.makedirs(name=self.config.history_failure_path, mode=self.MODE_READ_WRITE, exist_ok=True)
 
     @property
     def config(self) -> FileQueueAdapterConfig:
@@ -93,13 +102,15 @@ class FileQueueAdapter(QueueAdapter):
             if (i >= skip_messages):
                 last_file = None
 
-                self.log(f'checking if file on delay {file}')
                 m = self._load_message_from_file(file_path=file)
+                self.log(f'loaded message [{m.id=}][{m.delay=}[]{m.attempts=}][{file.path=}]')
 
                 now = datetime.datetime.now()
-                self.log(f'verifying {m.delay=} vs {now=}')
                 if m.delay and m.delay > now:
                     self.log('message delayed, do not process yet')
+                    # todo: should move this out of queue
+                elif self.config.max_number_of_attempts and m.attempts >= self.config.max_number_of_attempts:
+                    self.log(f'message exceed max attempts {self.config.max_number_of_attempts=} {m.attempts=}')
                 else:
                     self.log(f'attempt to lock message: {file.path}')
                     lock_file_path = self._lock_file(file.path)
@@ -137,7 +148,7 @@ class FileQueueAdapter(QueueAdapter):
     def load_message_by_id(self, message_id):
         return self._load_message_from_file(self._get_message_file_path(message_id))
 
-    def _load_message_from_file(self, file_path):
+    def _load_message_from_file(self, file_path) -> Message:
         self.log(f'load message from file [{file_path=}][format={self.config.message_format}]')
         message = None
         with open(file=file_path, encoding="utf-8", mode='r') as f:
@@ -212,9 +223,12 @@ class FileQueueAdapter(QueueAdapter):
         self.log(f'_get_message_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
-    def _get_history_file_path(self, message_id) -> str:
+    def _get_history_file_path(self, message_id, is_success: bool) -> str:
         file_name = f'{message_id}.message'
-        path = os.path.join(self.config.history_path, file_name)
+        if is_success:
+            path = os.path.join(self.config.history_success_path, file_name)
+        else:
+            path = os.path.join(self.config.history_failure_path, file_name)
         self.log(f'_get_history_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
@@ -231,7 +245,7 @@ class FileQueueAdapter(QueueAdapter):
         text = text.strip()
         return text
 
-    def commit(self, message: Message):
+    def commit(self, message: Message, is_success: bool = True):
         message_id = None
         if isinstance(message, Message):
             message_id = message.id
@@ -242,10 +256,7 @@ class FileQueueAdapter(QueueAdapter):
             raise Exception('commit expects message object')
 
         self.log(f'commit {message_id}')
-        if self.config.enable_history:
-            self._move_to_history(message_id=message_id)
-        else:
-            self._delete_lock(message_id=message_id)
+        self._move_to_history(message_id=message_id, is_success=is_success)
         self.log(f'commit complete {message_id}')
         Statman.gauge('fqa.commit').increment()
 
@@ -259,9 +270,17 @@ class FileQueueAdapter(QueueAdapter):
             raise Exception('rollback expects message object')
 
         self.log(f'rollback [id={message_id}]')
+        self._increment_failed_attempts(message_id=message_id)
         self._rollback_lock(message_id=message_id)
         self.log(f'rollback complete [id={message_id}]')
         Statman.gauge('fqa.rollback').increment()
+
+    def _increment_failed_attempts(self, message_id: str):
+        '''Increments the attempts counter in the message.  This method assumes the message is in the lock directory.'''
+        lock_file_path = self._get_lock_file_path(message_id=message_id)
+        m = self._load_message_from_file(file_path=lock_file_path)
+        m.attempts += 1
+        self._save_message_to_file(message=m, file_path=lock_file_path)
 
     def _rollback_lock(self, message_id: str):
         self.log(f'rollback lock [id={message_id}]')
@@ -276,10 +295,10 @@ class FileQueueAdapter(QueueAdapter):
         self.log(f'delete file {lock_file_path}')
         os.remove(lock_file_path)
 
-    def _move_to_history(self, message_id: str):
+    def _move_to_history(self, message_id: str, is_success: bool):
         self.log(f'move lock to history {message_id}')
         lock_file_path = self._get_lock_file_path(message_id=message_id)
-        message_file_path = self._get_history_file_path(message_id=message_id)
+        message_file_path = self._get_history_file_path(message_id=message_id, is_success=is_success)
         self.log(f'move file [{lock_file_path}]=>[{message_file_path}]')
         os.rename(src=lock_file_path, dst=message_file_path)
 
