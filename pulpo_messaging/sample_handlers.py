@@ -17,7 +17,8 @@ class EchoHandler(PayloadHandler):
         destination_file_path = os.path.join(self.destination_directory, destination_filename)
         with open(file=destination_file_path, encoding="utf-8", mode='w') as f:
             f.write(payload)
-        return payload
+        return RequestResult.success_factory()
+
 
     @property
     def destination_directory(self) -> str:
