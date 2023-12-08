@@ -116,7 +116,7 @@ class Pulpo():
                 if handler is None:
                     self.log(f'WARNING no handler for message type {message.request_type}')
                 else:
-                    handler.handle(payload=message.payload)
+                    handler.handle(payload=message.body)
 
                 self.queue_adapter.commit(message)
                 Statman.gauge('kessel.messages_processed').increment()
