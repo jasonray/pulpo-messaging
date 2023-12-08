@@ -66,7 +66,12 @@ class Pulpo():
         self._config = PulpoConfig(options)
 
         self.log('init queue adapter')
-        if self.config.queue_adapter_type == 'FileQueueAdapter':
+        if queue_adapter:
+            if isinstance(queue_adapter, QueueAdapter):
+                self._queue_adapter=queue_adapter
+            else:
+                raise Exception('invalid queue adapter')
+        elif self.config.queue_adapter_type == 'FileQueueAdapter':
             self._queue_adapter = FileQueueAdapter(self.config.get('file_queue_adapter'))
         else:
             raise Exception('invalid queue adapter type')
