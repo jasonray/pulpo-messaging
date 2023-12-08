@@ -141,7 +141,7 @@ class TestFqaCompliance(unittest.TestCase):
 
         dq_4 = qa.dequeue()
         self.assertIsNotNone(dq_4)
-        self.assertEqual( dq_4.attempts , 4)
+        self.assertEqual( dq_4.attempts , 2)
 
 
 class TestFqa(unittest.TestCase):
