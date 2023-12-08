@@ -122,6 +122,27 @@ class TestFqaCompliance(unittest.TestCase):
         dq_3 = qa.dequeue()
         self.assertIsNotNone(dq_3)
 
+    def test_rollback_increments_attempts(self):
+        qa = self.queue_adapter_factory()
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+        self.assertEqual( dq_1.attempts , 0)
+
+        qa.rollback(dq_1)
+
+        dq_3 = qa.dequeue()
+        self.assertIsNotNone(dq_3)
+        self.assertEqual( dq_3.attempts , 1)
+
+        qa.rollback(dq_3)
+
+        dq_4 = qa.dequeue()
+        self.assertIsNotNone(dq_4)
+        self.assertEqual( dq_4.attempts , 4)
+
 
 class TestFqa(unittest.TestCase):
 

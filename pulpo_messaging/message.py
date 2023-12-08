@@ -128,12 +128,16 @@ class Message():
 
     @property
     def attempts(self) -> int:
+        print('get attempts')
         value= self.get_header_item('attempts')
+        print(f'get attempts {value=}')
         if not value :
             value =0
+            print(f'get attempts, force to 0 {value=}')
+        print(f'get attempts, return {value=}')
         return value
 
-    @request_type.setter
+    @attempts.setter
     def attempts(self, value : int):
         self.set_header_item('attempts', value)
 

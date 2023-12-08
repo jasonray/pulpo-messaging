@@ -259,11 +259,13 @@ class FileQueueAdapter(QueueAdapter):
             raise Exception('rollback expects message object')
 
         self.log(f'rollback [id={message_id}]')
+        self._increment_failed_attempts(message_id=message_id)
         self._rollback_lock(message_id=message_id)
         self.log(f'rollback complete [id={message_id}]')
         Statman.gauge('fqa.rollback').increment()
 
     def _increment_failed_attempts(self , message_id: str):
+        '''Increments the attempts counter in the message.  This method assumes the message is in the lock directory.'''
         lock_file_path = self._get_lock_file_path(message_id=message_id)
         m = self._load_message_from_file(file_path=lock_file_path)
         m.attempts += 1
