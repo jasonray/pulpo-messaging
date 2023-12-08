@@ -113,7 +113,7 @@ class Pulpo():
 
             if message:
                 iterations_with_no_messages = 0
-                self.process_one_message(message)
+                self.handle_message(message)
             else:
                 iterations_with_no_messages += 1
                 self.log(f'no message available [iteration with no messages = {iterations_with_no_messages}][max = {self.config.shutdown_after_number_of_empty_iterations}]')
