@@ -44,7 +44,6 @@ class Message():
         #     self.set('body',{})
         # if not self.header:
         #     self.set('header',{})
-    
 
     def __str__(self):
         return str(self._components)
