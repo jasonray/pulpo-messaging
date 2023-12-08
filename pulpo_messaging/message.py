@@ -11,7 +11,7 @@ class Message():
 
     _components = None
 
-    def __init__(self, message_id=None, payload=None, headers=None, request_type=None, delay=None, components: dict = None):
+    def __init__(self, message_id=None, payload:dict=None, body=None, headers:dict=None, request_type=None, delay=None, components: dict = None):
         if components:
             print('load from components')
             self._components = components
@@ -19,14 +19,26 @@ class Message():
         else:
             self._components = {}
 
-        self._header = {}
-
         if message_id:
             self.id = message_id
         if payload:
-            self.set_payload_item(payload=payload)
+            for key in payload:
+                self.set_payload_item(key=key, value=payload[key])
+        if body:
+            self.set_payload_item(key='body',value= body)
         if headers:
-            self.set_header_item(headers=headers)
+            if isinstance( headers, dict):
+                print(f'processing headers: {headers=}')
+                for key in headers:
+                    print(f'processing headers: {key=}')
+                    print(f'{headers.get(key)}')
+                    print(f'{headers[key]}')
+                    self.set_header_item(key=key, value=headers[key])
+            elif isinstance(  headers, set):
+                print(f'processing headers: {headers=}')
+                for key in headers:
+                    print(f'processing headers: {key=}')
+                    self.set_header_item(key=key, value=None)
         if request_type:
             self.request_type = request_type
         if delay:
@@ -82,20 +94,13 @@ class Message():
 
     @property
     def header(self) -> dict:
-        return self._header
+        return self.get('header')
 
     def get_header_item(self, key: str):
         fqk = f'header.{key}'
         return self.get(fqk)
 
-    def set_header_item(self, headers):
-        if isinstance(headers, dict):
-            for key in headers:
-                self.attach_header(key=key, value=headers[key])
-        else:
-            self.attach_header(key=headers)
-
-    def attach_header(self, key: str, value: str = None):
+    def set_header_item(self, key: str, value: str = None):
         fqk = f'header.{key}'
         self.set(fqk, value)
 
@@ -127,17 +132,17 @@ class Message():
     def payload(self):
         return self.get('payload')
 
+    @property
+    def get_payload(self) -> dict:
+        return self.get('payload')
+
     def get_payload_item(self, key: str):
         fqk = f'payload.{key}'
         return self.get(fqk)
 
-    def set_payload_item(self, payload):
-
-        if isinstance(payload, dict):
-            for key in payload:
-                self.attach_payload_item(key=key, value=payload[key])
-        else:
-            self.attach_payload_item(key='body', value=payload)
+    def set_payload_item(self, key: str, value: str = None):
+        fqk = f'payload.{key}'
+        self.set(fqk, value)
 
     def attach_payload_item(self, key: str, value: str = None):
         fqk = f'payload.{key}'

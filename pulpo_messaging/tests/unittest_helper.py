@@ -2,7 +2,7 @@ import datetime
 import uuid
 import os
 
-_kessel_root_directory = '/tmp/kessel/unit-test'
+_kessel_root_directory = '/tmp/pulpo/unit-test'
 _timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 

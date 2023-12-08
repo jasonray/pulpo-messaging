@@ -38,7 +38,7 @@ def create_random_message(payload: str):
     elif request_type_number == 3:
         request_type ='upper'
         Statman.gauge(name='publish-sample-messages.published-messages.upper').increment()
-    return Message(payload=payload, request_type=request_type)
+    return Message(body=payload, request_type=request_type)
 
 def publish():
     Statman.stopwatch(name='publish-sample-messages.timing', autostart=True)
