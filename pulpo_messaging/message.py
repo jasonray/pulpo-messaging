@@ -11,7 +11,7 @@ class Message():
 
     _components = None
 
-    def __init__(self, message_id=None, payload:dict=None, body=None, headers:dict=None, request_type=None, delay=None, components: dict = None):
+    def __init__(self, message_id=None, body: dict = None, payload=None, headers: dict = None, request_type=None, delay=None, components: dict = None):
         if components:
             print('load from components')
             self._components = components
@@ -21,21 +21,17 @@ class Message():
 
         if message_id:
             self.id = message_id
-        if payload:
-            for key in payload:
-                self.set_payload_item(key=key, value=payload[key])
         if body:
-            self.set_payload_item(key='body',value= body)
+            for key in body:
+                self.set_body_item(key=key, value=body[key])
+        if payload:
+            print(f'setting payload: {payload}')
+            self.set_body_item(key='payload', value=payload)
         if headers:
-            if isinstance( headers, dict):
-                print(f'processing headers: {headers=}')
+            if isinstance(headers, dict):
                 for key in headers:
-                    print(f'processing headers: {key=}')
-                    print(f'{headers.get(key)}')
-                    print(f'{headers[key]}')
                     self.set_header_item(key=key, value=headers[key])
-            elif isinstance(  headers, set):
-                print(f'processing headers: {headers=}')
+            elif isinstance(headers, set):
                 for key in headers:
                     print(f'processing headers: {key=}')
                     self.set_header_item(key=key, value=None)
@@ -128,26 +124,18 @@ class Message():
     def request_type(self, value):
         self.set("header.request_type", value)
 
-    @property
-    def payload(self):
-        return self.get('payload')
-
-    @property
-    def get_payload(self) -> dict:
-        return self.get('payload')
-
-    def get_payload_item(self, key: str):
-        fqk = f'payload.{key}'
+    def get_body_item(self, key: str):
+        fqk = f'body.{key}'
         return self.get(fqk)
 
-    def set_payload_item(self, key: str, value: str = None):
-        fqk = f'payload.{key}'
-        self.set(fqk, value)
-
-    def attach_payload_item(self, key: str, value: str = None):
-        fqk = f'payload.{key}'
+    def set_body_item(self, key: str, value: str = None):
+        fqk = f'body.{key}'
         self.set(fqk, value)
 
     @property
     def body(self):
-        return self.get_payload_item("body")
+        return self.get('body')
+
+    @property
+    def payload(self):
+        return self.get_body_item('payload')
