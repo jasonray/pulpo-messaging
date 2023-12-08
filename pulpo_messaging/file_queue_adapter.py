@@ -40,6 +40,10 @@ class FileQueueAdapterConfig(Config):
     def enable_history(self: Config) -> bool:
         return self.getAsBool('enable_history', "False")
 
+    @property
+    def max_number_of_attempts(self: Config) -> bool:
+        return self.getAsInt('max_number_of_attempts', 0)
+
 
 class FileQueueAdapter(QueueAdapter):
     MODE_READ_WRITE = 0o770
@@ -93,13 +97,15 @@ class FileQueueAdapter(QueueAdapter):
             if (i >= skip_messages):
                 last_file = None
 
-                self.log(f'checking if file on delay {file}')
                 m = self._load_message_from_file(file_path=file)
+                self.log(f'loaded message [{m.id=}][{m.delay=}[]{m.attempts=}]')
 
                 now = datetime.datetime.now()
-                self.log(f'verifying {m.delay=} vs {now=}')
                 if m.delay and m.delay > now:
                     self.log('message delayed, do not process yet')
+                    # todo: should move this out of queue
+                elif self.config.max_number_of_attempts and m.attempts >= self.config.max_number_of_attempts:
+                    self.log(f'message exceed max attempts {self.config.max_number_of_attempts=} {m.attempts=}')
                 else:
                     self.log(f'attempt to lock message: {file.path}')
                     lock_file_path = self._lock_file(file.path)
