@@ -130,7 +130,7 @@ class Pulpo():
                     Statman.stopwatch('kessel.message_streak_tm').start()
                     Statman.gauge('kessel.message_streak_cnt').value = 0
 
-    def process_one_message(self, message):
+    def handle_message(self, message) -> RequestResult:
         Statman.gauge('kessel.dequeue').increment()
         Statman.gauge('kessel.message_streak_cnt').increment()
 
@@ -145,21 +145,29 @@ class Pulpo():
         else:
             self.log(f'WARNING unexpected handler {message.request_type} {handler}')
             result = RequestResult.fatal_factory(f'WARNING unexpected handler {message.request_type} {handler}')
+        self.log(f'processing complete: {result=}')
 
         if result.isSuccess:
             self.queue_adapter.commit(message)
             Statman.gauge('kessel.messages.success').increment()
+            Statman.gauge('kessel.commit').increment()
+            self.log('commit complete')
         elif result.isTransient:
             self.queue_adapter.rollback(message)
             Statman.gauge('kessel.messages.transient').increment()
+            Statman.gauge('kessel.rollback').increment()
+            self.log('rollback complete')
         elif result.isFatal:
             self.queue_adapter.commit(message)
             Statman.gauge('kessel.messages.fatal').increment()
+            Statman.gauge('kessel.commit').increment()
+            self.log('commit complete')
         else:
             pass
 
         Statman.gauge('kessel.messages_processed').increment()
-        self.log('commit complete')
+
+        return RequestResult
 
     def print_banner(self):
         print(f'print_banner {self.config.enable_banner=}')
