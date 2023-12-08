@@ -62,7 +62,7 @@ class Pulpo():
     _config = None
     _handler_registry = None
 
-    def __init__(self, options: dict):
+    def __init__(self, options: dict=None, queue_adapter=None):
         self._config = PulpoConfig(options)
 
         self.log('init queue adapter')
