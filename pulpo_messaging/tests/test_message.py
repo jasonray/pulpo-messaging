@@ -59,7 +59,7 @@ class TestMessage(unittest.TestCase):
         m = Message(request_type='rt')
         print(f'{m}')
         self.assertEqual(m.request_type, 'rt')
-        self.assertEqual(m.get('header.request_type'), 'rt')
+        self.assertEqual(m.get_header_item('request_type'), 'rt')
 
     def test_message_id(self):
         m = Message(message_id=123)
