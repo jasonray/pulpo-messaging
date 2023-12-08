@@ -1,13 +1,10 @@
 import unittest
 from pulpo_messaging.kessel import Message
-from pulpo_messaging.kessel import PulpoConfig
 from pulpo_messaging.kessel import Pulpo
-from pulpo_messaging.kessel import Config
 from pulpo_messaging.queue_adapter import QueueAdapter
 from pulpo_messaging.sample_handlers import AlwaysFailHandler, AlwaysSucceedHandler, AlwaysTransientFailureHandler
 from .unittest_helper import get_unique_base_path
-from statman import Statman
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock
 
 
 class TestKessel_HandleMessage(unittest.TestCase):
