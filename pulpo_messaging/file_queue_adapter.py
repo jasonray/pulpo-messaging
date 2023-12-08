@@ -137,7 +137,7 @@ class FileQueueAdapter(QueueAdapter):
     def load_message_by_id(self, message_id):
         return self._load_message_from_file(self._get_message_file_path(message_id))
 
-    def _load_message_from_file(self, file_path):
+    def _load_message_from_file(self, file_path) -> Message:
         self.log(f'load message from file [{file_path=}][format={self.config.message_format}]')
         message = None
         with open(file=file_path, encoding="utf-8", mode='r') as f:
