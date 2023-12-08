@@ -29,14 +29,14 @@ class LowerCaseHandler(EchoHandler):
 
     def handle(self, payload: str):
         print('LowerCaseHandler.handle')
-        EchoHandler.handle(self, payload.lower())
+        return EchoHandler.handle(self, payload.lower())
 
 
 class UpperCaseHandler(EchoHandler):
 
     def handle(self, payload: str):
         print('UpperCaseHandler.handle')
-        EchoHandler.handle(self, payload.upper())
+        return EchoHandler.handle(self, payload.upper())
 
 
 class AlwaysSucceedHandler(EchoHandler):
