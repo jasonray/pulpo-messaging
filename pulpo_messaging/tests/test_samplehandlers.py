@@ -1,6 +1,7 @@
 import unittest
 from pulpo_config import Config
 from pulpo_messaging import UpperCaseHandler, LowerCaseHandler, EchoHandler
+from pulpo_messaging.sample_handlers import AlwaysFailHandler, AlwaysSucceedHandler, AlwaysTransientFailureHandler
 from .unittest_helper import get_unique_base_path
 
 
@@ -26,3 +27,25 @@ class TestSampleHandlers(unittest.TestCase):
         handler = EchoHandler(options=config)
         for i in range(1, 2):
             handler.handle(f'{i} Hello World')
+
+    def test_success(self):
+        handler = AlwaysSucceedHandler()
+        result = handler.handle(payload='hello world')
+        print(f'{result=}')
+        self.assertTrue(result.isSuccess)
+        self.assertFalse(result.isFatal)
+        self.assertFalse(result.isTransient)
+
+    def test_fatal(self):
+        handler = AlwaysFailHandler()
+        result = handler.handle(payload='hello world')
+        self.assertFalse(result.isSuccess)
+        self.assertTrue(result.isFatal)
+        self.assertFalse(result.isTransient)
+
+    def test_transient(self):
+        handler = AlwaysTransientFailureHandler()
+        result = handler.handle(payload='hello world')
+        self.assertFalse(result.isSuccess)
+        self.assertFalse(result.isFatal)
+        self.assertTrue(result.isTransient)
