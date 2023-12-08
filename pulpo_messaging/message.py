@@ -94,7 +94,7 @@ class Message():
     def header(self) -> dict:
         return self.get('header')
 
-    def get_header_item(self, key: str):
+    def get_header_item(self, key: str) -> str:
         fqk = f'header.{key}'
         return self.get(fqk)
 
@@ -129,12 +129,11 @@ class Message():
     @property
     def attempts(self) -> int:
         print('get attempts')
-        value = self.get_header_item('attempts')
-        print(f'get attempts {value=}')
-        if not value:
+        header_item = self.get_header_item('attempts')
+        if value is None:
             value = 0
-            print(f'get attempts, force to 0 {value=}')
-        print(f'get attempts, return {value=}')
+        else:
+            value = int(header_item)
         return value
 
     @attempts.setter
