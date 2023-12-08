@@ -26,9 +26,12 @@ class TestMessage(unittest.TestCase):
         self.assertEqual(m.get('parent.k2'), 'v2')
 
     def test_message_payload_body(self):
-        m = Message(payload='v1')
+        m = Message(body='v1')
         print(f'{m}')
         self.assertEqual(m.get('payload.body'), 'v1')
+        self.assertEqual(m.get_payload.get('body')  ,'v1')
+        self.assertEqual(m.get_payload_item('body'),'v1')
+        self.assertEqual(m.body,'v1')
 
     def test_message_request_type(self):
         m = Message(request_type='rt')

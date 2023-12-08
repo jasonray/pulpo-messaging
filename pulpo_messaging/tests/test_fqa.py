@@ -17,7 +17,7 @@ class TestFqaCompliance(unittest.TestCase):
 
     def test_enqueue_dequeue_message(self):
         qa = self.queue_adapter_factory()
-        m1 = Message(payload='hello world')
+        m1 = Message(body='hello world')
         m1 = qa.enqueue(m1)
 
         dq_1 = qa.dequeue()
@@ -25,9 +25,21 @@ class TestFqaCompliance(unittest.TestCase):
         self.assertEqual(dq_1.body, 'hello world')
         self.assertEqual(dq_1.id, m1.id)
 
+    def test_enqueue_dequeue_with_payload(self):
+        qa = self.queue_adapter_factory()
+        m1 = Message(body='hello world')
+        m1.set_payload_item('k','v')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+
+        self.assertEqual(dq_1.body, 'hello world')
+        self.assertEqual(dq_1.get_payload_item('k'), 'v')
+        self.assertEqual(dq_1.id, m1.id)
+
     def test_dequeue_skip_locked_message_with_1(self):
         qa = self.queue_adapter_factory()
-        m1 = Message(payload='hello world')
+        m1 = Message(body='hello world')
         m1 = qa.enqueue(m1)
 
         dq_1 = qa.dequeue()
@@ -38,12 +50,12 @@ class TestFqaCompliance(unittest.TestCase):
 
     def test_dequeue_skip_locked_message_with_2(self):
         qa = self.queue_adapter_factory()
-        m1 = Message(payload='hello world m1')
+        m1 = Message(body='hello world m1')
         print('enqueue m1')
         m1 = qa.enqueue(m1)
         print('enqueue complete', m1.id)
 
-        m2 = Message(payload='hello world m2')
+        m2 = Message(body='hello world m2')
         print('enqueue m2')
         m2 = qa.enqueue(m2)
         print('enqueue complete', m2.id)
@@ -61,7 +73,7 @@ class TestFqaCompliance(unittest.TestCase):
 
     def test_commit_removes_message(self):
         qa = self.queue_adapter_factory()
-        m1 = Message(payload='hello world')
+        m1 = Message(body='hello world')
         m1 = qa.enqueue(m1)
 
         dq_1 = qa.dequeue()
@@ -82,7 +94,7 @@ class TestFqaCompliance(unittest.TestCase):
 
     def test_rollback_removes_lock(self):
         qa = self.queue_adapter_factory()
-        m1 = Message(payload='hello world')
+        m1 = Message(body='hello world')
         m1 = qa.enqueue(m1)
 
         dq_1 = qa.dequeue()
@@ -142,7 +154,7 @@ class TestFqa(unittest.TestCase):
         body += 'this statment has a "quote" - watch out \n'
         body += "this statment has a 'single quote' \n"
         body += "\t this starts with a tab \n"
-        m1 = Message(payload=body, headers='h1')
+        m1 = Message(body=body, headers={'h1'})
         m1 = qa.enqueue(m1)
         self.assertIsNotNone(m1.id)
 
@@ -157,7 +169,7 @@ class TestFqa(unittest.TestCase):
         qa = self.file_queue_adapter_factory()
         qa.config.set('skip_random_messages_range', 100)
 
-        m1 = Message(payload='test', headers='h1')
+        m1 = Message(body='test', headers={'h1'})
         m1 = qa.enqueue(m1)
 
         dq_1 = qa.dequeue()
@@ -169,7 +181,7 @@ class TestFqa(unittest.TestCase):
         qa.config.set('message_format', 'json')
         qa.config.set('enable_history', True)
 
-        m1 = Message(payload='hello world')
+        m1 = Message(body='hello world')
         m1 = qa.enqueue(m1)
 
         dq_1 = qa.dequeue()
@@ -181,7 +193,7 @@ class TestFqa(unittest.TestCase):
 
     def test_delay(self):
         qa = self.file_queue_adapter_factory()
-        m1 = Message(payload='hello world', delay=timedelta(seconds=5))
+        m1 = Message(body='hello world', delay=timedelta(seconds=5))
         m1 = qa.enqueue(m1)
 
         print('attempt to dequeue, expect message not yet available')
