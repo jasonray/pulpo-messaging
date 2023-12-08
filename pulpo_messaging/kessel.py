@@ -62,13 +62,13 @@ class Pulpo():
     _config = None
     _handler_registry = None
 
-    def __init__(self, options: dict=None, queue_adapter=None):
+    def __init__(self, options: dict = None, queue_adapter=None):
         self._config = PulpoConfig(options)
 
         self.log('init queue adapter')
         if queue_adapter:
             if isinstance(queue_adapter, QueueAdapter):
-                self._queue_adapter=queue_adapter
+                self._queue_adapter = queue_adapter
             else:
                 raise Exception('invalid queue adapter')
         elif self.config.queue_adapter_type == 'FileQueueAdapter':
@@ -140,7 +140,7 @@ class Pulpo():
         if handler is None:
             self.log(f'WARNING no handler for message type {message.request_type}')
             result = RequestResult.fatal_factory(f'WARNING no handler for message type {message.request_type}')
-        elif isinstance(handler , PayloadHandler):
+        elif isinstance(handler, PayloadHandler):
             result = handler.handle(payload=message.payload)
         else:
             self.log(f'WARNING unexpected handler {message.request_type} {handler}')

@@ -122,6 +122,7 @@ class TestFqaCompliance(unittest.TestCase):
         dq_3 = qa.dequeue()
         self.assertIsNotNone(dq_3)
 
+
 class TestFqa(unittest.TestCase):
 
     def file_queue_adapter_factory(self, tag: str = 'fqa', additional_options=None) -> FileQueueAdapter:
@@ -131,7 +132,7 @@ class TestFqa(unittest.TestCase):
         if additional_options:
             for key in additional_options:
                 value = additional_options.get(key)
-                options[key]=value
+                options[key] = value
 
         return FileQueueAdapter(options=options)
 
@@ -229,22 +230,22 @@ class TestFqa(unittest.TestCase):
 
         dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
-        self.assertEqual( dq_1.attempts , 0)
+        self.assertEqual(dq_1.attempts, 0)
 
         qa.rollback(dq_1)
 
         dq_3 = qa.dequeue()
         self.assertIsNotNone(dq_3)
-        self.assertEqual( dq_3.attempts , 1)
+        self.assertEqual(dq_3.attempts, 1)
 
         qa.rollback(dq_3)
 
         dq_4 = qa.dequeue()
         self.assertIsNotNone(dq_4)
-        self.assertEqual( dq_4.attempts , 2)
+        self.assertEqual(dq_4.attempts, 2)
 
     def test_message_exceeds_attempts_unavailable(self):
-        qa = self.file_queue_adapter_factory( additional_options= {"max_number_of_attempts": 2})
+        qa = self.file_queue_adapter_factory(additional_options={"max_number_of_attempts": 2})
 
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
