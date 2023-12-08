@@ -25,10 +25,9 @@ class TestFqaCompliance(unittest.TestCase):
         self.assertEqual(dq_1.payload, 'hello world')
         self.assertEqual(dq_1.id, m1.id)
 
-    def test_enqueue_dequeue_with_payload(self):
+    def test_enqueue_dequeue_with_body(self):
         qa = self.queue_adapter_factory()
-        m1 = Message(payload='hello world')
-        m1.set_body_item('k', 'v')
+        m1 = Message(body={'k': 'v'}, payload='hello world')
         m1 = qa.enqueue(m1)
 
         dq_1 = qa.dequeue()
