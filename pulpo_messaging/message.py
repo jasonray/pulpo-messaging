@@ -130,7 +130,7 @@ class Message():
     def attempts(self) -> int:
         print('get attempts')
         header_item = self.get_header_item('attempts')
-        if value is None:
+        if header_item is None:
             value = 0
         else:
             value = int(header_item)
