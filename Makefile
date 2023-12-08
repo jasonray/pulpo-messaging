@@ -1,12 +1,15 @@
 all: default
 
 clean: clean-output clean-test
+	rm -rf pulpo_messaging/__pycache__
+	rm -rf pulpo_messaging/tests/__pycache__
 
 clean-output: 
 	rm -rf /tmp/pulpo
 
 clean-test: 
 	rm -rf /tmp/pulpo/unit-test/
+	rm -rf .pytest_cache
 
 deps:
 	pip install -r requirements.txt
