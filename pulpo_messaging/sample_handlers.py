@@ -67,8 +67,7 @@ class FiftyFiftyHandler(EchoHandler):
 
     def handle(self, payload: str):
         print('FiftyFiftyHandler.handle')
-        result = random.randint(0, 1)
-        if result:
+        if random.randint(0, 1):
             result = RequestResult.success_factory()
         else:
             result = RequestResult.transient_factory(error='FiftyFiftyHandler failed, try again')
