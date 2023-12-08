@@ -126,6 +126,17 @@ class Message():
     def request_type(self, value):
         self.set_header_item('request_type', value)
 
+    @property
+    def attempts(self) -> int:
+        value= self.get_header_item('attempts')
+        if not value :
+            value =0
+        return value
+
+    @request_type.setter
+    def attempts(self, value : int):
+        self.set_header_item('attempts', value)
+
     def get_body_item(self, key: str):
         fqk = f'body.{key}'
         return self.get(fqk)
