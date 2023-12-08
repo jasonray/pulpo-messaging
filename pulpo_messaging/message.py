@@ -40,6 +40,12 @@ class Message():
         if delay:
             self.delay = delay
 
+        # if not self.body:
+        #     self.set('body',{})
+        # if not self.header:
+        #     self.set('header',{})
+    
+
     def __str__(self):
         return str(self._components)
 
@@ -118,11 +124,11 @@ class Message():
 
     @property
     def request_type(self):
-        return self.get("header.request_type")
+        return self.get_header_item('request_type')
 
     @request_type.setter
     def request_type(self, value):
-        self.set("header.request_type", value)
+        self.set_header_item('request_type', value)
 
     def get_body_item(self, key: str):
         fqk = f'body.{key}'
@@ -133,7 +139,7 @@ class Message():
         self.set(fqk, value)
 
     @property
-    def body(self):
+    def body(self) -> dict:
         return self.get('body')
 
     @property

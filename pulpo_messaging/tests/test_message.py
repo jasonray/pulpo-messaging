@@ -27,12 +27,33 @@ class TestMessage(unittest.TestCase):
 
     def test_message_payload(self):
         m = Message(payload='v1')
-        print(f'{m}')
         self.assertEqual(m.get('body.payload'), 'v1')
-        print('a')
         self.assertEqual(m.body.get('payload'), 'v1')
         self.assertEqual(m.get_body_item('payload'), 'v1')
         self.assertEqual(m.payload, 'v1')
+
+    def test_message_payload_not_get(self):
+        m = Message()
+        self.assertIsNone(m.payload)
+
+    def test_message_body_constructor(self):
+        b = {'k1': 'v1', 'k2': 'v2'}
+        m = Message(body=b)
+
+        print('test_message_body_constructor checks')
+        body = m.body
+        print(f'{body=}')
+        print(f"{body.get('k1')=}")
+
+        self.assertEqual(m.body.get('k1'), 'v1')
+        self.assertEqual(m.body.get('k2'), 'v2')
+
+    def test_message_body_set(self):
+        m = Message()
+        m.set_body_item('k1', 'v1')
+        m.set_body_item('k2', 'v2')
+        self.assertEqual(m.body.get('k1'), 'v1')
+        self.assertEqual(m.body.get('k2'), 'v2')
 
     def test_message_request_type(self):
         m = Message(request_type='rt')
