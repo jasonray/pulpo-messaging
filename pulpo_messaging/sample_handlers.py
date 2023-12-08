@@ -19,7 +19,6 @@ class EchoHandler(PayloadHandler):
             f.write(payload)
         return RequestResult.success_factory()
 
-
     @property
     def destination_directory(self) -> str:
         return self.config.get('destination_directory', '/tmp/kessel/EchoHandler-output')
