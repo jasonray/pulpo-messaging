@@ -25,12 +25,12 @@ class FileQueueAdapterConfig(Config):
         return os.path.join(self.base_path, 'lock')
 
     @property
-    def history_success_path(self: Config) -> str:
-        return os.path.join(self.base_path, 'history', 'success')
+    def archive_success_path(self: Config) -> str:
+        return os.path.join(self.base_path, 'archive', 'success')
 
     @property
-    def history_failure_path(self: Config) -> str:
-        return os.path.join(self.base_path, 'history', 'failure')
+    def archive_failure_path(self: Config) -> str:
+        return os.path.join(self.base_path, 'archive', 'failure')
 
     @property
     def message_format(self: Config) -> str:
@@ -41,8 +41,8 @@ class FileQueueAdapterConfig(Config):
         return self.getAsInt('skip_random_messages_range', 0)
 
     @property
-    def enable_history(self: Config) -> bool:
-        return self.getAsBool('enable_history', "False")
+    def enable_archive(self: Config) -> bool:
+        return self.getAsBool('enable_archive', "False")
 
     @property
     def max_number_of_attempts(self: Config) -> bool:
@@ -65,8 +65,8 @@ class FileQueueAdapter(QueueAdapter):
     def _create_message_directories(self):
         os.makedirs(name=self.config.base_path, mode=self.MODE_READ_WRITE, exist_ok=True)
         os.makedirs(name=self.config.lock_path, mode=self.MODE_READ_WRITE, exist_ok=True)
-        os.makedirs(name=self.config.history_success_path, mode=self.MODE_READ_WRITE, exist_ok=True)
-        os.makedirs(name=self.config.history_failure_path, mode=self.MODE_READ_WRITE, exist_ok=True)
+        os.makedirs(name=self.config.archive_success_path, mode=self.MODE_READ_WRITE, exist_ok=True)
+        os.makedirs(name=self.config.archive_failure_path, mode=self.MODE_READ_WRITE, exist_ok=True)
 
     @property
     def config(self) -> FileQueueAdapterConfig:
@@ -111,10 +111,10 @@ class FileQueueAdapter(QueueAdapter):
                     # todo: should move this out of queue
                 elif self.config.max_number_of_attempts and m.attempts >= self.config.max_number_of_attempts:
                     self.log(f'message exceed max attempts {self.config.max_number_of_attempts=} {m.attempts=}')
-                    self._move_to_history(message_id=m.id, source='queue', destination='failure')
+                    self._archive_message(message_id=m.id, source='queue', destination='failure')
                 elif m.expiration and m.expiration < now:
                     self.log(f'message expired {m.expiration=}')
-                    self._move_to_history(message_id=m.id, source='queue', destination='failure')
+                    self._archive_message(message_id=m.id, source='queue', destination='failure')
                 else:
                     self.log(f'attempt to lock message: {file.path}')
                     lock_file_path = self._lock_file(file.path)
@@ -227,21 +227,21 @@ class FileQueueAdapter(QueueAdapter):
         self.log(f'_get_message_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
-    def _does_history_success_message_exist(self, message_id  ) -> bool:
-        return os.path.exists(self._get_history_file_path_success(message_id=message_id))
+    def _does_archive_success_message_exist(self, message_id  ) -> bool:
+        return os.path.exists(self._get_archive_success_file_path(message_id=message_id))
 
-    def _get_history_file_path_success(self, message_id) -> str:
+    def _get_archive_success_file_path(self, message_id) -> str:
         file_name = f'{message_id}.message'
-        path = os.path.join(self.config.history_success_path, file_name)
+        path = os.path.join(self.config.archive_success_path, file_name)
         self.log(f'_get_history_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
-    def _does_history_failure_message_exist(self, message_id) -> bool:
-        return os.path.exists(self._get_history_file_path_failure(message_id=message_id))
+    def _does_archive_failure_message_exist(self, message_id) -> bool:
+        return os.path.exists(self._get_archive_failure_file_path(message_id=message_id))
 
-    def _get_history_file_path_failure(self, message_id) -> str:
+    def _get_archive_failure_file_path(self, message_id) -> str:
         file_name = f'{message_id}.message'
-        path = os.path.join(self.config.history_failure_path, file_name)
+        path = os.path.join(self.config.archive_failure_path, file_name)
         self.log(f'_get_history_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
@@ -269,7 +269,7 @@ class FileQueueAdapter(QueueAdapter):
             raise Exception('commit expects message object')
 
         self.log(f'commit {message_id}')
-        self._move_to_history(message_id=message_id, source='lock', destination='success' if is_success else 'failure')
+        self._archive_message(message_id=message_id, source='lock', destination='success' if is_success else 'failure')
         self.log(f'commit complete {message_id}')
         Statman.gauge('fqa.commit').increment()
 
@@ -308,7 +308,7 @@ class FileQueueAdapter(QueueAdapter):
         self.log(f'delete file {lock_file_path}')
         os.remove(lock_file_path)
 
-    def _move_to_history(self, message_id: str, source: str, destination: str):
+    def _archive_message(self, message_id: str, source: str, destination: str):
         '''
         Move message to history.
         Source: queue | lock
@@ -327,9 +327,9 @@ class FileQueueAdapter(QueueAdapter):
             raise Exception(f'Unable to move message.  Invalid source {source=}')
 
         if destination == 'success':
-            destination_file_path = self._get_history_file_path_success(message_id=message_id)
+            destination_file_path = self._get_archive_success_file_path(message_id=message_id)
         elif destination == 'failure':
-            destination_file_path = self._get_history_file_path_failure(message_id=message_id)
+            destination_file_path = self._get_archive_failure_file_path(message_id=message_id)
         else:
             raise Exception(f'Unable to move message.  Invalid destination {destination=}')
 
@@ -358,9 +358,9 @@ class FileQueueAdapter(QueueAdapter):
             state = 'queue'
         if not state and self._does_lock_exist(message_id=message_id):
             state = 'lock'
-        if not state and self._does_history_success_message_exist(message_id=message_id):
+        if not state and self._does_archive_success_message_exist(message_id=message_id):
             state = 'complete.success'
-        if not state and self._does_history_failure_message_exist(message_id=message_id):
+        if not state and self._does_archive_failure_message_exist(message_id=message_id):
             state = 'complete.fail'
         if not state:
             state = 'unknown'

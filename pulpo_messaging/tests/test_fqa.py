@@ -204,7 +204,7 @@ class TestFqa(unittest.TestCase):
         dq_1 = qa.dequeue()
         qa.commit(dq_1)
 
-        expected_historical_message_file_path = os.path.join(qa.config.history_success_path, dq_1.id + '.message')
+        expected_historical_message_file_path = os.path.join(qa.config.archive_success_path, dq_1.id + '.message')
         print('expected_historical_message_file_path: ', expected_historical_message_file_path)
         self.assertTrue(os.path.exists(expected_historical_message_file_path), "Historical message does not exist.")
 
