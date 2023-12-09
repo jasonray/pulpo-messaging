@@ -1,6 +1,7 @@
 import os
 import unittest
 import time
+import datetime
 from datetime import timedelta
 from pulpo_messaging.kessel import FileQueueAdapter
 from pulpo_messaging.kessel import QueueAdapter
@@ -125,7 +126,8 @@ class TestFqaCompliance(unittest.TestCase):
 
 class TestFqa(unittest.TestCase):
 
-    def file_queue_adapter_factory(self, tag: str = 'fqa', additional_options=None) -> FileQueueAdapter:
+    @staticmethod
+    def file_queue_adapter_factory(tag: str = 'fqa', additional_options=None) -> FileQueueAdapter:
         options = {}
         options['base_path'] = get_unique_base_path(tag)
 
@@ -162,7 +164,7 @@ class TestFqa(unittest.TestCase):
         self.assertEqual(message_file_path, expected_message_file_path)
 
     def test_json_format(self):
-        qa = self.file_queue_adapter_factory()
+        qa = TestFqa.file_queue_adapter_factory()
         qa.config.set('message_format', 'json')
 
         payload = 'hello world \n'
@@ -181,7 +183,7 @@ class TestFqa(unittest.TestCase):
         self.assertEqual(dq_1.header, m1.header)
 
     def test_skip_x_messages(self):
-        qa = self.file_queue_adapter_factory()
+        qa = TestFqa.file_queue_adapter_factory()
         qa.config.set('skip_random_messages_range', 100)
 
         m1 = Message(payload='test', header={'h1'})
@@ -192,7 +194,7 @@ class TestFqa(unittest.TestCase):
         self.assertEqual(dq_1.id, m1.id)
 
     def test_commit_moves_message_to_processed_directory(self):
-        qa = self.file_queue_adapter_factory()
+        qa = TestFqa.file_queue_adapter_factory()
         qa.config.set('message_format', 'json')
         qa.config.set('enable_history', True)
 
@@ -202,12 +204,12 @@ class TestFqa(unittest.TestCase):
         dq_1 = qa.dequeue()
         qa.commit(dq_1)
 
-        expected_historical_message_file_path = os.path.join(qa.config.history_success_path, dq_1.id + '.message')
+        expected_historical_message_file_path = os.path.join(qa.config.archive_success_path, dq_1.id + '.message')
         print('expected_historical_message_file_path: ', expected_historical_message_file_path)
         self.assertTrue(os.path.exists(expected_historical_message_file_path), "Historical message does not exist.")
 
     def test_delay(self):
-        qa = self.file_queue_adapter_factory()
+        qa = TestFqa.file_queue_adapter_factory()
         m1 = Message(payload='hello world', delay=timedelta(seconds=5))
         m1 = qa.enqueue(m1)
 
@@ -223,8 +225,23 @@ class TestFqa(unittest.TestCase):
         self.assertIsNotNone(dq_2)
         self.assertEqual(dq_2.id, m1.id)
 
+    def test_commit_failure_removes_message(self):
+        qa = TestFqa.file_queue_adapter_factory()
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+        qa.commit(message=dq_1, is_success=False)
+
+        dq_2 = qa.dequeue()
+        self.assertIsNone(dq_2)
+
+
+class TestFqaMaxAttempts(unittest.TestCase):
+
     def test_rollback_increments_attempts(self):
-        qa = self.file_queue_adapter_factory()
+        qa = TestFqa.file_queue_adapter_factory()
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
@@ -245,7 +262,7 @@ class TestFqa(unittest.TestCase):
         self.assertEqual(dq_4.attempts, 2)
 
     def test_message_exceeds_attempts_unavailable(self):
-        qa = self.file_queue_adapter_factory(additional_options={"max_number_of_attempts": 2})
+        qa = TestFqa.file_queue_adapter_factory(additional_options={"max_number_of_attempts": 2})
 
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
@@ -261,14 +278,45 @@ class TestFqa(unittest.TestCase):
         dq_3 = qa.dequeue()
         self.assertIsNone(dq_3)
 
-    def test_commit_failure_removes_message(self):
-        qa = self.file_queue_adapter_factory()
-        m1 = Message(payload='hello world')
+        # ensure that message is failed
+        self.assertEqual(qa.lookup_message_state(m1.id), 'complete.fail')
+
+
+class TestFqaExpiration(unittest.TestCase):
+
+    def test_skip_expired_message(self):
+        expiration_date_in_past = datetime.datetime.strptime("2000-01-01 12:00:00", "%Y-%m-%d %H:%M:%S")
+        print(f'{expiration_date_in_past=}')
+        qa = TestFqa.file_queue_adapter_factory()
+        m1 = Message(payload='hello world', expiration=expiration_date_in_past)
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNone(dq_1)
+
+        # ensure that message is in history/failed
+        self.assertEqual(qa.lookup_message_state(m1.id), 'complete.fail')
+
+    def test_process_message_with_future_expiration(self):
+        expiration_date_in_future = datetime.datetime.strptime("3000-01-01 12:00:00", "%Y-%m-%d %H:%M:%S")
+        print(f'{expiration_date_in_future=}')
+        qa = TestFqa.file_queue_adapter_factory()
+        m1 = Message(payload='hello world', expiration=expiration_date_in_future)
         m1 = qa.enqueue(m1)
 
         dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
-        qa.commit(message=dq_1, is_success=False)
 
-        dq_2 = qa.dequeue()
-        self.assertIsNone(dq_2)
+        # ensure that message is locked
+        self.assertEqual(qa.lookup_message_state(m1.id), 'lock')
+
+    def test_message_with_no_expiration_is_processed(self):
+        qa = TestFqa.file_queue_adapter_factory()
+        m1 = Message(payload='hello world', expiration=None)
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+
+        # ensure that message is locked
+        self.assertEqual(qa.lookup_message_state(m1.id), 'lock')

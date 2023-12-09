@@ -11,7 +11,7 @@ class Message():
 
     _components = None
 
-    def __init__(self, message_id=None, body: dict = None, payload=None, header: dict = None, request_type=None, delay=None, components: dict = None):
+    def __init__(self, message_id=None, body: dict = None, payload=None, header: dict = None, request_type=None, delay=None, expiration: datetime.datetime = None, components: dict = None):
         self._components = {}
 
         if components:
@@ -28,6 +28,8 @@ class Message():
             self.request_type = request_type
         if delay:
             self.delay = delay
+        if expiration:
+            self.expiration = expiration
 
     def __str__(self):
         return str(self._components)
@@ -125,6 +127,20 @@ class Message():
     @request_type.setter
     def request_type(self, value):
         self.set_header_item('request_type', value)
+
+    @property
+    def expiration(self) -> datetime.datetime:
+        value = self.get_header_item('expiration')
+        if isinstance(value, str):
+            value = datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S')  # pylint: disable=redefined-variable-type
+        return value
+
+    @expiration.setter
+    def expiration(self, value):
+        #%Y-%m-%d %H:%M:%S
+        if isinstance(value, str):
+            value = datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+        self.set_header_item('expiration', value)
 
     @property
     def attempts(self) -> int:
