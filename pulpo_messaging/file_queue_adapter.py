@@ -111,8 +111,10 @@ class FileQueueAdapter(QueueAdapter):
                     # todo: should move this out of queue
                 elif self.config.max_number_of_attempts and m.attempts >= self.config.max_number_of_attempts:
                     self.log(f'message exceed max attempts {self.config.max_number_of_attempts=} {m.attempts=}')
+                    self._move_to_history(message_id=m.id, source='queue', destination='failure')
                 elif m.expiration and m.expiration < now:
                     self.log(f'message expired {m.expiration=}')
+                    self._move_to_history(message_id=m.id, source='queue', destination='failure')
                 else:
                     self.log(f'attempt to lock message: {file.path}')
                     lock_file_path = self._lock_file(file.path)
@@ -258,7 +260,7 @@ class FileQueueAdapter(QueueAdapter):
             raise Exception('commit expects message object')
 
         self.log(f'commit {message_id}')
-        self._move_to_history(message_id=message_id, is_success=is_success)
+        self._move_to_history(message_id=message_id, source='lock', destination='success' if is_success else 'failure')
         self.log(f'commit complete {message_id}')
         Statman.gauge('fqa.commit').increment()
 
@@ -297,12 +299,33 @@ class FileQueueAdapter(QueueAdapter):
         self.log(f'delete file {lock_file_path}')
         os.remove(lock_file_path)
 
-    def _move_to_history(self, message_id: str, is_success: bool):
-        self.log(f'move lock to history {message_id}')
-        lock_file_path = self._get_lock_file_path(message_id=message_id)
-        message_file_path = self._get_history_file_path(message_id=message_id, is_success=is_success)
-        self.log(f'move file [{lock_file_path}]=>[{message_file_path}]')
-        os.rename(src=lock_file_path, dst=message_file_path)
+    def _move_to_history(self, message_id: str, source: str, destination: str):
+        '''
+        Move message to history.
+        Source: queue | lock
+        Destination: success | failure
+        '''
+
+        self.log(f'archive message [{message_id=}][{source=}][{destination=}]')
+        source_file_path = None
+        destination_file_path = None
+
+        if source == 'queue':
+            source_file_path = self._get_message_file_path(message_id=message_id)
+        elif source == 'lock':
+            source_file_path = self._get_lock_file_path(message_id=message_id)
+        else:
+            raise Exception(f'Unable to move message.  Invalid source {source=}')
+
+        if destination == 'success':
+            destination_file_path = self._get_history_file_path(message_id=message_id, is_success=True)
+        elif destination == 'failure':
+            destination_file_path = self._get_history_file_path(message_id=message_id, is_success=False)
+        else:
+            raise Exception(f'Unable to move message.  Invalid destination {destination=}')
+
+        self.log(f'move file [{source_file_path}]=>[{destination_file_path}]')
+        os.rename(src=source_file_path, dst=destination_file_path)
 
     def _delete_message(self, message_id: str):
         self.log(f'remove message {message_id}')
@@ -314,6 +337,32 @@ class FileQueueAdapter(QueueAdapter):
 
     def _does_message_exist(self, messsage_id) -> bool:
         return os.path.exists(self._get_message_file_path(message_id=messsage_id))
+
+    def find_message(self, message_id):
+        '''Utility to find where the message is located (queue, archive failure, archive success)'''
+        message_file_path = None
+        if not message_file_path:
+            self.log(f'check if message in queue exist {message_id=}')
+            fp = self._get_message_file_path(message_id=message_id)
+            if os.path.exists(fp):
+                message_file_path = fp
+        if not message_file_path:
+            self.log(f'check if lock exist {message_id=}')
+            fp = self._get_lock_file_path(message_id=message_id)
+            if os.path.exists(fp):
+                message_file_path = fp
+        if not message_file_path:
+            self.log(f'check if history success exist {message_id=}')
+            fp = self._get_history_file_path(message_id=message_id, is_success=True)
+            if os.path.exists(fp):
+                message_file_path = fp
+        if not message_file_path:
+            self.log(f'check if history failure exist {message_id=}')
+            fp = self._get_history_file_path(message_id=message_id, is_success=False)
+            if os.path.exists(fp):
+                message_file_path = fp
+        self.log(f'check if message exist {message_file_path=}')
+        return message_file_path
 
     def log(self, *argv):
         logger.log(*argv, flush=True)
