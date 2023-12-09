@@ -227,7 +227,7 @@ class FileQueueAdapter(QueueAdapter):
         self.log(f'_get_message_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
-    def _does_archive_success_message_exist(self, message_id  ) -> bool:
+    def _does_archive_success_message_exist(self, message_id) -> bool:
         return os.path.exists(self._get_archive_success_file_path(message_id=message_id))
 
     def _get_archive_success_file_path(self, message_id) -> str:
