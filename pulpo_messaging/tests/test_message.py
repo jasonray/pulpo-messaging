@@ -1,4 +1,5 @@
 import unittest
+import datetime
 from pulpo_messaging.kessel import Message
 
 
@@ -70,6 +71,12 @@ class TestMessage(unittest.TestCase):
         m = Message(delay=123)
         print(f'{m}')
         self.assertEqual(m.delay, 123)
+
+    def test_message_expiration(self):
+        dt = datetime.datetime.now
+        m = Message(expiration=dt)
+        print(f'{m}')
+        self.assertEqual(m.expiration, dt)
 
     def test_message_header_constructor(self):
         h = {'k1': 'v1', 'k2': 'v2', 'h1': None}

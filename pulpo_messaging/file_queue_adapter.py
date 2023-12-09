@@ -103,7 +103,7 @@ class FileQueueAdapter(QueueAdapter):
                 last_file = None
 
                 m = self._load_message_from_file(file_path=file)
-                self.log(f'loaded message [{m.id=}][{m.delay=}[]{m.attempts=}][{file.path=}]')
+                self.log(f'loaded message [{m.id=}][{m.delay=}[]{m.attempts=}][{file.path=}][{m.expiration=}]')
 
                 now = datetime.datetime.now()
                 if m.delay and m.delay > now:
@@ -111,6 +111,8 @@ class FileQueueAdapter(QueueAdapter):
                     # todo: should move this out of queue
                 elif self.config.max_number_of_attempts and m.attempts >= self.config.max_number_of_attempts:
                     self.log(f'message exceed max attempts {self.config.max_number_of_attempts=} {m.attempts=}')
+                elif m.expiration and m.expiration < now:
+                    self.log(f'message expired {m.expiration=}')
                 else:
                     self.log(f'attempt to lock message: {file.path}')
                     lock_file_path = self._lock_file(file.path)

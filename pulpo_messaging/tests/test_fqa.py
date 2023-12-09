@@ -1,6 +1,7 @@
 import os
 import unittest
 import time
+import datetime
 from datetime import timedelta
 from pulpo_messaging.kessel import FileQueueAdapter
 from pulpo_messaging.kessel import QueueAdapter
@@ -126,7 +127,7 @@ class TestFqaCompliance(unittest.TestCase):
 class TestFqa(unittest.TestCase):
 
     @staticmethod
-    def file_queue_adapter_factory( tag: str = 'fqa', additional_options=None) -> FileQueueAdapter:
+    def file_queue_adapter_factory(tag: str = 'fqa', additional_options=None) -> FileQueueAdapter:
         options = {}
         options['base_path'] = get_unique_base_path(tag)
 
@@ -238,6 +239,7 @@ class TestFqa(unittest.TestCase):
 
 
 class TestFqaMaxAttempts(unittest.TestCase):
+
     def test_rollback_increments_attempts(self):
         qa = TestFqa.file_queue_adapter_factory()
         m1 = Message(payload='hello world')
@@ -275,3 +277,34 @@ class TestFqaMaxAttempts(unittest.TestCase):
 
         dq_3 = qa.dequeue()
         self.assertIsNone(dq_3)
+
+
+class TestFqaExpiration(unittest.TestCase):
+
+    def test_skip_expired_message(self):
+        expiration_date_in_past = datetime.datetime.strptime("2000-01-01 12:00:00", "%Y-%m-%d %H:%M:%S")
+        print(f'{expiration_date_in_past=}')
+        qa = TestFqa.file_queue_adapter_factory()
+        m1 = Message(payload='hello world', expiration=expiration_date_in_past)
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNone(dq_1)
+
+    def test_process_message_with_future_expiration(self):
+        expiration_date_in_future = datetime.datetime.strptime("3000-01-01 12:00:00", "%Y-%m-%d %H:%M:%S")
+        print(f'{expiration_date_in_future=}')
+        qa = TestFqa.file_queue_adapter_factory()
+        m1 = Message(payload='hello world', expiration=expiration_date_in_future)
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+
+    def test_message_with_no_expiration_is_processed(self):
+        qa = TestFqa.file_queue_adapter_factory()
+        m1 = Message(payload='hello world', expiration=None)
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
