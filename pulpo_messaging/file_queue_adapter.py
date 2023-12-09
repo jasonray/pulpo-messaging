@@ -227,6 +227,9 @@ class FileQueueAdapter(QueueAdapter):
         self.log(f'_get_message_file_path [id:{message_id}]=>[file_name:{file_name}]=>[path:{path}]')
         return path
 
+    def _does_history_message_exist(self, message_id, is_success: bool) -> bool:
+        return os.path.exists(self._get_history_file_path(message_id=message_id, is_success=is_success))
+
     def _get_history_file_path(self, message_id, is_success: bool) -> str:
         file_name = f'{message_id}.message'
         if is_success:
@@ -338,31 +341,25 @@ class FileQueueAdapter(QueueAdapter):
     def _does_message_exist(self, messsage_id) -> bool:
         return os.path.exists(self._get_message_file_path(message_id=messsage_id))
 
-    def find_message(self, message_id):
-        '''Utility to find where the message is located (queue, archive failure, archive success)'''
-        message_file_path = None
-        if not message_file_path:
-            self.log(f'check if message in queue exist {message_id=}')
-            fp = self._get_message_file_path(message_id=message_id)
-            if os.path.exists(fp):
-                message_file_path = fp
-        if not message_file_path:
-            self.log(f'check if lock exist {message_id=}')
-            fp = self._get_lock_file_path(message_id=message_id)
-            if os.path.exists(fp):
-                message_file_path = fp
-        if not message_file_path:
-            self.log(f'check if history success exist {message_id=}')
-            fp = self._get_history_file_path(message_id=message_id, is_success=True)
-            if os.path.exists(fp):
-                message_file_path = fp
-        if not message_file_path:
-            self.log(f'check if history failure exist {message_id=}')
-            fp = self._get_history_file_path(message_id=message_id, is_success=False)
-            if os.path.exists(fp):
-                message_file_path = fp
-        self.log(f'check if message exist {message_file_path=}')
-        return message_file_path
+    def lookup_message_state(self, message_id):
+        '''
+        Utility to determine state based upon message location.  This is expected to be used for informative purposes only, and NOT for message flow.
+        Valid states: unknown, queue, lock, complete.success, complete.fail
+        '''
+        self.log(f'lookup message state [{message_id=}][{self.config.base_path=}]')
+        state = None
+        if not state and self._does_message_exist(messsage_id=message_id):
+            state = 'queue'
+        if not state and self._does_lock_exist(messsage_id=message_id):
+            state = 'lock'
+        if not state and self._does_history_message_exist(message_id=message_id, is_success=True):
+            state = 'complete.success'
+        if not state and self._does_history_message_exist(message_id=message_id, is_success=False):
+            state = 'complete.fail'
+        if not state:
+            state = 'unknown'
+        self.log(f'lookup message state [{message_id=}]=>[{state=}]')
+        return state
 
     def log(self, *argv):
         logger.log(*argv, flush=True)

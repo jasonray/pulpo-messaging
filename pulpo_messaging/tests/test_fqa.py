@@ -278,7 +278,8 @@ class TestFqaMaxAttempts(unittest.TestCase):
         dq_3 = qa.dequeue()
         self.assertIsNone(dq_3)
 
-        self.assertTrue('history/failure' in qa.find_message(m1.id))
+        # ensure that message is failed
+        self.assertEqual(qa.lookup_message_state(m1.id), 'complete.fail')
 
 
 class TestFqaExpiration(unittest.TestCase):
@@ -294,9 +295,7 @@ class TestFqaExpiration(unittest.TestCase):
         self.assertIsNone(dq_1)
 
         # ensure that message is in history/failed
-        message_file_path = qa.find_message(m1.id)
-        print(f'TestFqaExpiration {m1.id} {message_file_path}')
-        self.assertTrue('history/failure' in message_file_path)
+        self.assertEqual(qa.lookup_message_state(m1.id), 'complete.fail')
 
     def test_process_message_with_future_expiration(self):
         expiration_date_in_future = datetime.datetime.strptime("3000-01-01 12:00:00", "%Y-%m-%d %H:%M:%S")
@@ -308,10 +307,8 @@ class TestFqaExpiration(unittest.TestCase):
         dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
 
-        # ensure that message is in queue
-        message_file_path = qa.find_message(m1.id)
-        print(f'TestFqaExpiration {message_file_path}')
-        self.assertTrue(not 'history' in message_file_path)
+        # ensure that message is locked
+        self.assertEqual(qa.lookup_message_state(m1.id), 'lock')
 
     def test_message_with_no_expiration_is_processed(self):
         qa = TestFqa.file_queue_adapter_factory()
@@ -322,6 +319,4 @@ class TestFqaExpiration(unittest.TestCase):
         self.assertIsNotNone(dq_1)
 
         # ensure that message is locked
-        message_file_path = qa.find_message(m1.id)
-        print(f'TestFqaExpiration {message_file_path}')
-        self.assertTrue('lock' in message_file_path)
+        self.assertEqual(qa.lookup_message_state(m1.id), 'lock')
