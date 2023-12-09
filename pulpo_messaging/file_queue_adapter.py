@@ -335,11 +335,11 @@ class FileQueueAdapter(QueueAdapter):
         lock_file_path = self._get_message_file_path(message_id=message_id)
         os.remove(lock_file_path)
 
-    def _does_lock_exist(self, messsage_id) -> bool:
-        return os.path.exists(self._get_lock_file_path(message_id=messsage_id))
+    def _does_lock_exist(self, message_id) -> bool:
+        return os.path.exists(self._get_lock_file_path(message_id=message_id))
 
-    def _does_message_exist(self, messsage_id) -> bool:
-        return os.path.exists(self._get_message_file_path(message_id=messsage_id))
+    def _does_message_exist(self, message_id) -> bool:
+        return os.path.exists(self._get_message_file_path(message_id=message_id))
 
     def lookup_message_state(self, message_id):
         '''
@@ -348,9 +348,9 @@ class FileQueueAdapter(QueueAdapter):
         '''
         self.log(f'lookup message state [{message_id=}][{self.config.base_path=}]')
         state = None
-        if not state and self._does_message_exist(messsage_id=message_id):
+        if not state and self._does_message_exist(message_id=message_id):
             state = 'queue'
-        if not state and self._does_lock_exist(messsage_id=message_id):
+        if not state and self._does_lock_exist(message_id=message_id):
             state = 'lock'
         if not state and self._does_history_message_exist(message_id=message_id, is_success=True):
             state = 'complete.success'
