@@ -33,3 +33,13 @@ Each of these uses follows a workflow of:
 * Provider a robust `queue_adapter` implementation based on `beanstalkd`
 * Defines a `handler` interface, to be implemented by integrator (you!) specific to your system logic
 * Handles result logic, including deleting the request on success and resubmitted the request on a transient exception
+
+## Roles
+* Architect can map job type to handlers
+* Developers can implement new handlers
+* Producers can request jobs to be processed
+* Producers can specify expiration of job requests
+* Producers can specify delay (earliest date/time to execute job) of job requests
+* `pulpo-messaging` processes requests based on priority order, and routes job requests to handler
+* `pulpo-messaging` automatically retries on transient exceptions, and buries jobs on fatal exceptions
+
