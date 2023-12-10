@@ -148,26 +148,26 @@ class TestBeanstalkQueueAdapterCompliance():
         dq3 = qa.dequeue()
         assert not dq3
 
-    # def test_commit_removes_message(self):
-    #     qa = self.queue_adapter_factory()
-    #     m1 = Message(payload='hello world')
-    #     m1 = qa.enqueue(m1)
+    @with_beanstalkd()
+    def test_commit_removes_message(qa: QueueAdapter):
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
 
-    #     dq_1 = qa.dequeue()
-    #     self.assertIsNotNone(dq_1)
+        dq_1 = qa.dequeue()
+        assert dq_1
 
-    #     # at this point, m1 should exist and be locked
+        # at this point, m1 should exist and be locked
 
-    #     # because message is locked, it should not be available for dequeue
-    #     dq_2 = qa.dequeue()
-    #     self.assertIsNone(dq_2)
+        # because message is locked, it should not be available for dequeue
+        dq_2 = qa.dequeue()
+        assert not dq_2
 
-    #     qa.commit(dq_1)
+        qa.commit(dq_1)
 
-    #     # at this point, m1 should not exist
+        # at this point, m1 should not exist
 
-    #     dq_3 = qa.dequeue()
-    #     self.assertIsNone(dq_3)
+        dq_3 = qa.dequeue()
+        assert not dq_3
 
     # def test_rollback_removes_lock(self):
     #     qa = self.queue_adapter_factory()
