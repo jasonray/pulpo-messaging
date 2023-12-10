@@ -2,10 +2,10 @@ import os
 import time
 import subprocess
 import unittest
+from typing import Callable
 from pulpo_messaging.beanstalkd_queue_adapter import BeanstalkdQueueAdapter
 from pulpo_messaging.kessel import QueueAdapter
 from pulpo_messaging.kessel import Message
-from typing import Callable, Optional
 
 from greenstalk import (DEFAULT_TUBE, Address, Client)
 
@@ -215,7 +215,7 @@ class TestBeanstalkQueueAdapterStats():
         m4 = Message(payload='hello world 4')
         m4 = qa.enqueue(m4)
 
-        dq_1 = qa.dequeue()
+        dq_1 = qa.dequeue() # pylint: disable=unused-variable
         dq_2 = qa.dequeue()
 
         qa.commit(dq_2)
