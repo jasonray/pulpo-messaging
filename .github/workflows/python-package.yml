@@ -27,6 +27,9 @@ jobs:
     - name: Upgrade pip
       run: |
         pip install --upgrade pip
+    - name: Install beanstalkd
+      run: |
+        sudo apt-get install -y beanstalkd
     - name: Install dependencies
       run: |
         make build
