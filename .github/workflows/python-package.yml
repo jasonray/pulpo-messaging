@@ -35,7 +35,6 @@ jobs:
         ls /usr/bin/beanstalkd
         echo 'export home directory'
         export BEANSTALKD_PATH="/usr/bin/beanstalkd"
-        /usr/bin/beanstalkd -l 127.0.0.1 -p 4444
     - name: Install dependencies
       run: |
         make build
