@@ -11,6 +11,13 @@ from pulpo_messaging import logger
 from pulpo_messaging.message import Message
 from pulpo_messaging.queue_adapter import QueueAdapter
 
+# https://greenstalk.readthedocs.io/en/stable/index.html
+
+# To start beanstalkd now and restart at login:
+#   brew services start beanstalkd
+# Or, if you don't want/need a background service you can just run:
+#   /opt/homebrew/opt/beanstalkd/bin/beanstalkd -l 127.0.0.1 -p 11300
+
 
 class BeanstalkdQueueAdapterConfig(Config):
 
