@@ -45,6 +45,7 @@ TestFunc = Callable[[Client], None]
 WrapperFunc = Callable[[], None]
 DecoratorFunc = Callable[[TestFunc], WrapperFunc]
 
+
 def with_beanstalkd(
     address: Address = DEFAULT_INET_ADDRESS,
     encoding: Optional[str] = "utf-8",
@@ -52,7 +53,9 @@ def with_beanstalkd(
 ) -> DecoratorFunc:
     print('with_beanstalkd')
     print('define decorator')
+
     def decorator(test: TestFunc) -> WrapperFunc:
+
         def wrapper(cls) -> None:
             cmd = [BEANSTALKD_PATH]
             host, port = address
@@ -67,13 +70,16 @@ def with_beanstalkd(
                     options['port'] = port
                     options['encoding'] = encoding
                     options['default_tube'] = tube
-                    bqa= BeanstalkdQueueAdapter(options=options)
+                    bqa = BeanstalkdQueueAdapter(options=options)
                     test(bqa)
                 finally:
                     print(f'terminating beanstalkd {beanstalkd.pid=}')
                     beanstalkd.terminate()
+
         return wrapper
+
     return decorator
+
 
 class TestBeanstalkQueueAdapterCompliance():
 
@@ -111,8 +117,8 @@ class TestBeanstalkQueueAdapterCompliance():
 
         dq_1 = qa.dequeue()
 
-        assert dq_1.get_header_item('k')== 'v'
-        assert dq_1.id== m1.id
+        assert dq_1.get_header_item('k') == 'v'
+        assert dq_1.id == m1.id
 
     @with_beanstalkd()
     def test_dequeue_skip_locked_message_with_1(qa: QueueAdapter):
@@ -123,7 +129,7 @@ class TestBeanstalkQueueAdapterCompliance():
         assert dq_1
 
         dq_2 = qa.dequeue()
-        assert not dq_2 
+        assert not dq_2
 
     @with_beanstalkd()
     def test_dequeue_skip_locked_message_with_2(qa: QueueAdapter):
@@ -139,10 +145,10 @@ class TestBeanstalkQueueAdapterCompliance():
 
         print('first dequeue, expect m1')
         dq1 = qa.dequeue()
-        assert dq1.payload==m1.payload
+        assert dq1.payload == m1.payload
         print('second dequeue, expect m2')
         dq2 = qa.dequeue()
-        assert dq2.payload== m2.payload
+        assert dq2.payload == m2.payload
 
         # because message is locked, should not be able to dequeue
         dq3 = qa.dequeue()
@@ -190,15 +196,17 @@ class TestBeanstalkQueueAdapterCompliance():
         dq_3 = qa.dequeue()
         assert dq_3
 
+
 class TestBeanstalkQueueAdapterStats():
+
     @with_beanstalkd()
-    def test_stats_not_null(qa: BeanstalkdQueueAdapter ):
+    def test_stats_not_null(qa: BeanstalkdQueueAdapter):
         stats = qa.beanstalk_stat()
         print(f'{stats=}')
         assert stats
 
     @with_beanstalkd()
-    def test_enqueue_one_item(qa: BeanstalkdQueueAdapter ):
+    def test_enqueue_one_item(qa: BeanstalkdQueueAdapter):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
@@ -209,7 +217,7 @@ class TestBeanstalkQueueAdapterStats():
         assert stats['total-jobs'] == 1
 
     @with_beanstalkd()
-    def test_enqueue_two_dequeue_one_item(qa: BeanstalkdQueueAdapter ):
+    def test_enqueue_two_dequeue_one_item(qa: BeanstalkdQueueAdapter):
         m1 = Message(payload='hello world 1')
         m1 = qa.enqueue(m1)
         m2 = Message(payload='hello world 2')
@@ -221,10 +229,10 @@ class TestBeanstalkQueueAdapterStats():
         print(f'{stats=}')
         assert stats['current-jobs-reserved'] == 1
         assert stats['current-jobs-ready'] == 1
-        assert stats['total-jobs'] == 2        
+        assert stats['total-jobs'] == 2
 
     @with_beanstalkd()
-    def test_enqueue_four_dequeue_two_item_commit_one(qa: BeanstalkdQueueAdapter ):
+    def test_enqueue_four_dequeue_two_item_commit_one(qa: BeanstalkdQueueAdapter):
         m1 = Message(payload='hello world 1')
         m1 = qa.enqueue(m1)
         m2 = Message(payload='hello world 2')
@@ -243,10 +251,10 @@ class TestBeanstalkQueueAdapterStats():
         print(f'{stats=}')
         assert stats['current-jobs-reserved'] == 1
         assert stats['current-jobs-ready'] == 2
-        assert stats['total-jobs'] == 4 
+        assert stats['total-jobs'] == 4
 
     @with_beanstalkd()
-    def test_enqueue_four_dequeue_two_item_commit_one_release_one(qa: BeanstalkdQueueAdapter ):
+    def test_enqueue_four_dequeue_two_item_commit_one_release_one(qa: BeanstalkdQueueAdapter):
         m1 = Message(payload='hello world 1')
         m1 = qa.enqueue(m1)
         m2 = Message(payload='hello world 2')
@@ -266,7 +274,5 @@ class TestBeanstalkQueueAdapterStats():
         print(f'{stats=}')
         assert stats['current-jobs-reserved'] == 0
         assert stats['current-jobs-ready'] == 3
-        assert stats['cmd-delete'] == 1       
-        assert stats['total-jobs'] == 4       
-
-           
+        assert stats['cmd-delete'] == 1
+        assert stats['total-jobs'] == 4
