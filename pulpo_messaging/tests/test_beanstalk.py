@@ -1,32 +1,15 @@
 import os
 import time
+import os
+import subprocess
+import time
 from pulpo_messaging.beanstalkd_queue_adapter import BeanstalkdQueueAdapter
 from pulpo_messaging.kessel import QueueAdapter
 from pulpo_messaging.kessel import Message
 from .unittest_helper import get_unique_base_path
-import os
-import subprocess
-import time
 from typing import Callable, Optional
 
-from greenstalk import (
-    DEFAULT_PRIORITY,
-    DEFAULT_TTR,
-    DEFAULT_TUBE,
-    Address,
-    BuriedError,
-    Client,
-    DeadlineSoonError,
-    DrainingError,
-    Job,
-    JobTooBigError,
-    NotFoundError,
-    NotIgnoredError,
-    TimedOutError,
-    UnknownResponseError,
-    _parse_chunk,
-    _parse_response,
-)
+from greenstalk import (DEFAULT_TUBE, Address, Client)
 
 BEANSTALKD_PATH = os.getenv("BEANSTALKD_PATH", "beanstalkd")
 DEFAULT_INET_ADDRESS = ("127.0.0.1", 4444)
