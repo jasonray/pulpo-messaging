@@ -58,10 +58,6 @@ class BeanstalkdQueueAdapter(QueueAdapter):
         self._config = BeanstalkdQueueAdapterConfig(options)
         address = (self.config.host, self.config.port)
         self._client = BeanstalkClient(address= address,  encoding=self.config.encoding, watch=self.config.default_tube, use=self.config.default_tube)
-        
-        # print(f'stats_tube: {self.client.stats_tube( self.config.default_tube)}'  ) 
-
-
 
     @property
     def config(self) -> BeanstalkdQueueAdapterConfig:
@@ -102,6 +98,11 @@ class BeanstalkdQueueAdapter(QueueAdapter):
 
     def rollback(self, message: Message) -> Message:        
         self.client.release( job=greenstalk.Job(message.id, message.body) )
+
+    def beanstalk_stat(self, tube:str = None) -> Message:     
+        if not tube:
+            tube = self.config.default_tube
+        return self.client.stats_tube(tube)   
 
     def log(self, *argv):
         logger.log(*argv, flush=True)
