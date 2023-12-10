@@ -82,7 +82,6 @@ class BeanstalkdQueueAdapter(QueueAdapter):
 
     def enqueue(self, message: Message) -> Message:
         serialized_message = json.dumps(message._components, indent=2, default=str)
-        self.log(f'enqueue {serialized_message=}')
         # self.client.use( self.config.default_tube )
         put_job_id = self.client.put(body=serialized_message)
         message.id = put_job_id
