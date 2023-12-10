@@ -27,6 +27,14 @@ jobs:
     - name: Upgrade pip
       run: |
         pip install --upgrade pip
+    - name: Install beanstalkd
+      run: |
+        echo 'install beanstalkd via apt-get'
+        sudo apt-get install -y beanstalkd
+        echo 'check if it looks like it is installed'
+        ls /usr/bin/beanstalkd
+        echo 'export home directory'
+        export BEANSTALKD_PATH="/usr/bin/beanstalkd"
     - name: Install dependencies
       run: |
         make build
