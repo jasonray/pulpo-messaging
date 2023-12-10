@@ -19,7 +19,7 @@ DecoratorFunc = Callable[[TestFunc], WrapperFunc]
 
 def with_beanstalkd(
     address: Address = DEFAULT_INET_ADDRESS,
-    encoding: Optional[str] = "utf-8",
+    encoding: str = "utf-8",
     tube: str = DEFAULT_TUBE,
 ) -> DecoratorFunc:
     print('with_beanstalkd')
@@ -196,7 +196,7 @@ class TestBeanstalkQueueAdapterStats():
         m2 = Message(payload='hello world 2')
         m2 = qa.enqueue(m2)
 
-        dq_1 = qa.dequeue()
+        dq_1 = qa.dequeue()  # pylint: disable=unused-variable
 
         stats = qa.beanstalk_stat()
         print(f'{stats=}')
