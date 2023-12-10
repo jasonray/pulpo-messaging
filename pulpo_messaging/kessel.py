@@ -4,6 +4,7 @@ from pulpo_config import Config
 from art import text2art
 from pulpo_messaging import logger
 from .file_queue_adapter import FileQueueAdapter
+from .beanstalkd_queue_adapter import BeanstalkdQueueAdapter
 from .message import Message
 from .payload_handler import PayloadHandler, RequestResult
 from .queue_adapter import QueueAdapter
@@ -73,6 +74,8 @@ class Pulpo():
                 raise Exception('invalid queue adapter')
         elif self.config.queue_adapter_type == 'FileQueueAdapter':
             self._queue_adapter = FileQueueAdapter(self.config.get('file_queue_adapter'))
+        elif self.config.queue_adapter_type == 'BeanstalkdQueueAdapter':
+            self._queue_adapter = BeanstalkdQueueAdapter(self.config.get('beanstalkd_queue_adapter'))
         else:
             raise Exception('invalid queue adapter type')
 
