@@ -4,7 +4,7 @@ import time
 import json
 import random
 import datetime
-from pystalk import BeanstalkClient
+from greenstalk import Client as BeanstalkClient
 from statman import Statman
 from pulpo_config import Config
 from pulpo_messaging import logger
@@ -25,13 +25,17 @@ class BeanstalkdQueueAdapterConfig(Config):
     def port(self: Config) -> int:
         return self.get('port', 11300)
 
-    @property
-    def socket_timeout(self: Config) -> int:
-        return self.get('socket_timeout', None)
+    # @property
+    # def socket_timeout(self: Config) -> int:
+    #     return self.get('socket_timeout', None)
 
     @property
     def default_tube(self: Config) -> int:
         return self.get('default_tube', "pulpo-beanstalk-queue-adapter")
+
+    @property
+    def encoding(self: Config) -> str:
+        return self.get('encoding', "utf-8")
 
 
 class BeanstalkdQueueAdapter(QueueAdapter):
@@ -44,7 +48,8 @@ class BeanstalkdQueueAdapter(QueueAdapter):
         self.log('BeanstalkdQueueAdapter init')
 
         self._config = BeanstalkdQueueAdapterConfig(options)
-        self._client = BeanstalkClient(host= self.config.host, port=self.config.port, socket_timeout=self.config.socket_timeout)
+        address = (self.config.host, self.config.port)
+        self._client = BeanstalkClient(address= address,  encoding=self.config.encoding, watch=self.config.default_tube, use=self.config.default_tube)
         
         # print(f'stats_tube: {self.client.stats_tube( self.config.default_tube)}'  ) 
 
@@ -61,21 +66,21 @@ class BeanstalkdQueueAdapter(QueueAdapter):
     def enqueue(self, message: Message) -> Message:
         serialized_message = json.dumps(message._components, indent=2, default=str)        
         print(f'enqueue {serialized_message=}')
-        self.client.use( self.config.default_tube )
-        result, put_job_id = self.client.put_job( data= serialized_message )
-        self.log(f'put message [{result=}][{put_job_id=}]')
+        # self.client.use( self.config.default_tube )
+        put_job_id = self.client.put ( body= serialized_message )
+        self.log(f'put message [{put_job_id=}]')
         message.id = put_job_id
         return message
 
     def dequeue(self) -> Message:
         self.client.watch( self.config.default_tube)
-        job = self.client.reserve_job(timeout=1)
-        print(f'{job.job_id=} {job=}')
-        print(f'{job.job_data=}')
-        message_components = json.loads(job.job_data)
+        job = self.client.reserve(timeout=1)
+        print(f'{job.id=} {job=}')
+        print(f'{job.body=}')
+        message_components = json.loads(job.body)
         print(f'{message_components=}')
         message = Message(components=message_components)
-        message.id = job.job_id
+        message.id = job.id
         print(f'{message.body=}')
         return message
 
