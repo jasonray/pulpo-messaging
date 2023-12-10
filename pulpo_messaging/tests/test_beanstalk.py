@@ -1,23 +1,13 @@
 import os
-import unittest
 import time
-import datetime
-import json
-from datetime import timedelta
 from pulpo_messaging.beanstalkd_queue_adapter import BeanstalkdQueueAdapter
-from pulpo_messaging.kessel import FileQueueAdapter
 from pulpo_messaging.kessel import QueueAdapter
 from pulpo_messaging.kessel import Message
 from .unittest_helper import get_unique_base_path
-
-import json
 import os
-import signal
 import subprocess
 import time
-from contextlib import contextmanager
-from datetime import datetime, timedelta
-from typing import Callable, Iterable, Iterator, Optional, Union
+from typing import Callable, Optional
 
 from greenstalk import (
     DEFAULT_PRIORITY,
