@@ -4,6 +4,7 @@ import time
 import json
 import random
 import datetime
+import greenstalk
 from greenstalk import Client as BeanstalkClient
 from statman import Statman
 from pulpo_config import Config
@@ -81,7 +82,11 @@ class BeanstalkdQueueAdapter(QueueAdapter):
 
     def dequeue(self) -> Message:
         self.client.watch( self.config.default_tube)
-        job = self.client.reserve(timeout=1)
+        try:
+            job = self.client.reserve(timeout=1)
+        except greenstalk.TimedOutError:
+            # no message available
+            return None
         print(f'{job.id=} {job=}')
         print(f'{job.body=}')
         message_components = json.loads(job.body)
