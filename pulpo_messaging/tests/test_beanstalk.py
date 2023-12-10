@@ -104,16 +104,15 @@ class TestBeanstalkQueueAdapterCompliance():
         assert dq_1.get_body_item('k') == 'v'
         assert dq_1.id == m1.id
 
-    # @with_beanstalkd()
-    # def test_enqueue_dequeue_with_header(qa: QueueAdapter):
-    #     qa = self.queue_adapter_factory()
-    #     m1 = Message(header={'k': 'v'})
-    #     m1 = qa.enqueue(m1)
+    @with_beanstalkd()
+    def test_enqueue_dequeue_with_header(qa: QueueAdapter):
+        m1 = Message(header={'k': 'v'})
+        m1 = qa.enqueue(m1)
 
-    #     dq_1 = qa.dequeue()
+        dq_1 = qa.dequeue()
 
-    #     self.assertEqual(dq_1.get_header_item('k'), 'v')
-    #     self.assertEqual(dq_1.id, m1.id)
+        assert dq_1.get_header_item('k')== 'v'
+        assert dq_1.id== m1.id
 
     # def test_dequeue_skip_locked_message_with_1(self):
     #     qa = self.queue_adapter_factory()
