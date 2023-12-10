@@ -1,12 +1,6 @@
-import os
-import uuid
-import time
 import json
-import random
-import datetime
 import greenstalk
 from greenstalk import Client as BeanstalkClient
-from statman import Statman
 from pulpo_config import Config
 from pulpo_messaging import logger
 from pulpo_messaging.message import Message
