@@ -83,25 +83,25 @@ class BeanstalkdQueueAdapter(QueueAdapter):
     def dequeue(self) -> Message:
         self.client.watch( self.config.default_tube)
         try:
+            self.log('BeanstalkdQueueAdapter dequeue begin reserve')
             job = self.client.reserve(timeout=1)
         except greenstalk.TimedOutError:
+            self.log('BeanstalkdQueueAdapter dequeue reserve timeout')
             # no message available
             return None
-        print(f'{job.id=} {job=}')
-        print(f'{job.body=}')
+        self.log(f'BeanstalkdQueueAdapter dequeue reserve complete {job.id=}')
         message_components = json.loads(job.body)
         print(f'{message_components=}')
         message = Message(components=message_components)
         message.id = job.id
-        print(f'{message.body=}')
         return message
 
 
     def commit(self, message: Message, is_success: bool = True) -> Message:
-        pass
+        self.client.delete( job=greenstalk.Job(message.id, message.body) )
 
-    def rollback(self, message: Message) -> Message:
-        pass
+    def rollback(self, message: Message) -> Message:        
+        self.client.release( job=greenstalk.Job(message.id, message.body) )
 
     def log(self, *argv):
         logger.log(*argv, flush=True)
