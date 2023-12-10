@@ -3,11 +3,11 @@ import time
 import subprocess
 import unittest
 from typing import Callable
+from greenstalk import (DEFAULT_TUBE, Address, Client)
 from pulpo_messaging.beanstalkd_queue_adapter import BeanstalkdQueueAdapter
 from pulpo_messaging.kessel import QueueAdapter
 from pulpo_messaging.kessel import Message
 
-from greenstalk import (DEFAULT_TUBE, Address, Client)
 
 BEANSTALKD_PATH = os.getenv("BEANSTALKD_PATH", "beanstalkd")
 DEFAULT_INET_ADDRESS = ("127.0.0.1", 4444)
@@ -215,7 +215,7 @@ class TestBeanstalkQueueAdapterStats():
         m4 = Message(payload='hello world 4')
         m4 = qa.enqueue(m4)
 
-        dq_1 = qa.dequeue() # pylint: disable=unused-variable
+        dq_1 = qa.dequeue()  # pylint: disable=unused-variable
         dq_2 = qa.dequeue()
 
         qa.commit(dq_2)
