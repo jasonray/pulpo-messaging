@@ -189,3 +189,84 @@ class TestBeanstalkQueueAdapterCompliance():
 
         dq_3 = qa.dequeue()
         assert dq_3
+
+class TestBeanstalkQueueAdapterStats():
+    @with_beanstalkd()
+    def test_stats_not_null(qa: BeanstalkdQueueAdapter ):
+        stats = qa.beanstalk_stat()
+        print(f'{stats=}')
+        assert stats
+
+    @with_beanstalkd()
+    def test_enqueue_one_item(qa: BeanstalkdQueueAdapter ):
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        stats = qa.beanstalk_stat()
+        print(f'{stats=}')
+        assert stats['current-jobs-reserved'] == 0
+        assert stats['current-jobs-ready'] == 1
+        assert stats['total-jobs'] == 1
+
+    @with_beanstalkd()
+    def test_enqueue_two_dequeue_one_item(qa: BeanstalkdQueueAdapter ):
+        m1 = Message(payload='hello world 1')
+        m1 = qa.enqueue(m1)
+        m2 = Message(payload='hello world 2')
+        m2 = qa.enqueue(m2)
+
+        dq_1 = qa.dequeue()
+
+        stats = qa.beanstalk_stat()
+        print(f'{stats=}')
+        assert stats['current-jobs-reserved'] == 1
+        assert stats['current-jobs-ready'] == 1
+        assert stats['total-jobs'] == 2        
+
+    @with_beanstalkd()
+    def test_enqueue_four_dequeue_two_item_commit_one(qa: BeanstalkdQueueAdapter ):
+        m1 = Message(payload='hello world 1')
+        m1 = qa.enqueue(m1)
+        m2 = Message(payload='hello world 2')
+        m2 = qa.enqueue(m2)
+        m3 = Message(payload='hello world 3')
+        m3 = qa.enqueue(m3)
+        m4 = Message(payload='hello world 4')
+        m4 = qa.enqueue(m4)
+
+        dq_1 = qa.dequeue()
+        dq_2 = qa.dequeue()
+
+        qa.commit(dq_2)
+
+        stats = qa.beanstalk_stat()
+        print(f'{stats=}')
+        assert stats['current-jobs-reserved'] == 1
+        assert stats['current-jobs-ready'] == 2
+        assert stats['total-jobs'] == 4 
+
+    @with_beanstalkd()
+    def test_enqueue_four_dequeue_two_item_commit_one_release_one(qa: BeanstalkdQueueAdapter ):
+        m1 = Message(payload='hello world 1')
+        m1 = qa.enqueue(m1)
+        m2 = Message(payload='hello world 2')
+        m2 = qa.enqueue(m2)
+        m3 = Message(payload='hello world 3')
+        m3 = qa.enqueue(m3)
+        m4 = Message(payload='hello world 4')
+        m4 = qa.enqueue(m4)
+
+        dq_1 = qa.dequeue()
+        dq_2 = qa.dequeue()
+
+        qa.commit(dq_2)
+        qa.rollback(dq_1)
+
+        stats = qa.beanstalk_stat()
+        print(f'{stats=}')
+        assert stats['current-jobs-reserved'] == 0
+        assert stats['current-jobs-ready'] == 3
+        assert stats['cmd-delete'] == 1       
+        assert stats['total-jobs'] == 4       
+
+           
