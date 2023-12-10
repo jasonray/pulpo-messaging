@@ -43,3 +43,32 @@ Each of these uses follows a workflow of:
 * `pulpo-messaging` processes requests based on priority order, and routes job requests to handler
 * `pulpo-messaging` automatically retries on transient exceptions, and buries jobs on fatal exceptions
 
+# Concepts
+* `job`: single delayed processing task
+* `job request`: request to `pulpo-messaging` to perform a single job
+* `producer`: system requesting job
+* `handler`: the set of Python code to fulfil the job request. This is where the extensibility of the system comes into play: you create your own handlers with your logic and `pulpo-messaging` will delegate to your registered handlers.
+* `queue`: `pulpo-messaging` uses a queue for holding the job requests which need to be processed.
+* `queue_adapter`: the queue adapter integrates `pulpo-messaging` with a specific queue implementation.  Currently, there are `queue_adapters` for a light-weight, file based implementation (`file_queue_adapter`) and a robust implementation utilizing `beanstalkd` (`beanstalk_queue_adapter`)
+
+# API
+
+## Message
+A message is the implementation of a `job request`.  Message is implemented a dictionary, with root elements of `id`, `header`, and `body`.
+| Field        | Parent | Specified by               | Description |
+| id           | root   | `queue_adapter` on enqueue | unique identifier |
+| header       | root   | various                    | stores content used for routing / flow control     |
+| request_type | header | producer                   | 
+
+
+
+Field	Optional/Request	Description
+id	requred	unique identifier, created by Kessel job manager
+ref	optional	identifier, create by job producer
+type	required	job type is used to map to a specific handler
+expiration	optional	Specifies the latest that a job may be processed. This is provided as an absolute date/time as a JavaScript date (2012-04-23T18:25:43.511Z)
+delay	optional	Specifies the earliest that a job may be processed. This is provided as an absolute date/time as a JavaScript date (2012-04-23T18:25:43.511Z)
+priority	optional	Specifies the order by which jobs will be processed. 0 is the highest priority, the lowest priority being approx 4M. Negative numbers are treated as 0
+callback	optional	If a callback is provided it will be invoked when job is complete. This is currently implemented with a JavaScript function callback function(err). Pending: callbacks using HTTP endpoint
+payload	optional	The payload is the content to pass to the handler
+
