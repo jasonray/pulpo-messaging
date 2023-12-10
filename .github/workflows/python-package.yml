@@ -30,6 +30,9 @@ jobs:
     - name: Install beanstalkd
       run: |
         sudo apt-get install -y beanstalkd
+        export BEANSTALKD_PATH="/lib/systemd/system/beanstalkd.service"
+        which beanstalkd
+        up beanstalkd
     - name: Install dependencies
       run: |
         make build
