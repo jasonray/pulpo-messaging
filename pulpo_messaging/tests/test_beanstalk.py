@@ -1,12 +1,9 @@
 import os
 import time
-import os
 import subprocess
-import time
 from pulpo_messaging.beanstalkd_queue_adapter import BeanstalkdQueueAdapter
 from pulpo_messaging.kessel import QueueAdapter
 from pulpo_messaging.kessel import Message
-from .unittest_helper import get_unique_base_path
 from typing import Callable, Optional
 
 from greenstalk import (DEFAULT_TUBE, Address, Client)
