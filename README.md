@@ -66,3 +66,13 @@ A message is the implementation of a `job request`.  Message is implemented a di
 | attempts     | header | `queue_adapter`            | Tracks the number of (failed) attempts on a given message.  This is likely only used by the file_queue_adapter.
 | body         | root   | producer                   | defines the content the the handler will need to execute the job.  This is stored as key-value pairs.  For example, for a job that sends an email, the message could have a body with key-value pairs of "to", "subject", "body". 
 | payload      | body   | producer                   | for simplistic jobs, payload acts as a single value for job request.  |
+
+## Publish
+* `publish(message: Message) -> Message` => enqueues the job request on to the queue
+  * `message.request_type`: specifies the job that is being requested.  This value is looked up against the configuration of the registry to determine the handler
+  * `priority` (optional): specifies the order by which jobs will be processed.  
+  * `expiration` (optional): specifies the latest that a job may be processed.
+  * `delay` (optional): specifies the earlier that a job may be processed.
+  * publish returns a `Message`, which is the requested message with a populated message id
+
+
