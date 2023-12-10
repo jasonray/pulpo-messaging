@@ -56,19 +56,13 @@ Each of these uses follows a workflow of:
 ## Message
 A message is the implementation of a `job request`.  Message is implemented a dictionary, with root elements of `id`, `header`, and `body`.
 | Field        | Parent | Specified by               | Description |
+| ------------ | ------ | -------------------------- | ----------- |
 | id           | root   | `queue_adapter` on enqueue | unique identifier |
-| header       | root   | various                    | stores content used for routing / flow control     |
-| request_type | header | producer                   | 
-
-
-
-Field	Optional/Request	Description
-id	requred	unique identifier, created by Kessel job manager
-ref	optional	identifier, create by job producer
-type	required	job type is used to map to a specific handler
-expiration	optional	Specifies the latest that a job may be processed. This is provided as an absolute date/time as a JavaScript date (2012-04-23T18:25:43.511Z)
-delay	optional	Specifies the earliest that a job may be processed. This is provided as an absolute date/time as a JavaScript date (2012-04-23T18:25:43.511Z)
-priority	optional	Specifies the order by which jobs will be processed. 0 is the highest priority, the lowest priority being approx 4M. Negative numbers are treated as 0
-callback	optional	If a callback is provided it will be invoked when job is complete. This is currently implemented with a JavaScript function callback function(err). Pending: callbacks using HTTP endpoint
-payload	optional	The payload is the content to pass to the handler
-
+| header       | root   | various                    | stores content used for routing / flow control |
+| request_type | header | producer                   | defines the job that is being requests (i.e. send_email, print_shipping_label, etc) |
+| expiration   | header | producer                   | Specifies the latest that a job may be processed. This is provided as an absolute date/time. |
+| delay        | header | producer                   | Specifies the earlier that a job may be processed.  Prior to this date/time, the message will not be dequeue. This is provided as an absolute date/time. |
+| priority     | header | producer                   | Specifies the order by which jobs will be processed. 0 is the highest priority, the lowest priority being approx 4M. Negative numbers are treated as 0
+| attempts     | header | `queue_adapter`            | Tracks the number of (failed) attempts on a given message.  This is likely only used by the file_queue_adapter.
+| body         | root   | producer                   | defines the content the the handler will need to execute the job.  This is stored as key-value pairs.  For example, for a job that sends an email, the message could have a body with key-value pairs of "to", "subject", "body". 
+| payload      | body   | producer                   | for simplistic jobs, payload acts as a single value for job request.  |
