@@ -8,7 +8,6 @@ from pulpo_messaging.beanstalkd_queue_adapter import BeanstalkdQueueAdapter
 from pulpo_messaging.kessel import QueueAdapter
 from pulpo_messaging.kessel import Message
 
-
 BEANSTALKD_PATH = os.getenv("BEANSTALKD_PATH", "beanstalkd")
 DEFAULT_INET_ADDRESS = ("127.0.0.1", 4444)
 
@@ -60,7 +59,7 @@ class TestBeanstalkQueueAdapterCompliance(unittest.TestCase):
 
         m1 = Message(payload='hello world')
         print('invoke enqueue')
-        m1 = qa.enqueue(m1)
+        m1 = qa.enqueue(m1) 
         print(f'enqueue complete {m1.id=}')
 
         print('invoke dequeue')
