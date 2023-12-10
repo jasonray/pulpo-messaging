@@ -123,7 +123,7 @@ class TestBeanstalkQueueAdapterCompliance():
         assert dq_1
 
         dq_2 = qa.dequeue()
-        assert dq_2 #not none
+        assert not dq_2 
 
     # def test_dequeue_skip_locked_message_with_2(self):
     #     qa = self.queue_adapter_factory()
