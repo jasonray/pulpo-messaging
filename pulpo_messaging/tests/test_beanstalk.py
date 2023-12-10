@@ -1,6 +1,7 @@
 import os
 import time
 import subprocess
+import unittest
 from pulpo_messaging.beanstalkd_queue_adapter import BeanstalkdQueueAdapter
 from pulpo_messaging.kessel import QueueAdapter
 from pulpo_messaging.kessel import Message
@@ -41,7 +42,7 @@ def with_beanstalkd(
                     options['encoding'] = encoding
                     options['default_tube'] = tube
                     bqa = BeanstalkdQueueAdapter(options=options)
-                    test(bqa)
+                    test(cls, bqa)
                 finally:
                     print(f'terminating beanstalkd {beanstalkd.pid=}')
                     beanstalkd.terminate()
@@ -51,10 +52,10 @@ def with_beanstalkd(
     return decorator
 
 
-class TestBeanstalkQueueAdapterCompliance():
+class TestBeanstalkQueueAdapterCompliance(unittest.TestCase):
 
     @with_beanstalkd()
-    def test_enqueue_dequeue_message(qa: QueueAdapter):
+    def test_enqueue_dequeue_message(self, qa: QueueAdapter):
         print(f'test_enqueue_dequeue_message {qa=}')
 
         m1 = Message(payload='hello world')
@@ -66,11 +67,13 @@ class TestBeanstalkQueueAdapterCompliance():
         dq_1 = qa.dequeue()
         print(f'dequeue complete {dq_1=}')
 
+        # I am not sure which assertion style I should use, so leaving both here for now
         assert dq_1.id == m1.id
+        self.assertEqual(dq_1.id, m1.id)
         assert dq_1.payload == 'hello world'
 
     @with_beanstalkd()
-    def test_enqueue_dequeue_with_body(qa: QueueAdapter):
+    def test_enqueue_dequeue_with_body(self, qa: QueueAdapter):
         m1 = Message(body={'k': 'v'}, payload='hello world')
         m1 = qa.enqueue(m1)
 
@@ -81,7 +84,7 @@ class TestBeanstalkQueueAdapterCompliance():
         assert dq_1.id == m1.id
 
     @with_beanstalkd()
-    def test_enqueue_dequeue_with_header(qa: QueueAdapter):
+    def test_enqueue_dequeue_with_header(self, qa: QueueAdapter):
         m1 = Message(header={'k': 'v'})
         m1 = qa.enqueue(m1)
 
@@ -91,7 +94,7 @@ class TestBeanstalkQueueAdapterCompliance():
         assert dq_1.id == m1.id
 
     @with_beanstalkd()
-    def test_dequeue_skip_locked_message_with_1(qa: QueueAdapter):
+    def test_dequeue_skip_locked_message_with_1(self, qa: QueueAdapter):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
@@ -102,7 +105,7 @@ class TestBeanstalkQueueAdapterCompliance():
         assert not dq_2
 
     @with_beanstalkd()
-    def test_dequeue_skip_locked_message_with_2(qa: QueueAdapter):
+    def test_dequeue_skip_locked_message_with_2(self, qa: QueueAdapter):
         m1 = Message(payload='hello world m1')
         print('enqueue m1')
         m1 = qa.enqueue(m1)
@@ -125,7 +128,7 @@ class TestBeanstalkQueueAdapterCompliance():
         assert not dq3
 
     @with_beanstalkd()
-    def test_commit_removes_message(qa: QueueAdapter):
+    def test_commit_removes_message(self, qa: QueueAdapter):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
@@ -146,7 +149,7 @@ class TestBeanstalkQueueAdapterCompliance():
         assert not dq_3
 
     @with_beanstalkd()
-    def test_rollback_removes_lock(qa: QueueAdapter):
+    def test_rollback_removes_lock(self, qa: QueueAdapter):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
@@ -170,13 +173,13 @@ class TestBeanstalkQueueAdapterCompliance():
 class TestBeanstalkQueueAdapterStats():
 
     @with_beanstalkd()
-    def test_stats_not_null(qa: BeanstalkdQueueAdapter):
+    def test_stats_not_null(self, qa: BeanstalkdQueueAdapter):
         stats = qa.beanstalk_stat()
         print(f'{stats=}')
         assert stats
 
     @with_beanstalkd()
-    def test_enqueue_one_item(qa: BeanstalkdQueueAdapter):
+    def test_enqueue_one_item(self, qa: BeanstalkdQueueAdapter):
         m1 = Message(payload='hello world')
         m1 = qa.enqueue(m1)
 
@@ -187,7 +190,7 @@ class TestBeanstalkQueueAdapterStats():
         assert stats['total-jobs'] == 1
 
     @with_beanstalkd()
-    def test_enqueue_two_dequeue_one_item(qa: BeanstalkdQueueAdapter):
+    def test_enqueue_two_dequeue_one_item(self, qa: BeanstalkdQueueAdapter):
         m1 = Message(payload='hello world 1')
         m1 = qa.enqueue(m1)
         m2 = Message(payload='hello world 2')
@@ -202,7 +205,7 @@ class TestBeanstalkQueueAdapterStats():
         assert stats['total-jobs'] == 2
 
     @with_beanstalkd()
-    def test_enqueue_four_dequeue_two_item_commit_one(qa: BeanstalkdQueueAdapter):
+    def test_enqueue_four_dequeue_two_item_commit_one(self, qa: BeanstalkdQueueAdapter):
         m1 = Message(payload='hello world 1')
         m1 = qa.enqueue(m1)
         m2 = Message(payload='hello world 2')
@@ -224,7 +227,7 @@ class TestBeanstalkQueueAdapterStats():
         assert stats['total-jobs'] == 4
 
     @with_beanstalkd()
-    def test_enqueue_four_dequeue_two_item_commit_one_release_one(qa: BeanstalkdQueueAdapter):
+    def test_enqueue_four_dequeue_two_item_commit_one_release_one(self, qa: BeanstalkdQueueAdapter):
         m1 = Message(payload='hello world 1')
         m1 = qa.enqueue(m1)
         m2 = Message(payload='hello world 2')
