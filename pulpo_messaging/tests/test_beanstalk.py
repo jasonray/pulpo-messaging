@@ -125,28 +125,28 @@ class TestBeanstalkQueueAdapterCompliance():
         dq_2 = qa.dequeue()
         assert not dq_2 
 
-    # def test_dequeue_skip_locked_message_with_2(self):
-    #     qa = self.queue_adapter_factory()
-    #     m1 = Message(payload='hello world m1')
-    #     print('enqueue m1')
-    #     m1 = qa.enqueue(m1)
-    #     print('enqueue complete', m1.id)
+    @with_beanstalkd()
+    def test_dequeue_skip_locked_message_with_2(qa: QueueAdapter):
+        m1 = Message(payload='hello world m1')
+        print('enqueue m1')
+        m1 = qa.enqueue(m1)
+        print('enqueue complete', m1.id)
 
-    #     m2 = Message(payload='hello world m2')
-    #     print('enqueue m2')
-    #     m2 = qa.enqueue(m2)
-    #     print('enqueue complete', m2.id)
+        m2 = Message(payload='hello world m2')
+        print('enqueue m2')
+        m2 = qa.enqueue(m2)
+        print('enqueue complete', m2.id)
 
-    #     print('first dequeue, expect m1')
-    #     dq1 = qa.dequeue()
-    #     self.assertEqual(dq1.payload, m1.payload)
-    #     print('second dequeue, expect m2')
-    #     dq2 = qa.dequeue()
-    #     self.assertEqual(dq2.payload, m2.payload)
+        print('first dequeue, expect m1')
+        dq1 = qa.dequeue()
+        assert dq1.payload==m1.payload
+        print('second dequeue, expect m2')
+        dq2 = qa.dequeue()
+        assert dq2.payload== m2.payload
 
-    #     # because message is locked, should not be able to dequeue
-    #     dq3 = qa.dequeue()
-    #     self.assertIsNone(dq3)
+        # because message is locked, should not be able to dequeue
+        dq3 = qa.dequeue()
+        assert not dq3
 
     # def test_commit_removes_message(self):
     #     qa = self.queue_adapter_factory()
