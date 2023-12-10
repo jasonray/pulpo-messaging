@@ -73,8 +73,6 @@ class TestBeanstalkQueueAdapterCompliance(unittest.TestCase):
         self.assertEqual(dq_1.id, m1.id)
         assert dq_1.payload == 'hello world'
 
-        1 / 0
-
     @with_beanstalkd()
     def test_enqueue_dequeue_with_body(self, qa: QueueAdapter):
         m1 = Message(body={'k': 'v'}, payload='hello world')
