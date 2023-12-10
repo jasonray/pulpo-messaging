@@ -15,6 +15,8 @@ TestFunc = Callable[[Client], None]
 WrapperFunc = Callable[[], None]
 DecoratorFunc = Callable[[TestFunc], WrapperFunc]
 
+# pylint: disable=duplicate-code
+
 
 def with_beanstalkd(
     address: Address = DEFAULT_INET_ADDRESS,
@@ -59,7 +61,7 @@ class TestBeanstalkQueueAdapterCompliance(unittest.TestCase):
 
         m1 = Message(payload='hello world')
         print('invoke enqueue')
-        m1 = qa.enqueue(m1) 
+        m1 = qa.enqueue(m1)
         print(f'enqueue complete {m1.id=}')
 
         print('invoke dequeue')
@@ -71,7 +73,7 @@ class TestBeanstalkQueueAdapterCompliance(unittest.TestCase):
         self.assertEqual(dq_1.id, m1.id)
         assert dq_1.payload == 'hello world'
 
-        1/0
+        1 / 0
 
     @with_beanstalkd()
     def test_enqueue_dequeue_with_body(self, qa: QueueAdapter):
@@ -250,3 +252,6 @@ class TestBeanstalkQueueAdapterStats():
         assert stats['current-jobs-ready'] == 3
         assert stats['cmd-delete'] == 1
         assert stats['total-jobs'] == 4
+
+
+# pylint: enable=duplicate-code
