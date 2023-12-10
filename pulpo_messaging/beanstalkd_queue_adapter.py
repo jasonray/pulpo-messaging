@@ -57,7 +57,7 @@ class BeanstalkdQueueAdapter(QueueAdapter):
 
         self._config = BeanstalkdQueueAdapterConfig(options)
         address = (self.config.host, self.config.port)
-        self._client = BeanstalkClient(address= address,  encoding=self.config.encoding, watch=self.config.default_tube, use=self.config.default_tube)
+        self._client = BeanstalkClient(address=address, encoding=self.config.encoding, watch=self.config.default_tube, use=self.config.default_tube)
 
     @property
     def config(self) -> BeanstalkdQueueAdapterConfig:
@@ -68,16 +68,16 @@ class BeanstalkdQueueAdapter(QueueAdapter):
         return self._client
 
     def enqueue(self, message: Message) -> Message:
-        serialized_message = json.dumps(message._components, indent=2, default=str)        
+        serialized_message = json.dumps(message._components, indent=2, default=str)
         print(f'enqueue {serialized_message=}')
         # self.client.use( self.config.default_tube )
-        put_job_id = self.client.put ( body= serialized_message )
+        put_job_id = self.client.put(body=serialized_message)
         self.log(f'put message [{put_job_id=}]')
         message.id = put_job_id
         return message
 
     def dequeue(self) -> Message:
-        self.client.watch( self.config.default_tube)
+        self.client.watch(self.config.default_tube)
         try:
             self.log('BeanstalkdQueueAdapter dequeue begin reserve')
             job = self.client.reserve(timeout=1)
@@ -92,17 +92,16 @@ class BeanstalkdQueueAdapter(QueueAdapter):
         message.id = job.id
         return message
 
-
     def commit(self, message: Message, is_success: bool = True) -> Message:
-        self.client.delete( job=greenstalk.Job(message.id, message.body) )
+        self.client.delete(job=greenstalk.Job(message.id, message.body))
 
-    def rollback(self, message: Message) -> Message:        
-        self.client.release( job=greenstalk.Job(message.id, message.body) )
+    def rollback(self, message: Message) -> Message:
+        self.client.release(job=greenstalk.Job(message.id, message.body))
 
-    def beanstalk_stat(self, tube:str = None) -> Message:     
+    def beanstalk_stat(self, tube: str = None) -> Message:
         if not tube:
             tube = self.config.default_tube
-        return self.client.stats_tube(tube)   
+        return self.client.stats_tube(tube)
 
     def log(self, *argv):
         logger.log(*argv, flush=True)
