@@ -114,16 +114,16 @@ class TestBeanstalkQueueAdapterCompliance():
         assert dq_1.get_header_item('k')== 'v'
         assert dq_1.id== m1.id
 
-    # def test_dequeue_skip_locked_message_with_1(self):
-    #     qa = self.queue_adapter_factory()
-    #     m1 = Message(payload='hello world')
-    #     m1 = qa.enqueue(m1)
+    @with_beanstalkd()
+    def test_dequeue_skip_locked_message_with_1(qa: QueueAdapter):
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
 
-    #     dq_1 = qa.dequeue()
-    #     self.assertIsNotNone(dq_1)
+        dq_1 = qa.dequeue()
+        assert dq_1
 
-    #     dq_2 = qa.dequeue()
-    #     self.assertIsNone(dq_2)
+        dq_2 = qa.dequeue()
+        assert dq_2 #not none
 
     # def test_dequeue_skip_locked_message_with_2(self):
     #     qa = self.queue_adapter_factory()
