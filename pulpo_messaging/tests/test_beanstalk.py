@@ -7,6 +7,7 @@ from greenstalk import (DEFAULT_TUBE, Address, Client)
 from pulpo_messaging.beanstalkd_queue_adapter import BeanstalkdQueueAdapter
 from pulpo_messaging.kessel import QueueAdapter
 from pulpo_messaging.kessel import Message
+from statman import Statman
 
 BEANSTALKD_PATH = os.getenv("BEANSTALKD_PATH", "beanstalkd")
 DEFAULT_INET_ADDRESS = ("127.0.0.1", 4444)
@@ -18,11 +19,7 @@ DecoratorFunc = Callable[[TestFunc], WrapperFunc]
 # pylint: disable=duplicate-code
 
 
-def with_beanstalkd(
-    address: Address = DEFAULT_INET_ADDRESS,
-    encoding: str = "utf-8",
-    tube: str = DEFAULT_TUBE,
-) -> DecoratorFunc:
+def with_beanstalkd(address: Address = DEFAULT_INET_ADDRESS, encoding: str = "utf-8", tube: str = DEFAULT_TUBE, reserve_timeout: int = None) -> DecoratorFunc:
     print('with_beanstalkd')
     print('define decorator')
 
@@ -42,6 +39,7 @@ def with_beanstalkd(
                     options['port'] = port
                     options['encoding'] = encoding
                     options['default_tube'] = tube
+                    options['reserve_timeout'] = reserve_timeout
                     bqa = BeanstalkdQueueAdapter(options=options)
                     test(cls, bqa)
                 finally:
@@ -169,6 +167,27 @@ class TestBeanstalkQueueAdapterCompliance(unittest.TestCase):
 
         dq_3 = qa.dequeue()
         assert dq_3
+
+
+class TestBeanstalkQueueAdapterReserveTimeoutDuration(unittest.TestCase):
+
+    @with_beanstalkd(reserve_timeout=None)
+    def test_reserve_timeout_default(self, qa: BeanstalkdQueueAdapter):
+        assert qa.config.reserve_timeout == 0
+
+    @with_beanstalkd(reserve_timeout=None)
+    def test_reserve_timeout_none(self, qa: BeanstalkdQueueAdapter):
+        Statman.stopwatch('reserve-timer').start()
+        qa.dequeue()
+        Statman.stopwatch('reserve-timer').stop()
+        self.assertAlmostEqual(Statman.stopwatch('reserve-timer').value, 0, delta=0.1)
+
+    @with_beanstalkd(reserve_timeout=2)
+    def test_reserve_timeout_two(self, qa: BeanstalkdQueueAdapter):
+        Statman.stopwatch('reserve-timer').start()
+        qa.dequeue()
+        Statman.stopwatch('reserve-timer').stop()
+        self.assertAlmostEqual(Statman.stopwatch('reserve-timer').value, 2, delta=0.1)
 
 
 class TestBeanstalkQueueAdapterStats():
