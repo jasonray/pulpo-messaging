@@ -89,3 +89,12 @@ A message is the implementation of a `job request`.  Message is implemented a di
 
 ### initialize
 
+
+## Beanstalk_Queue_Adapter
+### Config
+* host
+* port
+* socket_timeout
+* default_tube
+* encoding
+* reserve_timeout
