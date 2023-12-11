@@ -1,5 +1,6 @@
 # pulpo-messaging
 [![Python CI](https://github.com/jasonray/pulpo-messaging/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/jasonray/pulpo-messaging/actions/workflows/python-package.yml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/aca4c5fafdb24f30a79a58272f8d5819)](https://app.codacy.com/gh/jasonray/pulpo-messaging/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 `pulpo-messaging` is a lightweight framework for handling distributed delayed job processing. This can be useful for any background jobs that you need within your system.
 
