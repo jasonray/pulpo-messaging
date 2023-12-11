@@ -67,7 +67,17 @@ A message is the implementation of a `job request`.  Message is implemented a di
 | body         | root   | producer                   | defines the content the the handler will need to execute the job.  This is stored as key-value pairs.  For example, for a job that sends an email, the message could have a body with key-value pairs of "to", "subject", "body". 
 | payload      | body   | producer                   | for simplistic jobs, payload acts as a single value for job request.  |
 
-## Publish
+## Pulpo
+### Config
+* `shutdown_after_number_of_empty_iterations` (int): pulpo looks for new jobs to process by iterating, checking the queue_adapter for new jobs.  If there are multiple iterations with no messages (as specified by this setting), pulpo will shutdown (with the expectation that it would be automatically restarted).
+* `sleep_duration` (int): specifies the number of seconds to pause for each iteration when there are no messages available.
+* `queue_adapter_type(self)` (str): specifies the implementation of the queue_adapter.  Specify `FileQueueAdapter` to use the file based queue, or `BeanstalkdQueueAdapter` to use the beanstalkd based queue.
+* `enable_output_buffering(self)`
+* `enable_banner`
+* `banner_name`
+* `banner_font`
+
+### Publish
 * `publish(message: Message) -> Message` => enqueues the job request on to the queue
   * `message.request_type`: specifies the job that is being requested.  This value is looked up against the configuration of the registry to determine the handler
   * `priority` (optional): specifies the order by which jobs will be processed.  
@@ -75,4 +85,5 @@ A message is the implementation of a `job request`.  Message is implemented a di
   * `delay` (optional): specifies the earlier that a job may be processed.
   * publish returns a `Message`, which is the requested message with a populated message id
 
+### initialize
 
