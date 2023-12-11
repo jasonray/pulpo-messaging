@@ -1,5 +1,5 @@
 # pulpo-messaging
-[![Python CI](https://github.com/jasonray/pulpo-messaging/actions/workflows/python-package.yml/badge.svg)](https://github.com/jasonray/pulpo-messaging/actions/workflows/python-package.yml)
+[![Python CI](https://github.com/jasonray/pulpo-messaging/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/jasonray/pulpo-messaging/actions/workflows/python-package.yml)
 
 `pulpo-messaging` is a lightweight framework for handling distributed delayed job processing. This can be useful for any background jobs that you need within your system.
 
