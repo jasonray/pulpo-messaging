@@ -58,6 +58,10 @@ class BeanstalkdQueueAdapterConfig(Config):
     def encoding(self: Config) -> str:
         return self.get('encoding', "utf-8")
 
+    @property
+    def reserve_timeout(self: Config) -> int:
+        return self.getAsInt('reserve_timeout', 0)
+
 
 class BeanstalkdQueueAdapter(QueueAdapter):
 
@@ -91,8 +95,8 @@ class BeanstalkdQueueAdapter(QueueAdapter):
     def dequeue(self) -> Message:
         self.client.watch(self.config.default_tube)
         try:
-            self.log('BeanstalkdQueueAdapter dequeue begin reserve')
-            job = self.client.reserve(timeout=1)
+            self.log(f'BeanstalkdQueueAdapter dequeue begin reserve {self.config.reserve_timeout=}')
+            job = self.client.reserve(timeout=self.config.reserve_timeout)
         except greenstalk.TimedOutError:
             self.log('BeanstalkdQueueAdapter dequeue reserve timeout')
             # no message available
