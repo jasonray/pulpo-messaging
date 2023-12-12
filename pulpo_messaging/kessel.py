@@ -86,9 +86,9 @@ class Pulpo():
                 self._queue_adapter = queue_adapter
             else:
                 raise Exception('invalid queue adapter')
-        elif self.config.queue_adapter_type == 'FileQueueAdapter' or self.config.queue_adapter_type == 'file_queue_adapter':
+        elif self.config.queue_adapter_type in {'FileQueueAdapter', 'file_queue_adapter'}:
             self._queue_adapter = FileQueueAdapter(self.config.get('file_queue_adapter'))
-        elif self.config.queue_adapter_type == 'BeanstalkdQueueAdapter' or self.config.queue_adapter_type == 'beanstalkd_queue_adapter':
+        elif self.config.queue_adapter_type in {'BeanstalkdQueueAdapter', 'beanstalkd_queue_adapter'}:
             self._queue_adapter = BeanstalkdQueueAdapter(self.config.get('beanstalkd_queue_adapter'))
         else:
             raise Exception(f'invalid queue adapter type {self.config.queue_adapter_type}')
