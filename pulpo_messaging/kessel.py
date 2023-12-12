@@ -65,9 +65,9 @@ class Pulpo():
 
     def __init__(self, options: dict = None, queue_adapter=None):
         self._config = PulpoConfig(options)
-        
+
         if queue_adapter:
-            self._queue_adapter=queue_adapter
+            self._queue_adapter = queue_adapter
 
         self._handler_registry = HandlerRegistry()
         self.handler_registry.register('echo', EchoHandler(self.config.get('echo_handler')))
@@ -80,7 +80,7 @@ class Pulpo():
     def initialize_queue_adapter(self, queue_adapter: QueueAdapter = None):
         self.log('init queue adapter')
         if self._queue_adapter:
-            pass #queue adapter already initialized
+            pass  #queue adapter already initialized
         elif queue_adapter:
             if isinstance(queue_adapter, QueueAdapter):
                 self._queue_adapter = queue_adapter
