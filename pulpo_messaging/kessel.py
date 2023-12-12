@@ -1,3 +1,4 @@
+import signal
 import time
 from statman import Statman
 from pulpo_config import Config
@@ -62,6 +63,7 @@ class Pulpo():
     _queue_adapter = None
     _config = None
     _handler_registry = None
+    _shutdown_requested = False
 
     def __init__(self, options: dict = None, queue_adapter=None):
         self._config = PulpoConfig(options)
@@ -76,6 +78,11 @@ class Pulpo():
         self.handler_registry.register('success', AlwaysSucceedHandler(self.config.get('AlwaysSucceedHandler')))
         self.handler_registry.register('fail', AlwaysFailHandler(self.config.get('AlwaysFailHandler')))
         self.handler_registry.register('fail', FiftyFiftyHandler(self.config.get('FiftyFiftyHandler')))
+
+        signal.signal(signal.SIGINT, self.signal_handler)
+        signal.signal(signal.SIGTERM, self.signal_handler)
+
+        self._shutdown_requested = False
 
     def initialize_queue_adapter(self, queue_adapter: QueueAdapter = None):
         self.log('init queue adapter')
@@ -121,7 +128,7 @@ class Pulpo():
         Statman.stopwatch('kessel.message_streak_tm', autostart=True)
         Statman.calculation(
             'kessel.message_streak_messages_per_s').calculation_function = lambda: Statman.gauge('kessel.message_streak_cnt').value / Statman.stopwatch('kessel.message_streak_tm').value
-        while continue_processing:
+        while continue_processing and not self._shutdown_requested:
             Statman.gauge('kessel.dequeue-attempts').increment()
             message = self.queue_adapter.dequeue()
 
@@ -143,6 +150,8 @@ class Pulpo():
                     time.sleep(self.config.sleep_duration)
                     Statman.stopwatch('kessel.message_streak_tm').start()
                     Statman.gauge('kessel.message_streak_cnt').value = 0
+
+        self.log('processing complete')
 
     def handle_message(self, message) -> RequestResult:
         Statman.gauge('kessel.dequeue').increment()
@@ -189,6 +198,10 @@ class Pulpo():
             print(banner)
         else:
             self.log('starting kessel')
+
+    def signal_handler(self, signum, frame):  # pylint: disable=unused-argument
+        self.log('Signal handler called with signal, requesting shutdown', signum)
+        self._shutdown_requested = True
 
     def log(self, *argv):
         logger.log(*argv, flush=self.config.enable_output_buffering)
