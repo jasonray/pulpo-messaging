@@ -1,9 +1,54 @@
 #!/bin/bash
 
-truncate -s 0 /tmp/kessel/kessel.log
+truncate -s 0 /tmp/pulpo/pulpo.log
 
-python3 kessel-runner.py --config=kessel-config.json >> /tmp/kessel/kessel.log 2>&1 &
-python3 kessel-runner.py --config=kessel-config.json >> /tmp/kessel/kessel.log 2>&1 &
-python3 kessel-runner.py --config=kessel-config.json >> /tmp/kessel/kessel.log 2>&1 &
-python3 kessel-runner.py --config=kessel-config.json >> /tmp/kessel/kessel.log 2>&1 &
-python3 kessel-runner.py --config=kessel-config.json >> /tmp/kessel/kessel.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
+python3 pulpo-runner.py --config=pulpo-config.json >> /tmp/pulpo/pulpo.log 2>&1 &
