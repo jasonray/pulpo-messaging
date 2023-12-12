@@ -56,7 +56,9 @@ Each of these uses follows a workflow of:
 # API
 
 ## Message
+
 A message is the implementation of a `job request`.  Message is implemented a dictionary, with root elements of `id`, `header`, and `body`.
+
 | Field        | Parent | Specified by               | Description |
 | ------------ | ------ | -------------------------- | ----------- |
 | id           | root   | `queue_adapter` on enqueue | unique identifier |
@@ -64,9 +66,9 @@ A message is the implementation of a `job request`.  Message is implemented a di
 | request_type | header | producer                   | defines the job that is being requests (i.e. send_email, print_shipping_label, etc) |
 | expiration   | header | producer                   | Specifies the latest that a job may be processed. This is provided as an absolute date/time. |
 | delay        | header | producer                   | Specifies the earlier that a job may be processed.  Prior to this date/time, the message will not be dequeue. This is provided as an absolute date/time. |
-| priority     | header | producer                   | Specifies the order by which jobs will be processed. 0 is the highest priority, the lowest priority being approx 4M. Negative numbers are treated as 0
-| attempts     | header | `queue_adapter`            | Tracks the number of (failed) attempts on a given message.  This is likely only used by the file_queue_adapter.
-| body         | root   | producer                   | defines the content the the handler will need to execute the job.  This is stored as key-value pairs.  For example, for a job that sends an email, the message could have a body with key-value pairs of "to", "subject", "body". 
+| priority     | header | producer                   | Specifies the order by which jobs will be processed. 0 is the highest priority, the lowest priority being approx 4M. Negative numbers are treated as 0 |
+| attempts     | header | `queue_adapter`            | Tracks the number of (failed) attempts on a given message.  This is likely only used by the file_queue_adapter. |
+| body         | root   | producer                   | defines the content the the handler will need to execute the job.  This is stored as key-value pairs.  For example, for a job that sends an email, the message could have a body with key-value pairs of "to", "subject", "body".  |
 | payload      | body   | producer                   | for simplistic jobs, payload acts as a single value for job request.  |
 
 ## Pulpo
