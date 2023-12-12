@@ -14,6 +14,4 @@ def log(*values: object, flush: bool = False):
     TEMPLATE = "[p:{pid}]\t[{dt}]\t{message}"
     output = TEMPLATE.format(pid=pid, dt=dt, message=message)
 
-    flush = False
-
     print(output, flush=flush)

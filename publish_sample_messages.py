@@ -27,15 +27,18 @@ config.fromArgumentParser(args)
 kessel = Pulpo(config)
 
 def create_random_message(payload: str):
-    request_type_number = random.randint(1,3)
+    request_type_number = random.randint(1,1)
     request_type = None
     if request_type_number == 1:
+        request_type ='success'
+        Statman.gauge(name='publish-sample-messages.published-messages.success').increment()
+    elif request_type_number == 2:
         request_type ='echo'
         Statman.gauge(name='publish-sample-messages.published-messages.echo').increment()
-    elif request_type_number == 2:
+    elif request_type_number == 3:
         request_type ='lower'
         Statman.gauge(name='publish-sample-messages.published-messages.lower').increment()
-    elif request_type_number == 3:
+    elif request_type_number == 4:
         request_type ='upper'
         Statman.gauge(name='publish-sample-messages.published-messages.upper').increment()
     return Message(payload=payload, request_type=request_type)

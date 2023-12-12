@@ -12,14 +12,12 @@ parser.add_argument('--sleep_duration', type=str, help='How long to sleep betwee
 
 args = parser.parse_args()
 
-config = None
+config = PulpoConfig()
 if args.config:
     print('load config from file', args.config)
-    config = PulpoConfig(json_file_path=args.config)
-else:
-    config = PulpoConfig()
+    config = config.fromJsonFile(file_path=args.config)
 
-config.process_args(args)
+config.fromArgumentParser(args)
 print('kessel config: [{config}]')
 
 kessel = Pulpo(config)

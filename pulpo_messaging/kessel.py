@@ -8,7 +8,7 @@ from .beanstalkd_queue_adapter import BeanstalkdQueueAdapter
 from .message import Message
 from .payload_handler import PayloadHandler, RequestResult
 from .queue_adapter import QueueAdapter
-from .sample_handlers import EchoHandler, LowerCaseHandler, UpperCaseHandler
+from .sample_handlers import AlwaysFailHandler, AlwaysSucceedHandler, EchoHandler, FiftyFiftyHandler, LowerCaseHandler, UpperCaseHandler
 
 
 class HandlerRegistry():
@@ -65,24 +65,33 @@ class Pulpo():
 
     def __init__(self, options: dict = None, queue_adapter=None):
         self._config = PulpoConfig(options)
-
-        self.log('init queue adapter')
+        
         if queue_adapter:
-            if isinstance(queue_adapter, QueueAdapter):
-                self._queue_adapter = queue_adapter
-            else:
-                raise Exception('invalid queue adapter')
-        elif self.config.queue_adapter_type == 'FileQueueAdapter':
-            self._queue_adapter = FileQueueAdapter(self.config.get('file_queue_adapter'))
-        elif self.config.queue_adapter_type == 'BeanstalkdQueueAdapter':
-            self._queue_adapter = BeanstalkdQueueAdapter(self.config.get('beanstalkd_queue_adapter'))
-        else:
-            raise Exception('invalid queue adapter type')
+            self._queue_adapter=queue_adapter
 
         self._handler_registry = HandlerRegistry()
         self.handler_registry.register('echo', EchoHandler(self.config.get('echo_handler')))
         self.handler_registry.register('lower', LowerCaseHandler(self.config.get('lower_handler')))
         self.handler_registry.register('upper', UpperCaseHandler(self.config.get('upper_handler')))
+        self.handler_registry.register('success', AlwaysSucceedHandler(self.config.get('AlwaysSucceedHandler')))
+        self.handler_registry.register('fail', AlwaysFailHandler(self.config.get('AlwaysFailHandler')))
+        self.handler_registry.register('fail', FiftyFiftyHandler(self.config.get('FiftyFiftyHandler')))
+
+    def initialize_queue_adapter(self, queue_adapter: QueueAdapter = None):
+        self.log('init queue adapter')
+        if self._queue_adapter:
+            pass #queue adapter already initialized
+        elif queue_adapter:
+            if isinstance(queue_adapter, QueueAdapter):
+                self._queue_adapter = queue_adapter
+            else:
+                raise Exception('invalid queue adapter')
+        elif self.config.queue_adapter_type == 'FileQueueAdapter' or self.config.queue_adapter_type == 'file_queue_adapter':
+            self._queue_adapter = FileQueueAdapter(self.config.get('file_queue_adapter'))
+        elif self.config.queue_adapter_type == 'BeanstalkdQueueAdapter' or self.config.queue_adapter_type == 'beanstalkd_queue_adapter':
+            self._queue_adapter = BeanstalkdQueueAdapter(self.config.get('beanstalkd_queue_adapter'))
+        else:
+            raise Exception(f'invalid queue adapter type {self.config.queue_adapter_type}')
 
     @property
     def config(self) -> PulpoConfig:
@@ -97,11 +106,15 @@ class Pulpo():
         return self._handler_registry
 
     def publish(self, message: Message) -> Message:
+        if not self._queue_adapter:
+            self.initialize_queue_adapter()
+
         self.log('publish message to queue adapter')
         return self.queue_adapter.enqueue(message)
 
     def initialize(self) -> Message:
         self.print_banner()
+        self.initialize_queue_adapter()
         continue_processing = True
         iterations_with_no_messages = 0
 
@@ -173,7 +186,6 @@ class Pulpo():
         return RequestResult
 
     def print_banner(self):
-        print(f'print_banner {self.config.enable_banner=}')
         if self.config.enable_banner:
             banner = text2art(self.config.banner_name, font=self.config.banner_font, chr_ignore=True)
             print(banner)
