@@ -21,4 +21,4 @@ config.fromArgumentParser(args)
 print('kessel config: [{config}]')
 
 kessel = Pulpo(config)
-kessel.initialize()
+kessel.start()
