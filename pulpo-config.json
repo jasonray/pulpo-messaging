@@ -1,6 +1,6 @@
 {
     "shutdown_after_number_of_empty_iterations": 7,
-    "queue_adapter_type": "FileQueueAdapter",
+    "queue_adapter_type": "BeanstalkdQueueAdapter",
     "banner": {
         "enable":true
     },
@@ -9,6 +9,12 @@
         "skip_random_messages_range": 0,
         "message_format": "json",
         "enable_history": "True"
+    },
+    "beanstalkd_queue_adapter": {
+        "host": "127.0.0.1",
+        "port": 11300,
+        "default_tube": "pulpo-beanstalk-queue-adapter",
+        "encoding": "UTF-8"
     },
     "echo_handler": {
         "destination_directory": "/tmp/pulpo/echo"

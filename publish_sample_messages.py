@@ -23,7 +23,7 @@ if args.config:
 else:
     config = PulpoConfig()
 
-config.process_args(args)
+config.fromArgumentParser(args)
 kessel = Pulpo(config)
 
 def create_random_message(payload: str):
