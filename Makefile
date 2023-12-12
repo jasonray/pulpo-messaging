@@ -30,7 +30,8 @@ lint-no-error:
 	pylint --exit-zero -r n pulpo_messaging
 
 test: build dev_deps
-	python3 -m pytest -v --durations=0
+	python3 -m pytest -v --durations=0 --cov=pulpo_messaging --cov-report html
+
 
 build: deps
 	# might re-add clean 
