@@ -112,7 +112,7 @@ class Pulpo():
         self.log('publish message to queue adapter')
         return self.queue_adapter.enqueue(message)
 
-    def initialize(self) -> Message:
+    def start(self) -> Message:
         self.print_banner()
         self.initialize_queue_adapter()
         continue_processing = True
@@ -122,8 +122,6 @@ class Pulpo():
         Statman.calculation(
             'kessel.message_streak_messages_per_s').calculation_function = lambda: Statman.gauge('kessel.message_streak_cnt').value / Statman.stopwatch('kessel.message_streak_tm').value
         while continue_processing:
-            self.log('kessel init begin dequeue')
-
             Statman.gauge('kessel.dequeue-attempts').increment()
             message = self.queue_adapter.dequeue()
 
