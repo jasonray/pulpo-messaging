@@ -1,5 +1,4 @@
 import unittest
-from pulpo_messaging.kessel import PulpoConfig
 from pulpo_messaging.kessel import Pulpo
 from pulpo_messaging.kessel import Config
 
