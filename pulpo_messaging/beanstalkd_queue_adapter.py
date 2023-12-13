@@ -1,5 +1,6 @@
 import json
 import greenstalk
+from statman import Statman
 from greenstalk import Client as BeanstalkClient
 from pulpo_config import Config
 from pulpo_messaging import logger
@@ -75,6 +76,8 @@ class BeanstalkdQueueAdapter(QueueAdapter):
         self._config = BeanstalkdQueueAdapterConfig(options)
         address = (self.config.host, self.config.port)
         self._client = BeanstalkClient(address=address, encoding=self.config.encoding, watch=self.config.default_tube, use=self.config.default_tube)
+
+        Statman.external_source('beanstalk', self.beanstalk_stat)
 
     @property
     def config(self) -> BeanstalkdQueueAdapterConfig:
