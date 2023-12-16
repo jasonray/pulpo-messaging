@@ -169,6 +169,78 @@ class TestBeanstalkQueueAdapterCompliance(unittest.TestCase):
         assert dq_3
 
 
+class TestBeanstalkQueueAdapterDelay(unittest.TestCase):
+
+    @with_beanstalkd(reserve_timeout=None)
+    def test_reserve_with_delay_not_specified(self, qa: BeanstalkdQueueAdapter):
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        assert dq_1
+        assert dq_1.id == m1.id
+
+    @with_beanstalkd(reserve_timeout=None)
+    def test_reserve_with_delay_0(self, qa: BeanstalkdQueueAdapter):
+        delay = 0
+        m1 = Message(payload='hello world', delay=delay)
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        assert dq_1
+        assert dq_1.id == m1.id
+
+    @with_beanstalkd(reserve_timeout=None)
+    def test_reserve_with_delay_none(self, qa: BeanstalkdQueueAdapter):
+        delay = None
+        m1 = Message(payload='hello world', delay=delay)
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        assert dq_1
+        assert dq_1.id == m1.id
+
+    @with_beanstalkd(reserve_timeout=None)
+    def test_reserve_with_delay(self, qa: BeanstalkdQueueAdapter):
+        delay = 2
+        m1 = Message(payload='hello world', delay=delay)
+        assert m1.delayInSeconds == delay
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        print(f'{dq_1=}')
+        # because of delay, the message should not be ready
+        assert not dq_1
+
+        time.sleep(delay)
+
+        dq_2 = qa.dequeue()
+        print(f'{dq_2=}')
+        # because we are now past delay, the message should be ready
+        assert dq_2
+        assert dq_2.id == m1.id
+
+    @with_beanstalkd(reserve_timeout=None)
+    def test_reserve_with_delay_access_another_message(self, qa: BeanstalkdQueueAdapter):
+        delay = 1
+        m1 = Message(payload='hello world', delay=delay)
+        m2 = Message(payload='hello world', delay=0)
+        m1 = qa.enqueue(m1)
+        m2 = qa.enqueue(m2)
+
+        dq_1 = qa.dequeue()
+        assert dq_1.id == m2.id
+
+        dq_2 = qa.dequeue()
+        assert not dq_2
+
+        time.sleep(delay)
+
+        dq_3 = qa.dequeue()
+        assert dq_3
+        assert dq_3.id == m1.id
+
+
 class TestBeanstalkQueueAdapterReserveTimeoutDuration(unittest.TestCase):
 
     @with_beanstalkd(reserve_timeout=None)

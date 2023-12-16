@@ -67,11 +67,6 @@ class TestMessage(unittest.TestCase):
         print(f'{m}')
         self.assertEqual(m.id, 123)
 
-    def test_message_delay(self):
-        m = Message(delay=123)
-        print(f'{m}')
-        self.assertEqual(m.delay, 123)
-
     def test_message_expiration(self):
         dt = datetime.datetime.now
         m = Message(expiration=dt)
@@ -104,3 +99,37 @@ class TestMessage(unittest.TestCase):
         m.attempts = 5
         print(f'{m}')
         self.assertEqual(m.attempts, 5)
+
+
+class TestMessageDelta(unittest.TestCase):
+
+    def test_message_delay_as_date(self):
+        dt = datetime.datetime.now()
+        m = Message(delay=dt)
+        print(f'{m}')
+        self.assertEqual(m.delay, dt)
+
+    def test_message_delay_as_delta(self):
+        delta = datetime.timedelta(seconds=20)
+        dt = datetime.datetime.now() + delta
+        m = Message(delay=delta)
+        print(f'{m}')
+        # dates are almost equal
+        assert abs(m.delay - dt).seconds < 1
+
+    def test_message_delay_as_int(self):
+        delta_in_seconds = 20
+        delta = datetime.timedelta(seconds=delta_in_seconds)
+        dt = datetime.datetime.now() + delta
+        m = Message(delay=delta_in_seconds)
+        print(f'{m}')
+        # dates are almost equal
+        assert abs(m.delay - dt).seconds < 1
+
+    def test_message_delay_as_int_get_in_seconds(self):
+        delta_in_seconds = 20
+        m = Message(delay=delta_in_seconds)
+        print(f'{m}')
+        # dates are almost equal
+        print(f'm delay: {m.delay=}')
+        assert (m.delayInSeconds - delta_in_seconds) < 1

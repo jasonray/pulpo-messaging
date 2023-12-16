@@ -40,7 +40,6 @@ class Message():
                 self.set_header_item(key=key, value=header[key])
         elif isinstance(header, set):
             for key in header:
-                # print(f'processing headers: {key=}')
                 self.set_header_item(key=key, value=None)
 
     def __store_body(self, body):
@@ -48,7 +47,6 @@ class Message():
             self.set_body_item(key=key, value=body[key])
 
     def get(self, key: str):
-        # print(f'message.get {key=}')
         keys = key.split('.')
 
         value = self._components
@@ -61,7 +59,6 @@ class Message():
             else:
                 value = None
 
-        # print(f'message.get {key=} => {value=}')
         return value
 
     def getAsDate(self, key: str):
@@ -71,7 +68,6 @@ class Message():
         return value
 
     def set(self, key: str, value: typing.Any):
-        # print(f'message.set {key=} {value=}')
         keys = key.split('.')
 
         parent = self._components
@@ -109,13 +105,27 @@ class Message():
         fqk = 'header.delay'
         return self.getAsDate(fqk)
 
+    @property
+    def delayInSeconds(self):
+        delay_dt = self.delay
+
+        if not delay_dt:
+            return 0
+        now = datetime.datetime.now()
+        delay_delta = delay_dt - now
+        value = delay_delta.total_seconds()
+        value = max(value, 0)
+        value = round(value)
+        return value
+
     @delay.setter
     def delay(self, value):
         if isinstance(value, timedelta):
-            # print('setting delay as timedelta')
             delta_dt = datetime.datetime.now() + value
+        elif isinstance(value, int):
+            delta = timedelta(seconds=value)
+            delta_dt = datetime.datetime.now() + delta
         else:
-            # print('setting delay as date')
             delta_dt = value
         fqk = 'header.delay'
         self.set(fqk, delta_dt)
@@ -144,7 +154,6 @@ class Message():
 
     @property
     def attempts(self) -> int:
-        # print('get attempts')
         header_item = self.get_header_item('attempts')
         if header_item is None:
             value = 0
