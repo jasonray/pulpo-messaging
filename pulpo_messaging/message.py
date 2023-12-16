@@ -105,10 +105,26 @@ class Message():
         fqk = 'header.delay'
         return self.getAsDate(fqk)
 
+    @property
+    def delayInSeconds(self):
+        delay_dt = self.delay
+
+        if not delay_dt:
+            return 0
+        now = datetime.datetime.now()
+        delay_delta = delay_dt - now
+        value = delay_delta.total_seconds()
+        value = max(value, 0)
+        value = round(value)
+        return value
+
     @delay.setter
     def delay(self, value):
         if isinstance(value, timedelta):
             delta_dt = datetime.datetime.now() + value
+        elif isinstance(value, int):
+            delta = timedelta(seconds=value)
+            delta_dt = datetime.datetime.now() + delta
         else:
             delta_dt = value
         fqk = 'header.delay'

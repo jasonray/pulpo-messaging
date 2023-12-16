@@ -103,9 +103,10 @@ class FileQueueAdapter(QueueAdapter):
                 last_file = None
 
                 m = self._load_message_from_file(file_path=file)
-                self.log(f'loaded message [{m.id=}][{m.delay=}[]{m.attempts=}][{file.path=}][{m.expiration=}]')
+                self.log(f'loaded message [{m.id=}][{m.delay=}][{m.attempts=}][{file.path=}][{m.expiration=}]')
 
                 now = datetime.datetime.now()
+
                 if m.delay and m.delay > now:
                     self.log('message delayed, do not process yet')
                     # todo: should move this out of queue
