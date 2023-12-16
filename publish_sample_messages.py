@@ -55,6 +55,7 @@ if args.time:
     continue_processing=True
     while continue_processing:
         publish()
+        Statman.report(output_stdout=True)
         time.sleep(args.time)
 else:
     publish()
