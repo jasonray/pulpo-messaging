@@ -262,6 +262,7 @@ class TestBeanstalkQueueAdapterReserveTimeoutDuration(unittest.TestCase):
         Statman.stopwatch('reserve-timer').stop()
         self.assertAlmostEqual(Statman.stopwatch('reserve-timer').value, 2, delta=0.1)
 
+
 class TestBeanstalkExpiration(unittest.TestCase):
 
     @with_beanstalkd(reserve_timeout=None)
@@ -291,7 +292,6 @@ class TestBeanstalkExpiration(unittest.TestCase):
 
         dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
-
 
 
 class TestBeanstalkQueueAdapterStats():
