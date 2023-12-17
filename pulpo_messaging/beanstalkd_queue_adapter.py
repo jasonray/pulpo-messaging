@@ -119,13 +119,13 @@ class BeanstalkdQueueAdapter(QueueAdapter):
 
                 print(f'dequeue: {self.config.max_number_of_attempts=}')
 
-                if message and self.config.max_number_of_attempts  :
+                if message and self.config.max_number_of_attempts:
                     self._get_message_attempts(message)
                     print(f'dequeue: {message.attempts=}')
                     if message.attempts >= self.config.max_number_of_attempts:
                         self.log(f'message exceed max attempts {self.config.max_number_of_attempts=} {message.attempts=}')
                         self.commit(message=message, is_success=False)
-                        message=None
+                        message = None
                 if message and message.expiration and message.expiration < datetime.datetime.now():
                     self.log(f'message expired {message.expiration=}')
                     self.commit(message=message, is_success=False)
@@ -137,13 +137,12 @@ class BeanstalkdQueueAdapter(QueueAdapter):
             # no message available
             message = None
         return message
-    
+
     def _get_message_attempts(self, message: Message) -> Message:
-        job_stats= self.client.stats_job(message.id)
+        job_stats = self.client.stats_job(message.id)
         print(f'{job_stats=}')
         message.attempts = job_stats.get('releases')
         return message
-
 
     def commit(self, message: Message, is_success: bool = True) -> Message:
         self.log(f'commit (delete) {message.id=}')
