@@ -100,6 +100,12 @@ defaults:
     values:
       layout: single
       author_profile: true
+  - scope:
+      path: "/"
+      type: pages
+    values:
+      layout: single
+      author_profile: true
 
 category_archive:
   type: liquid
