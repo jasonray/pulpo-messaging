@@ -1,6 +1,6 @@
 ---
 title: page-title
-layout: singe
+layout: single
 permalink: /
 toc: true
 toc_label: "Table of Contents"
