@@ -295,6 +295,7 @@ class TestBeanstalkExpiration(unittest.TestCase):
         dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
 
+
 class TestBqaMaxAttempts(unittest.TestCase):
 
     @with_beanstalkd(reserve_timeout=None, max_number_of_attempts=5)
@@ -325,12 +326,12 @@ class TestBqaMaxAttempts(unittest.TestCase):
 
         dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
-        self.assertEqual( dq_1.id , m1.id )
+        self.assertEqual(dq_1.id, m1.id)
         qa.rollback(dq_1)
 
         dq_2 = qa.dequeue()
         self.assertIsNotNone(dq_2)
-        self.assertEqual( dq_2.id , m1.id )
+        self.assertEqual(dq_2.id, m1.id)
         qa.rollback(dq_2)
 
         dq_3 = qa.dequeue()
@@ -346,17 +347,18 @@ class TestBqaMaxAttempts(unittest.TestCase):
 
         dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
-        self.assertEqual( dq_1.id , m1.id )
+        self.assertEqual(dq_1.id, m1.id)
         qa.rollback(dq_1)
 
         dq_2 = qa.dequeue()
         self.assertIsNotNone(dq_2)
-        self.assertEqual( dq_2.id , m1.id )
+        self.assertEqual(dq_2.id, m1.id)
         qa.rollback(dq_2)
 
         dq_3 = qa.dequeue()
         self.assertIsNotNone(dq_3)
-        self.assertEqual( dq_3.id , m2.id )
+        self.assertEqual(dq_3.id, m2.id)
+
 
 class TestBeanstalkQueueAdapterStats():
 
