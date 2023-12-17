@@ -102,9 +102,9 @@ class BeanstalkdQueueAdapter(QueueAdapter):
 
     def dequeue(self) -> Message:
         self.client.watch(self.config.default_tube)
-        message=None
+        message = None
         try:
-            while not message: 
+            while not message:
                 self.log(f'BeanstalkdQueueAdapter dequeue begin reserve {self.config.reserve_timeout=}')
                 job = self.client.reserve(timeout=self.config.reserve_timeout)
                 self.log(f'BeanstalkdQueueAdapter dequeue reserve complete {job.id=}')
@@ -112,14 +112,14 @@ class BeanstalkdQueueAdapter(QueueAdapter):
                 print(f'{message_components=}')
                 message = Message(components=message_components)
                 message.id = job.id
-                if message.expiration and message.expiration < datetime.datetime.now() :
+                if message.expiration and message.expiration < datetime.datetime.now():
                     self.log(f'message expired {message.expiration=}')
                     self.commit(message=message, is_success=False)
-                    message=None
+                    message = None
         except greenstalk.TimedOutError:
             self.log('BeanstalkdQueueAdapter dequeue reserve timeout')
             # no message available
-            message=None
+            message = None
         return message
 
     def commit(self, message: Message, is_success: bool = True) -> Message:
