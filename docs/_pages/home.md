@@ -1,8 +1,15 @@
 ---
 title: page-title
-layout: wide
+layout: singe
 permalink: /
-hidden: true
+toc: true
+toc_label: "Table of Contents"
+toc_icon: "cog"
+toc_sticky: true
+sidebar:
+  title: ""
+  nav: sidebar-sample
+hidden: false
 header:
   image: https://www.jayray.net/assets/images/projects/pulpo-cute.png
 author_profile: false
