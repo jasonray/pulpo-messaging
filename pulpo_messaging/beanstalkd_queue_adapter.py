@@ -64,6 +64,10 @@ class BeanstalkdQueueAdapterConfig(Config):
     def reserve_timeout(self: Config) -> int:
         return self.getAsInt('reserve_timeout', 0)
 
+    @property
+    def max_number_of_attempts(self: Config) -> bool:
+        return self.getAsInt('max_number_of_attempts', 0)
+
 
 class BeanstalkdQueueAdapter(QueueAdapter):
 
@@ -109,18 +113,37 @@ class BeanstalkdQueueAdapter(QueueAdapter):
                 job = self.client.reserve(timeout=self.config.reserve_timeout)
                 self.log(f'BeanstalkdQueueAdapter dequeue reserve complete {job.id=}')
                 message_components = json.loads(job.body)
-                print(f'{message_components=}')
+                print(f'dequeue (1): {message_components=}')
                 message = Message(components=message_components)
                 message.id = job.id
-                if message.expiration and message.expiration < datetime.datetime.now():
+
+                print(f'dequeue: {self.config.max_number_of_attempts=}')
+
+                if message and self.config.max_number_of_attempts  :
+                    self._get_message_attempts(message)
+                    print(f'dequeue: {message.attempts=}')
+                    if message.attempts >= self.config.max_number_of_attempts:
+                        self.log(f'message exceed max attempts {self.config.max_number_of_attempts=} {message.attempts=}')
+                        self.commit(message=message, is_success=False)
+                        message=None
+                if message and message.expiration and message.expiration < datetime.datetime.now():
                     self.log(f'message expired {message.expiration=}')
                     self.commit(message=message, is_success=False)
                     message = None
+
+                print(f'dequeue (r): {message_components=}')
         except greenstalk.TimedOutError:
             self.log('BeanstalkdQueueAdapter dequeue reserve timeout')
             # no message available
             message = None
         return message
+    
+    def _get_message_attempts(self, message: Message) -> Message:
+        job_stats= self.client.stats_job(message.id)
+        print(f'{job_stats=}')
+        message.attempts = job_stats.get('releases')
+        return message
+
 
     def commit(self, message: Message, is_success: bool = True) -> Message:
         self.log(f'commit (delete) {message.id=}')

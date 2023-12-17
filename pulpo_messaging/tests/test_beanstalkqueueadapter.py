@@ -20,7 +20,7 @@ DecoratorFunc = Callable[[TestFunc], WrapperFunc]
 # pylint: disable=duplicate-code
 
 
-def with_beanstalkd(address: Address = DEFAULT_INET_ADDRESS, encoding: str = "utf-8", tube: str = DEFAULT_TUBE, reserve_timeout: int = None) -> DecoratorFunc:
+def with_beanstalkd(address: Address = DEFAULT_INET_ADDRESS, encoding: str = "utf-8", tube: str = DEFAULT_TUBE, reserve_timeout: int = None, max_number_of_attempts: int = None) -> DecoratorFunc:
     print('with_beanstalkd')
     print('define decorator')
 
@@ -41,6 +41,8 @@ def with_beanstalkd(address: Address = DEFAULT_INET_ADDRESS, encoding: str = "ut
                     options['encoding'] = encoding
                     options['default_tube'] = tube
                     options['reserve_timeout'] = reserve_timeout
+                    options['max_number_of_attempts'] = max_number_of_attempts
+
                     bqa = BeanstalkdQueueAdapter(options=options)
                     test(cls, bqa)
                 finally:
@@ -293,6 +295,68 @@ class TestBeanstalkExpiration(unittest.TestCase):
         dq_1 = qa.dequeue()
         self.assertIsNotNone(dq_1)
 
+class TestBqaMaxAttempts(unittest.TestCase):
+
+    @with_beanstalkd(reserve_timeout=None, max_number_of_attempts=5)
+    def test_rollback_increments_attempts(self, qa: BeanstalkdQueueAdapter):
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+        self.assertEqual(dq_1.attempts, 0)
+
+        qa.rollback(dq_1)
+
+        dq_3 = qa.dequeue()
+        self.assertIsNotNone(dq_3)
+        self.assertEqual(dq_3.attempts, 1)
+
+        qa.rollback(dq_3)
+
+        dq_4 = qa.dequeue()
+        self.assertIsNotNone(dq_4)
+        self.assertEqual(dq_4.attempts, 2)
+
+    @with_beanstalkd(reserve_timeout=None, max_number_of_attempts=2)
+    def test_message_exceeds_attempts_unavailable(self, qa: BeanstalkdQueueAdapter):
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+        self.assertEqual( dq_1.id , m1.id )
+        qa.rollback(dq_1)
+
+        dq_2 = qa.dequeue()
+        self.assertIsNotNone(dq_2)
+        self.assertEqual( dq_2.id , m1.id )
+        qa.rollback(dq_2)
+
+        dq_3 = qa.dequeue()
+        self.assertIsNone(dq_3)
+
+    @with_beanstalkd(reserve_timeout=None, max_number_of_attempts=2)
+    def test_message_exceeds_attempts_process_next_message(self, qa: BeanstalkdQueueAdapter):
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        m2 = Message(payload='hello world, again')
+        m2 = qa.enqueue(m2)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+        self.assertEqual( dq_1.id , m1.id )
+        qa.rollback(dq_1)
+
+        dq_2 = qa.dequeue()
+        self.assertIsNotNone(dq_2)
+        self.assertEqual( dq_2.id , m1.id )
+        qa.rollback(dq_2)
+
+        dq_3 = qa.dequeue()
+        self.assertIsNotNone(dq_3)
+        self.assertEqual( dq_3.id , m2.id )
 
 class TestBeanstalkQueueAdapterStats():
 
