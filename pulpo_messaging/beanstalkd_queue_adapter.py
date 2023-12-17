@@ -1,3 +1,4 @@
+import datetime
 import json
 import greenstalk
 from statman import Statman
@@ -101,18 +102,24 @@ class BeanstalkdQueueAdapter(QueueAdapter):
 
     def dequeue(self) -> Message:
         self.client.watch(self.config.default_tube)
+        message=None
         try:
-            self.log(f'BeanstalkdQueueAdapter dequeue begin reserve {self.config.reserve_timeout=}')
-            job = self.client.reserve(timeout=self.config.reserve_timeout)
+            while not message: 
+                self.log(f'BeanstalkdQueueAdapter dequeue begin reserve {self.config.reserve_timeout=}')
+                job = self.client.reserve(timeout=self.config.reserve_timeout)
+                self.log(f'BeanstalkdQueueAdapter dequeue reserve complete {job.id=}')
+                message_components = json.loads(job.body)
+                print(f'{message_components=}')
+                message = Message(components=message_components)
+                message.id = job.id
+                if message.expiration and message.expiration < datetime.datetime.now() :
+                    self.log(f'message expired {message.expiration=}')
+                    self.commit(message=message, is_success=False)
+                    message=None
         except greenstalk.TimedOutError:
             self.log('BeanstalkdQueueAdapter dequeue reserve timeout')
             # no message available
-            return None
-        self.log(f'BeanstalkdQueueAdapter dequeue reserve complete {job.id=}')
-        message_components = json.loads(job.body)
-        print(f'{message_components=}')
-        message = Message(components=message_components)
-        message.id = job.id
+            message=None
         return message
 
     def commit(self, message: Message, is_success: bool = True) -> Message:

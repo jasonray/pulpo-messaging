@@ -2,6 +2,7 @@ import os
 import time
 import subprocess
 import unittest
+import datetime
 from typing import Callable
 from greenstalk import (DEFAULT_TUBE, Address, Client)
 from statman import Statman
@@ -260,6 +261,37 @@ class TestBeanstalkQueueAdapterReserveTimeoutDuration(unittest.TestCase):
         qa.dequeue()
         Statman.stopwatch('reserve-timer').stop()
         self.assertAlmostEqual(Statman.stopwatch('reserve-timer').value, 2, delta=0.1)
+
+class TestBeanstalkExpiration(unittest.TestCase):
+
+    @with_beanstalkd(reserve_timeout=None)
+    def test_skip_expired_message(self, qa: BeanstalkdQueueAdapter):
+        expiration_date_in_past = datetime.datetime.strptime("2000-01-01 12:00:00", "%Y-%m-%d %H:%M:%S")
+        print(f'{expiration_date_in_past=}')
+        m1 = Message(payload='hello world', expiration=expiration_date_in_past)
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNone(dq_1)
+
+    @with_beanstalkd(reserve_timeout=None)
+    def test_process_message_with_future_expiration(self, qa: BeanstalkdQueueAdapter):
+        expiration_date_in_future = datetime.datetime.strptime("3000-01-01 12:00:00", "%Y-%m-%d %H:%M:%S")
+        print(f'{expiration_date_in_future=}')
+        m1 = Message(payload='hello world', expiration=expiration_date_in_future)
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+
+    @with_beanstalkd(reserve_timeout=None)
+    def test_message_with_no_expiration_is_processed(self, qa: BeanstalkdQueueAdapter):
+        m1 = Message(payload='hello world', expiration=None)
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+
 
 
 class TestBeanstalkQueueAdapterStats():
