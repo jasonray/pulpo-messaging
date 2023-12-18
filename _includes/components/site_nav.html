@@ -70,7 +70,8 @@
       {% include toc.html sanitize=true html=content h_min=1 h_max=6 class="nav_list" skip_no_ids=false id="left_side_toc_1" %}
       <hr />
       <div class="nav-category" id="left_side_toc_2">On this page2</div>
-      {% include toc.html sanitize=true html=content h_min=1 h_max=6 class="nav_list" skip_no_ids=false id="left_side_toc_2"%}    
       <hr />
       c:{{ content }}
 </nav>
+
+{% include toc.html sanitize=true html=content h_min=1 h_max=6 class="nav_list" skip_no_ids=false id="left_side_toc_2"%}    
