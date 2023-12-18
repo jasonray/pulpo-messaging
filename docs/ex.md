@@ -1,0 +1,5 @@
+# example
+
+```
+do while true
+```
