@@ -6,13 +6,13 @@ permalink: docs/examples/ex2
 parent: Examples
 ---
 
-# Navigation Structure
+# TOC no_toc
 {: .no_toc }
 
-## Table of contents
+## TOC no_tox text-delta
 {: .no_toc .text-delta }
 
-1. TOC
+1. TOC with num
 {:toc}
 
 
