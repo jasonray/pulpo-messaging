@@ -52,10 +52,11 @@ aux_links:
     - "//github.com/just-the-docs/just-the-docs"
 # Makes Aux links open in a new tab. Default is false
 aux_links_new_tab: true  
-# callouts:
-#   warning:
-#     title: Warning
-#     color: red
+
+callouts:
+  warning:
+    title: Warning
+    color: red
 
 nav_external_links:
   - title: Just the Docs on GitHub (ex)
