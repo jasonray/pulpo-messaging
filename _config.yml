@@ -55,6 +55,7 @@ aux_links_new_tab: true
 #     title: Warning
 #     color: red
 logo: "/images/pulpo-cute.png"
+favicon_ico: "favicon.ico"
 url: "https://just-the-docs.com" # the base hostname & protocol for your site, e.g. http://example.com
 repository: just-the-docs/just-the-docs # for github-metadata
 
