@@ -21,6 +21,7 @@ plugins:
 # https://github.com/pmarsceill/jtd-remote/blob/master/_config.yml
 remote_theme: just-the-docs/just-the-docs
 # color_scheme: light
+
 search_enabled: true
 search:
   # Split pages into sections that can be searched individually
@@ -45,6 +46,7 @@ search:
   # Enable or disable the search button that appears in the bottom right corner of every page
   # Supports true or false (default)
   button: false
+
 aux_links:
   "Just the Docs on GitHub":
     - "//github.com/just-the-docs/just-the-docs"
@@ -54,6 +56,13 @@ aux_links_new_tab: true
 #   warning:
 #     title: Warning
 #     color: red
+
+# Heading anchor links appear on hover over h1-h6 tags in page content
+# allowing users to deep link to a particular heading on a page.
+#
+# Supports true (default) or false
+heading_anchors: true
+
 logo: "/images/pulpo-cute.png"
 favicon_ico: "favicon.ico"
 url: "https://just-the-docs.com" # the base hostname & protocol for your site, e.g. http://example.com
