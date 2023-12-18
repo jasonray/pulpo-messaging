@@ -1,5 +1,6 @@
 title: pulpo-messaging
 description: light weight job framework
+baseurl: "" # the subpath of your site, e.g. /blog
 
 google_analytics: G-B941W3153Q
 
@@ -9,7 +10,7 @@ plugins:
 
 
 ### leap day
-remote_theme: pages-themes/leap-day@v0.2.0
+# remote_theme: pages-themes/leap-day@v0.2.0
 # show_downloads: false
 
 
@@ -18,14 +19,16 @@ remote_theme: pages-themes/leap-day@v0.2.0
 ### just the docs
 # https://just-the-docs.github.io/just-the-docs/
 # https://github.com/pmarsceill/jtd-remote/blob/master/_config.yml
-# remote_theme: just-the-docs/just-the-docs
+remote_theme: just-the-docs/just-the-docs
 # color_scheme: light
 # search_enabled: false
 # callouts:
 #   warning:
 #     title: Warning
 #     color: red
-
+logo: "/images/pulpo-cute.png"
+url: "https://just-the-docs.com" # the base hostname & protocol for your site, e.g. http://example.com
+repository: just-the-docs/just-the-docs # for github-metadata
 
 
 # github:
