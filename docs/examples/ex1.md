@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Customization
+title: Examples
 nav_order: 2
 ---
 
