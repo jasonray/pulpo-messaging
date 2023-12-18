@@ -20,7 +20,7 @@ plugins:
 # https://just-the-docs.github.io/just-the-docs/
 # https://github.com/pmarsceill/jtd-remote/blob/master/_config.yml
 remote_theme: just-the-docs/just-the-docs
-# color_scheme: light
+color_scheme: light
 
 search_enabled: true
 search:
