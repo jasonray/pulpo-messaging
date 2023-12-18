@@ -6,14 +6,8 @@ permalink: docs/examples/ex2
 parent: Examples
 ---
 
-# TOC no_toc
-{: .no_toc }
-
 ## TOC no_tox text-delta
 {: .no_toc .text-delta }
-
-1. TOC with num
-{:toc}
 
 
 # example 2
