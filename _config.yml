@@ -48,7 +48,7 @@ search:
   button: false
 
 aux_links:
-  "Just the Docs on GitHub":
+  "Just the Docs on GitHub (aux link)":
     - "//github.com/just-the-docs/just-the-docs"
 # Makes Aux links open in a new tab. Default is false
 aux_links_new_tab: true  
@@ -56,6 +56,12 @@ aux_links_new_tab: true
 #   warning:
 #     title: Warning
 #     color: red
+
+nav_external_links:
+  - title: Just the Docs on GitHub (ex)
+    url: https://github.com/just-the-docs/just-the-docs
+    hide_icon: false # set to true to hide the external link icon - defaults to false
+    opens_in_new_tab: true # set to true to open this link in a new tab - defaults to false
 
 # Heading anchor links appear on hover over h1-h6 tags in page content
 # allowing users to deep link to a particular heading on a page.
