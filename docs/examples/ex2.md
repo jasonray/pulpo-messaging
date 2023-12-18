@@ -12,6 +12,9 @@ parent: Examples
 ## TOC no_tox text-delta
 {: .no_toc .text-delta }
 
+1. TOC with num
+{:toc}
+
 
 # example 2
 
