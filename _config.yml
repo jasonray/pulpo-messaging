@@ -64,8 +64,12 @@ callouts:
     color: red
 
 nav_external_links:
-  - title: Just the Docs on GitHub (ex)
-    url: https://github.com/just-the-docs/just-the-docs
+  - title: statman
+    url: https://github.com/jasonray/statman.py
+    hide_icon: false # set to true to hide the external link icon - defaults to false
+    opens_in_new_tab: true # set to true to open this link in a new tab - defaults to false
+  - title: pulpo-config
+    url: https://github.com/jasonray/pulpo-config
     hide_icon: false # set to true to hide the external link icon - defaults to false
     opens_in_new_tab: true # set to true to open this link in a new tab - defaults to false
 
