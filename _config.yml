@@ -86,19 +86,19 @@ repository: just-the-docs/just-the-docs # for github-metadata
 #   another_url: another value
 
 # Define Jekyll collections
-collections:
+# collections:
   # Define a collection named "tests", its documents reside in the "_tests" directory
-  tests:
-    permalink: "/:collection/:path/"
-    output: true
+  # tests:
+  #   permalink: "/:collection/:path/"
+  #   output: true
 
-just_the_docs:
+# just_the_docs:
   # Define which collections are used in just-the-docs
-  collections:
+  # collections:
     # Reference the "tests" collection
-    tests:
+    # tests:
       # Give the collection a name
-      name: Tests
+      # name: Tests
       # Exclude the collection from the navigation
       # Supports true or false (default)
       # nav_exclude: true
