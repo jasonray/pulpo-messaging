@@ -1,9 +1,9 @@
 import os
 import uuid
 import random
+from loguru import logger
 from .payload_handler import PayloadHandler
 from .payload_handler import RequestResult
-from loguru import logger
 
 
 class EchoHandler(PayloadHandler):
