@@ -2,3 +2,4 @@ statman == 1.4.3
 pulpo-config == 2.0.1
 art == 6.1
 greenstalk==2.0.2
+tqdm==4.66.0

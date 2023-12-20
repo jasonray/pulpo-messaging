@@ -5,6 +5,7 @@ from statman import Statman
 import random
 import argparse
 import time
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser(
                     prog='publish_sample_messages',
@@ -45,7 +46,7 @@ def create_random_message(payload: str):
 
 def publish():
     Statman.stopwatch(name='publish-sample-messages.timing', autostart=True)
-    for i in range(0, args.number_of_messages):
+    for i in tqdm(range(0, args.number_of_messages)):
         m = create_random_message(payload=f'HellO WorlD {i}')
         kessel.publish(m)
         Statman.gauge(name='publish-sample-messages.published-messages').increment()
