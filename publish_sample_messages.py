@@ -1,3 +1,5 @@
+import sys
+from loguru import logger
 from pulpo_messaging.kessel import Message
 from pulpo_messaging.kessel import Pulpo
 from pulpo_messaging.kessel import PulpoConfig
@@ -13,18 +15,26 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--n', dest='number_of_messages',    help='number of messages to publish', type=int, default=100)
 parser.add_argument('--t', dest='time', help='if provided, will publish n messages every t seconds', type=int, default=None)
 parser.add_argument('--config', type=str, help='path to config file')
+parser.add_argument('-v', '--verbose', dest='verbose', action='store_true')
 args = parser.parse_args()
 
-args = parser.parse_args()
+if args.verbose:
+    logger.remove(0)
+    logger.add(sys.stdout, level="TRACE")
+else:
+    logger.remove(0)
+    logger.add(sys.stdout, level="SUCCESS")
+
 config = None
 if args.config:
-    print('load config from file', args.config)
+    logger.debug('load config from file', args.config)
     config = PulpoConfig(json_file_path=args.config)
 else:
     config = PulpoConfig()
 
 config.fromArgumentParser(args)
 kessel = Pulpo(config)
+
 
 def create_random_message(payload: str):
     request_type_number = random.randint(1,1)
@@ -60,5 +70,5 @@ if args.time:
 else:
     publish()
 
-Statman.stopwatch(name='publish-sample-messages.timing').print()
-Statman.report(output_stdout=True)
+logger.success(f'complete, published {Statman.gauge(name="publish-sample-messages.published-messages").value} message(s)')
+Statman.report(log_method=logger.success)
