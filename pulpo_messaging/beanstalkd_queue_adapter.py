@@ -3,10 +3,10 @@ import json
 import greenstalk
 from statman import Statman
 from greenstalk import Client as BeanstalkClient
+from loguru import logger
 from pulpo_config import Config
 from pulpo_messaging.message import Message
 from pulpo_messaging.queue_adapter import QueueAdapter
-from loguru import logger
 
 # from greenstalk import (
 #     DEFAULT_PRIORITY,
