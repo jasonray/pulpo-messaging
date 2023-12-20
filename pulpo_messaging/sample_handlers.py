@@ -3,6 +3,7 @@ import uuid
 import random
 from .payload_handler import PayloadHandler
 from .payload_handler import RequestResult
+from loguru import logger
 
 
 class EchoHandler(PayloadHandler):
@@ -12,7 +13,7 @@ class EchoHandler(PayloadHandler):
         os.makedirs(name=self.destination_directory, mode=0o777, exist_ok=True)
 
     def handle(self, payload: str):
-        print('EchoHandler.handle')
+        logger.trace('EchoHandler.handle')
         destination_filename = f'{uuid.uuid4()}.echo.txt'
         destination_file_path = os.path.join(self.destination_directory, destination_filename)
         with open(file=destination_file_path, encoding="utf-8", mode='w') as f:
@@ -27,30 +28,30 @@ class EchoHandler(PayloadHandler):
 class LowerCaseHandler(EchoHandler):
 
     def handle(self, payload: str):
-        print('LowerCaseHandler.handle')
+        logger.trace('LowerCaseHandler.handle')
         return EchoHandler.handle(self, payload.lower())
 
 
 class UpperCaseHandler(EchoHandler):
 
     def handle(self, payload: str):
-        print('UpperCaseHandler.handle')
+        logger.trace('UpperCaseHandler.handle')
         return EchoHandler.handle(self, payload.upper())
 
 
 class AlwaysSucceedHandler(EchoHandler):
 
     def handle(self, payload: str):
-        print('AlwaysSucceedHandler.handle')
+        logger.trace('AlwaysSucceedHandler.handle')
         result = RequestResult.success_factory()
-        print(f'AlwaysSucceedHandler {result=}')
+        logger.debug(f'AlwaysSucceedHandler {result.result=}')
         return result
 
 
 class AlwaysFailHandler(EchoHandler):
 
     def handle(self, payload: str):
-        print('AlwaysFailHandler.handle')
+        logger.trace('AlwaysFailHandler.handle')
         result = RequestResult.fatal_factory(error='something unexpected occurred')
         return result
 
@@ -58,7 +59,7 @@ class AlwaysFailHandler(EchoHandler):
 class AlwaysTransientFailureHandler(EchoHandler):
 
     def handle(self, payload: str):
-        print('AlwaysTransientFailureHandler.handle')
+        logger.trace('AlwaysTransientFailureHandler.handle')
         result = RequestResult.transient_factory(error='something occurred, but if you try again in a moment it may succeed')
         return result
 
@@ -66,7 +67,7 @@ class AlwaysTransientFailureHandler(EchoHandler):
 class FiftyFiftyHandler(EchoHandler):
 
     def handle(self, payload: str):
-        print('FiftyFiftyHandler.handle')
+        logger.trace('FiftyFiftyHandler.handle')
         if random.randint(0, 1):
             result = RequestResult.success_factory()
         else:

@@ -59,6 +59,10 @@ class PulpoConfig(Config):
     def banner_font(self: Config) -> bool:
         return self.get('banner.font', 'block')
 
+    @property
+    def enable_statman_reporting(self: Config) -> bool:
+        return self.getAsBool('enable_statman_reporting', False)
+
 
 class Pulpo():
     _queue_adapter = None
@@ -86,7 +90,7 @@ class Pulpo():
         self._shutdown_requested = False
 
     def initialize_queue_adapter(self, queue_adapter: QueueAdapter = None):
-        self.log('init queue adapter')
+        logger.debug('init queue adapter')
         if self._queue_adapter:
             pass  #queue adapter already initialized
         elif queue_adapter:
@@ -117,7 +121,7 @@ class Pulpo():
         if not self._queue_adapter:
             self.initialize_queue_adapter()
 
-        self.log('publish message to queue adapter')
+        logger.info(f'publish message [{message.request_type}]')
         return self.queue_adapter.enqueue(message)
 
     def start(self) -> Message:
@@ -138,54 +142,58 @@ class Pulpo():
                 self.handle_message(message)
             else:
                 iterations_with_no_messages += 1
-                self.log(f'no message available [iteration with no messages = {iterations_with_no_messages}][max = {self.config.shutdown_after_number_of_empty_iterations}]')
+                logger.trace(f'no message available [iteration with no messages = {iterations_with_no_messages}][max = {self.config.shutdown_after_number_of_empty_iterations}]')
 
                 Statman.stopwatch('kessel.message_streak_tm').stop()
-                Statman.report(output_stdout=False, log_method=self.log)
+                if self.config.enable_statman_reporting:
+                    Statman.report(output_stdout=False, log_method=logger.debug)
 
                 if iterations_with_no_messages >= self.config.shutdown_after_number_of_empty_iterations:
-                    self.log('no message available, shutdown')
+                    logger.info('no message available, shutdown')
                     continue_processing = False
                 else:
-                    self.log('no message available, sleep')
+                    logger.debug('no message available, sleep')
                     time.sleep(self.config.sleep_duration)
                     Statman.stopwatch('kessel.message_streak_tm').start()
                     Statman.gauge('kessel.message_streak_cnt').value = 0
 
-        self.log('processing complete')
+        logger.info('pulpo-messaging shutdown')
 
     def handle_message(self, message) -> RequestResult:
         Statman.gauge('kessel.dequeue').increment()
         Statman.gauge('kessel.message_streak_cnt').increment()
 
-        self.log(f'received message {message.id} {message.request_type}')
+        logger.info(f'processing message [id={message.id}][type={message.request_type}]')
         handler = self.handler_registry.get(message.request_type)
-        self.log(f'handler: {handler}')
+        logger.trace(f'handler: {handler}')
         if handler is None:
-            self.log(f'WARNING no handler for message type {message.request_type}')
+            logger.warning(f'WARNING no handler for message type {message.request_type}')
             result = RequestResult.fatal_factory(f'WARNING no handler for message type {message.request_type}')
         elif isinstance(handler, PayloadHandler):
             result = handler.handle(payload=message.payload)
         else:
-            self.log(f'WARNING unexpected handler {message.request_type} {handler}')
+            logger.warning(f'WARNING unexpected handler {message.request_type} {handler}')
             result = RequestResult.fatal_factory(f'WARNING unexpected handler {message.request_type} {handler}')
-        self.log(f'processing complete: {result=}')
+        logger.trace(f'processing complete: {result=}')
 
         if result.isSuccess:
+            logger.info(f'message successfully processed [id={message.id}][type={message.request_type}]')
             self.queue_adapter.commit(message=message, is_success=True)
             Statman.gauge('kessel.messages.success').increment()
             Statman.gauge('kessel.commit').increment()
-            self.log('commit complete')
+            logger.debug('commit complete')
         elif result.isTransient:
+            logger.warning(f'message failed due to transient condition [id={message.id}][type={message.request_type}]')
             self.queue_adapter.rollback(message=message)
             Statman.gauge('kessel.messages.transient').increment()
             Statman.gauge('kessel.rollback').increment()
-            self.log('rollback complete')
+            logger.debug('rollback complete')
         elif result.isFatal:
+            logger.warning(f'message failed due to fatal exception [id={message.id}][type={message.request_type}]')
             self.queue_adapter.commit(message=message, is_success=False)
             Statman.gauge('kessel.messages.fatal').increment()
             Statman.gauge('kessel.commit').increment()
-            self.log('commit complete')
+            logger.debug('commit complete')
         else:
             pass
 
@@ -198,11 +206,8 @@ class Pulpo():
             banner = text2art(self.config.banner_name, font=self.config.banner_font, chr_ignore=True)
             print(banner)
         else:
-            self.log('starting kessel')
+            logger.debug('starting pulpo-messaging')
 
     def signal_handler(self, signum, frame):  # pylint: disable=unused-argument
-        self.log('Signal handler called with signal, requesting shutdown', signum)
+        logger.info('Signal handler called with signal, requesting shutdown', signum)
         self._shutdown_requested = True
-
-    def log(self, *argv):
-        logger.info(*argv, flush=self.config.enable_output_buffering)

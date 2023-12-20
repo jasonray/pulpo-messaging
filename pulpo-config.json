@@ -2,6 +2,7 @@
     "shutdown_after_number_of_empty_iterations": 7,
     "enable_output_buffering": false,
     "queue_adapter_type": "beanstalkd_queue_adapter",
+    "enable_statman_reporting": false,
     "banner": {
         "enable":true,
         "name":"pulpo"
