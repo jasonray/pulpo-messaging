@@ -3,14 +3,13 @@ import time
 from statman import Statman
 from pulpo_config import Config
 from art import text2art
-from pulpo_messaging import logger
+from loguru import logger
 from .file_queue_adapter import FileQueueAdapter
 from .beanstalkd_queue_adapter import BeanstalkdQueueAdapter
 from .message import Message
 from .payload_handler import PayloadHandler, RequestResult
 from .queue_adapter import QueueAdapter
 from .sample_handlers import AlwaysFailHandler, AlwaysSucceedHandler, EchoHandler, FiftyFiftyHandler, LowerCaseHandler, UpperCaseHandler
-from loguru import logger
 
 
 class HandlerRegistry():
