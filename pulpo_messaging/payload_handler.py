@@ -18,6 +18,15 @@ class RequestResult():
                 self._response_message_list.append(response_message)
         self._error = error
 
+    def __str__(self):
+        values = {}
+        values['result'] = self.result
+        if self.error:
+            values['error'] = self.error
+        if len(self.response_messages): 
+            values['response_messages_cnt'] = len(self.response_messages)
+        return str(values)
+
     @property
     def result(self):
         return self._result

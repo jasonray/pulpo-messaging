@@ -4,9 +4,9 @@ import greenstalk
 from statman import Statman
 from greenstalk import Client as BeanstalkClient
 from pulpo_config import Config
-from pulpo_messaging import logger
 from pulpo_messaging.message import Message
 from pulpo_messaging.queue_adapter import QueueAdapter
+from loguru import logger
 
 # from greenstalk import (
 #     DEFAULT_PRIORITY,
@@ -76,7 +76,7 @@ class BeanstalkdQueueAdapter(QueueAdapter):
 
     def __init__(self, options: dict):
         super().__init__()
-        self.log('BeanstalkdQueueAdapter init')
+        logger.trace('BeanstalkdQueueAdapter init')
 
         self._config = BeanstalkdQueueAdapterConfig(options)
         address = (self.config.host, self.config.port)
@@ -93,69 +93,60 @@ class BeanstalkdQueueAdapter(QueueAdapter):
         return self._client
 
     def enqueue(self, message: Message) -> Message:
-        print(f'enqueue {message=}')
-        print(f'enqueue {message.id=}')
-        print(f'enqueue {message.delay=}')
         serialized_message = json.dumps(message._components, indent=2, default=str)
-        print(f'enqueue {serialized_message=}')
         # self.client.use( self.config.default_tube )
         put_job_id = self.client.put(body=serialized_message, delay=message.delayInSeconds)
         message.id = put_job_id
-        self.log(f'enqueued message {message.id=}')
+        logger.debug(f'enqueued message {message.id=}')
         return message
 
     def dequeue(self) -> Message:
         self.client.watch(self.config.default_tube)
-        message = None
+        m = None
         try:
-            while not message:
-                self.log(f'BeanstalkdQueueAdapter dequeue begin reserve {self.config.reserve_timeout=}')
+            while not m:
+                logger.trace(f'BeanstalkdQueueAdapter dequeue begin reserve {self.config.reserve_timeout=}')
                 job = self.client.reserve(timeout=self.config.reserve_timeout)
-                self.log(f'BeanstalkdQueueAdapter dequeue reserve complete {job.id=}')
+                logger.trace(f'BeanstalkdQueueAdapter dequeue reserve complete {job.id=}')
                 message_components = json.loads(job.body)
-                print(f'dequeue (1): {message_components=}')
-                message = Message(components=message_components)
-                message.id = job.id
+                m = Message(components=message_components)
+                m.id = job.id
 
-                print(f'dequeue: {self.config.max_number_of_attempts=}')
+                if m and self.config.max_number_of_attempts:
+                    self._get_message_attempts(m)
+                    if m.attempts >= self.config.max_number_of_attempts:
+                        logger.warning(f'message exceed max attempts {m.id=} {self.config.max_number_of_attempts=} {m.attempts=}')
+                        self.commit(message=m, is_success=False)
+                        m = None
+                if m and m.expiration and m.expiration < datetime.datetime.now():
+                    logger.warning(f'message expired {m.expiration=}')
+                    self.commit(message=m, is_success=False)
+                    m = None
 
-                if message and self.config.max_number_of_attempts:
-                    self._get_message_attempts(message)
-                    print(f'dequeue: {message.attempts=}')
-                    if message.attempts >= self.config.max_number_of_attempts:
-                        self.log(f'message exceed max attempts {self.config.max_number_of_attempts=} {message.attempts=}')
-                        self.commit(message=message, is_success=False)
-                        message = None
-                if message and message.expiration and message.expiration < datetime.datetime.now():
-                    self.log(f'message expired {message.expiration=}')
-                    self.commit(message=message, is_success=False)
-                    message = None
-
-                print(f'dequeue (r): {message_components=}')
         except greenstalk.TimedOutError:
-            self.log('BeanstalkdQueueAdapter dequeue reserve timeout')
+            logger.trace('BeanstalkdQueueAdapter dequeue reserve timeout')
             # no message available
-            message = None
-        return message
+            m = None
+
+        if m:
+            logger.debug(f'dequeued message: {m.id=}')
+
+        return m
 
     def _get_message_attempts(self, message: Message) -> Message:
         job_stats = self.client.stats_job(message.id)
-        print(f'{job_stats=}')
         message.attempts = job_stats.get('releases')
         return message
 
     def commit(self, message: Message, is_success: bool = True) -> Message:
-        self.log(f'commit (delete) {message.id=}')
+        logger.trace(f'commit (delete) {message.id=}')
         self.client.delete(job=greenstalk.Job(message.id, message.body))
 
     def rollback(self, message: Message) -> Message:
-        self.log(f'rollback (release) {message.id=}')
+        logger.trace(f'rollback (release) {message.id=}')
         self.client.release(job=greenstalk.Job(message.id, message.body))
 
     def beanstalk_stat(self, tube: str = None) -> Message:
         if not tube:
             tube = self.config.default_tube
         return self.client.stats_tube(tube)
-
-    def log(self, *argv):
-        logger.log(*argv, flush=True)
