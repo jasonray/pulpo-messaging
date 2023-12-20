@@ -23,7 +23,7 @@ class RequestResult():
         values['result'] = self.result
         if self.error:
             values['error'] = self.error
-        if len(self.response_messages):
+        if self.response_messages:
             values['response_messages_cnt'] = len(self.response_messages)
         return str(values)
 
