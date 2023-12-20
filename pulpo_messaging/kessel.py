@@ -10,6 +10,7 @@ from .message import Message
 from .payload_handler import PayloadHandler, RequestResult
 from .queue_adapter import QueueAdapter
 from .sample_handlers import AlwaysFailHandler, AlwaysSucceedHandler, EchoHandler, FiftyFiftyHandler, LowerCaseHandler, UpperCaseHandler
+from loguru import logger
 
 
 class HandlerRegistry():
@@ -204,4 +205,4 @@ class Pulpo():
         self._shutdown_requested = True
 
     def log(self, *argv):
-        logger.log(*argv, flush=self.config.enable_output_buffering)
+        logger.info(*argv, flush=self.config.enable_output_buffering)
