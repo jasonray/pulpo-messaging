@@ -1,0 +1,32 @@
+{
+    "shutdown_after_number_of_empty_iterations": 7,
+    "enable_output_buffering": false,
+    "queue_adapter_type": "file_queue_adapter",
+    "enable_statman_reporting": false,
+    "banner": {
+        "enable":true,
+        "name":"pulpo"
+    },
+    "file_queue_adapter": {
+        "base_path": "/tmp/pulpo/fqa",
+        "skip_random_messages_range": 0,
+        "message_format": "json",
+        "enable_history": "True"
+    },
+    "beanstalkd_queue_adapter": {
+        "host": "127.0.0.1",
+        "port": 11300,
+        "default_tube": "pulpo-beanstalk-queue-adapter",
+        "encoding": "UTF-8",
+        "reserve_timeout": 0
+    },
+    "echo_handler": {
+        "destination_directory": "/tmp/pulpo/echo"
+    },
+    "lower_handler": {
+        "destination_directory": "/tmp/pulpo/lower"
+    },
+    "upper_handler": {
+        "destination_directory": "/tmp/pulpo/upper"
+    }
+}

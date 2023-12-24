@@ -103,6 +103,7 @@ class Pulpo():
             self._queue_adapter = BeanstalkdQueueAdapter(self.config.get('beanstalkd_queue_adapter'))
         else:
             raise Exception(f'invalid queue adapter type {self.config.queue_adapter_type}')
+        return self._queue_adapter
 
     @property
     def config(self) -> PulpoConfig:
