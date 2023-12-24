@@ -1,6 +1,5 @@
 import argparse
 import sys
-from icecream import ic
 from loguru import logger
 from pulpo_messaging.message import Message
 from pulpo_messaging.queue_adapter import QueueAdapter
