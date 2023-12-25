@@ -8,22 +8,54 @@ from .unittest_helper import get_unique_base_path
 class TestFqaCli(unittest.TestCase):
     fqa_config = 'pulpo-config-fqa.json'
 
-    def run_cli(self, command, config: str, fqa_base_directory: str = None, additional_args=None):
+    def run_cli(self, command, config: str=None, fqa_base_directory: str = None, additional_args=None, error_on_fail:bool = True):
+        if not config:
+            config = self.fqa_config
+
+        if not fqa_base_directory:
+            fqa_base_directory = get_unique_base_path()
+
         args = []
         args.append('python3')
         args.append('pulpo-cli.py')
         args.append(command)
         args.append(f'--config={config}')
-
-        if fqa_base_directory:
-            args.append(f'--file_queue_adapter.base_path={fqa_base_directory}')
+        args.append(f'--file_queue_adapter.base_path={fqa_base_directory}')
 
         if additional_args:
             args = args + additional_args
 
-        # print(f'{args=}')
-        result = subprocess.run(args, capture_output=True, check=False)
+        print(f'{args=}')
+        result = subprocess.run(args, capture_output=True, check=error_on_fail)
         print(f'{command=} => {result=}')
+        return result
+
+    def run_put(self, message: str=None, fqa_base_directory:str=None , error_on_fail:bool = True ) :
+        if not message:
+            message = 'hello world'
+
+        additional_args = [f'--payload="{message}"']
+        result = self.run_cli(command='queue.put', config=self.fqa_config,fqa_base_directory=fqa_base_directory,   additional_args=additional_args, error_on_fail=error_on_fail)
+
+        if result.returncode==0:
+            message_id = self.get_message_id_from_output(result)
+            print(f'run put cli [{message_id=}]')
+            return result, message_id
+        else:
+            return result, None
+
+    
+    def run_pop(self, fqa_base_directory:str=None , error_on_fail:bool = True ) :
+        result = self.run_cli(command='queue.pop', config=self.fqa_config, fqa_base_directory=fqa_base_directory)
+
+        message_id = self.get_message_id_from_output(result)
+        print(f'run pop cli [{message_id=}]')
+        return result, message_id    
+
+    def run_peek(self, message_id: str, fqa_base_directory:str=None , error_on_fail:bool = True ) :
+        additional_args = [f'--id={message_id}']
+        result = self.run_cli(command='queue.peek', config=self.fqa_config,fqa_base_directory=fqa_base_directory, additional_args=additional_args, error_on_fail=error_on_fail)
+        print(f'run peek cli')
         return result
 
     def get_message_id_from_output(self, result):
@@ -39,59 +71,40 @@ class TestFqaCli(unittest.TestCase):
         return message_id
 
     def test_put(self):
-        additional_args = ['--payload="hello world!"']
-        result = self.run_cli(command='queue.put', config=self.fqa_config, additional_args=additional_args)
-        assert result.returncode == 0
-
-        message_id = self.get_message_id_from_output(result)
-        print(f'{message_id=}')
+        result , message_id = self.run_put(message = 'hello world!')        
         self.assertIsNotNone(message_id)
 
     def test_fail_put(self):
+        # create a directory which the application has no permissions to write 
+        # this will cause failure
         fqa_base_directory = os.path.join(get_unique_base_path("cli"), 'invalid')
         os.makedirs(fqa_base_directory)
         os.chmod(path=fqa_base_directory, mode=0)
 
-        additional_args = ['--payload="this message will fail with no permissions to write"']
-        result = self.run_cli(command='queue.put', config=self.fqa_config, additional_args=additional_args, fqa_base_directory=fqa_base_directory)
-        assert result.returncode == 1
-
+        with self.assertRaises(Exception):
+            self.run_cli(command='queue.peek', config=self.fqa_config, fqa_base_directory=fqa_base_directory , error_on_fail=True )
+ 
     def test_put_peek(self):
-        additional_args = ['--payload="hello world!"']
-        result = self.run_cli(command='queue.put', config=self.fqa_config, additional_args=additional_args)
-        assert result.returncode == 0
+        fqa_base_directory = get_unique_base_path()
+        result , message_id = self.run_put(message='hello world', fqa_base_directory=fqa_base_directory)
 
-        message_id = self.get_message_id_from_output(result)
-        print(f'{message_id=}')
-        self.assertIsNotNone(message_id)
-
-        additional_args = [f'--id={message_id}']
-        result = self.run_cli(command='queue.peek', config=self.fqa_config, additional_args=additional_args)
+        result = self.run_peek(message_id=message_id, fqa_base_directory=fqa_base_directory, error_on_fail=True)
         assert result.returncode == 0
         assert 'hello world' in str(result.stdout)
 
     def test_put_pop_peek(self):
         fqa_base_directory = get_unique_base_path("cli")
 
-        additional_args = ['--payload="hello world!"']
-        result = self.run_cli(command='queue.put', config=self.fqa_config, fqa_base_directory=fqa_base_directory, additional_args=additional_args)
-        assert result.returncode == 0
-
-        put_message_id = self.get_message_id_from_output(result)
-        print(f'put {put_message_id=}')
+        result, put_message_id = self.run_put(message='hello world', fqa_base_directory=fqa_base_directory, error_on_fail=True)
         self.assertIsNotNone(put_message_id)
 
-        additional_args = [f'--id={put_message_id}']
-        result = self.run_cli(command='queue.pop', config=self.fqa_config, fqa_base_directory=fqa_base_directory, additional_args=additional_args)
-        assert result.returncode == 0
-
-        pop_message_id = self.get_message_id_from_output(result)
-        print(f'pop {pop_message_id=}')
+        result , pop_message_id = self.run_pop(fqa_base_directory=fqa_base_directory , error_on_fail=True)
         self.assertIsNotNone(pop_message_id)
         self.assertEqual(pop_message_id, put_message_id)
 
         additional_args = [f'--id={put_message_id}']
         result = self.run_cli(command='queue.peek', config=self.fqa_config, fqa_base_directory=fqa_base_directory, additional_args=additional_args)
+
         assert result.returncode == 0
         assert 'no message' in str(result.stdout)
 
