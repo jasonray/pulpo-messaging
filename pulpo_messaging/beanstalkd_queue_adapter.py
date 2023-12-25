@@ -136,13 +136,12 @@ class BeanstalkdQueueAdapter(QueueAdapter):
         m = Message(components=message_components)
         m.id = job.id
         return m
-    
+
     def peek(self, message_id: str) -> Message:
         logger.debug(f'peek {message_id=}')
         job = self.client.peek(id=int(message_id))
         message = self._load_message_from_job(job)
         return message
-
 
     def _get_message_attempts(self, message: Message) -> Message:
         job_stats = self.client.stats_job(message.id)
