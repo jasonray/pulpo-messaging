@@ -48,12 +48,12 @@ class TestFqaCli(unittest.TestCase):
         self.assertIsNotNone(message_id)
 
     def test_fail_put(self):
-        fqa_base_directory = os.path.join( get_unique_base_path("cli") , 'invalid' )
+        fqa_base_directory = os.path.join(get_unique_base_path("cli"), 'invalid')
         os.makedirs(fqa_base_directory)
-        os.chmod( path=fqa_base_directory, mode=0 )
+        os.chmod(path=fqa_base_directory, mode=0)
 
         additional_args = ['--payload="this message will fail with no permissions to write"']
-        result = self.run_cli(command='queue.put', config=self.fqa_config, additional_args=additional_args , fqa_base_directory=fqa_base_directory)
+        result = self.run_cli(command='queue.put', config=self.fqa_config, additional_args=additional_args, fqa_base_directory=fqa_base_directory)
         assert result.returncode == 1
 
     def test_put_peek(self):
