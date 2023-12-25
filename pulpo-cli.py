@@ -39,11 +39,10 @@ def main():
     command_parts = args.command.split('.')
     command_parent = command_parts[0]
 
-    match command_parent:
-        case 'queue':
-            QueueCommands.run(args)
-        case _:
-            raise Exception(f'invalid command [{args.command}][{command_parent}]')
+    if command_parent== 'queue':
+        QueueCommands.run(args)
+    else:
+        raise Exception(f'invalid command [{args.command}][{command_parent}]')
 
     return 0
 
