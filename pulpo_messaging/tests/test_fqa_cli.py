@@ -1,19 +1,13 @@
-import os
 import re
 import subprocess
-from typing import Callable
 import unittest
-import time
-import datetime
-from datetime import timedelta
-from uuid import uuid4
 from .unittest_helper import get_unique_base_path
 
 
 class TestFqaCli(unittest.TestCase):
     fqa_config = 'pulpo-config-fqa.json'
 
-    def run_cli(self, command, config: str, fqa_base_directory: str = None, additional_args=[]):
+    def run_cli(self, command, config: str, fqa_base_directory: str = None, additional_args=None):
         args = []
         args.append('python3')
         args.append('pulpo-cli.py')
@@ -23,9 +17,11 @@ class TestFqaCli(unittest.TestCase):
         if fqa_base_directory:
             args.append(f'--file_queue_adapter.base_path={fqa_base_directory}')
 
-        args = args + additional_args
+        if additional_args:
+            args = args + additional_args
+
         # print(f'{args=}')
-        result = subprocess.run(args, capture_output=True)
+        result = subprocess.run(args, capture_output=True, check=False)
         print(f'{command=} => {result=}')
         return result
 
@@ -42,7 +38,7 @@ class TestFqaCli(unittest.TestCase):
         return message_id
 
     def test_ls(self):
-        result = subprocess.run(["ls", "-l", "/dev/null"], capture_output=True)
+        result = subprocess.run(["ls", "-l", "/dev/null"], capture_output=True, check=True)
         print(f'{result=}')
         assert result.returncode == 0
         assert 'root' in str(result.stdout)
