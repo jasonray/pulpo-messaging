@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 import unittest
@@ -29,19 +30,13 @@ class TestFqaCli(unittest.TestCase):
         # print(f'{result=}')
         output = result.stdout
         output_str = output.decode('utf-8')
-        print(f'attempt to extract message id from string: {output_str}')
+        # print(f'attempt to extract message id from string: {output_str}')
         match = re.search(r"(?:message\.id|message_id)='([^']+)'", output_str)
 
         self.assertIsNotNone(match, f'unable to determine job id from output [{output_str}]')
         message_id = match.group(1)
-        print(f'extracted {message_id=}')
+        # print(f'extracted {message_id=}')
         return message_id
-
-    def test_ls(self):
-        result = subprocess.run(["ls", "-l", "/dev/null"], capture_output=True, check=True)
-        print(f'{result=}')
-        assert result.returncode == 0
-        assert 'root' in str(result.stdout)
 
     def test_put(self):
         additional_args = ['--payload="hello world!"']
@@ -51,6 +46,15 @@ class TestFqaCli(unittest.TestCase):
         message_id = self.get_message_id_from_output(result)
         print(f'{message_id=}')
         self.assertIsNotNone(message_id)
+
+    def test_fail_put(self):
+        fqa_base_directory = os.path.join( get_unique_base_path("cli") , 'invalid' )
+        os.makedirs(fqa_base_directory)
+        os.chmod( path=fqa_base_directory, mode=0 )
+
+        additional_args = ['--payload="this message will fail with no permissions to write"']
+        result = self.run_cli(command='queue.put', config=self.fqa_config, additional_args=additional_args , fqa_base_directory=fqa_base_directory)
+        assert result.returncode == 1
 
     def test_put_peek(self):
         additional_args = ['--payload="hello world!"']
