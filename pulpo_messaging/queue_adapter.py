@@ -14,3 +14,9 @@ class QueueAdapter():
 
     def rollback(self, message: Message) -> Message:
         pass
+
+    def peek(self, message_id: str) -> Message:
+        pass
+
+    def delete(self, message_id: str):
+        pass
