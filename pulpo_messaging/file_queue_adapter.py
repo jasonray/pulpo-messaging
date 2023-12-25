@@ -151,8 +151,20 @@ class FileQueueAdapter(QueueAdapter):
 
         return m
 
-    def load_message_by_id(self, message_id):
-        return self._load_message_from_file(self._get_message_file_path(message_id))
+    def peek(self, message_id: str) -> Message:
+        logger.debug(f'peek {message_id=}')
+        status = self.lookup_message_state(message_id=message_id)
+        logger.debug(f'peek {message_id=} {status=}')
+        # unknown, queue, lock, complete.success, complete.fail
+        match status:
+            case 'queue':
+                return self._load_message_from_file(self._get_message_file_path(message_id))
+            case 'lock':
+                return self._load_message_from_file(self._get_lock_file_path(message_id))
+
+    def delete(self, message_id: str):
+        status = self.lookup_message_state(message_id=message_id)
+        self._archive_message(message_id=message_id, source=status, destination='failure')
 
     def _load_message_from_file(self, file_path) -> Message:
         logger.trace(f'load message from file [{file_path=}][format={self.config.message_format}]')

@@ -26,6 +26,29 @@ class TestFqaCompliance(unittest.TestCase):
         self.assertEqual(dq_1.payload, 'hello world')
         self.assertEqual(dq_1.id, m1.id)
 
+    def test_peek_available_message(self):
+        qa = self.queue_adapter_factory()
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        peek_1 = qa.peek(m1.id)
+
+        self.assertEqual(peek_1.payload, 'hello world')
+        self.assertEqual(peek_1.id, m1.id)
+
+    def test_peek_reserved_message(self):
+        qa = self.queue_adapter_factory()
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        dq_1 = qa.dequeue()
+        self.assertIsNotNone(dq_1)
+
+        peek_1 = qa.peek(m1.id)
+
+        self.assertEqual(peek_1.payload, 'hello world')
+        self.assertEqual(peek_1.id, m1.id)
+
     def test_enqueue_dequeue_with_body(self):
         qa = self.queue_adapter_factory()
         m1 = Message(body={'k': 'v'}, payload='hello world')

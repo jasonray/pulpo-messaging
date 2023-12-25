@@ -108,9 +108,7 @@ class BeanstalkdQueueAdapter(QueueAdapter):
                 logger.trace(f'BeanstalkdQueueAdapter dequeue begin reserve {self.config.reserve_timeout=}')
                 job = self.client.reserve(timeout=self.config.reserve_timeout)
                 logger.trace(f'BeanstalkdQueueAdapter dequeue reserve complete {job.id=}')
-                message_components = json.loads(job.body)
-                m = Message(components=message_components)
-                m.id = job.id
+                m = self._load_message_from_job(job)
 
                 if m and self.config.max_number_of_attempts:
                     self._get_message_attempts(m)
@@ -132,6 +130,19 @@ class BeanstalkdQueueAdapter(QueueAdapter):
             logger.debug(f'dequeued message: {m.id=}')
 
         return m
+
+    def _load_message_from_job(self, job):
+        message_components = json.loads(job.body)
+        m = Message(components=message_components)
+        m.id = job.id
+        return m
+    
+    def peek(self, message_id: str) -> Message:
+        logger.debug(f'peek {message_id=}')
+        job = self.client.peek(id=int(message_id))
+        message = self._load_message_from_job(job)
+        return message
+
 
     def _get_message_attempts(self, message: Message) -> Message:
         job_stats = self.client.stats_job(message.id)
