@@ -156,10 +156,11 @@ class FileQueueAdapter(QueueAdapter):
         status = self.lookup_message_state(message_id=message_id)
         logger.debug(f'peek {message_id=} {status=}')
         # unknown, queue, lock, complete.success, complete.fail
-        if status== 'queue':
+        if status == 'queue':
             return self._load_message_from_file(self._get_message_file_path(message_id))
-        elif status== 'lock':
+        if status == 'lock':
             return self._load_message_from_file(self._get_lock_file_path(message_id))
+        return None
 
     def delete(self, message_id: str):
         status = self.lookup_message_state(message_id=message_id)
