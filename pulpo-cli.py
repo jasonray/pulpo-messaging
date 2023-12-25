@@ -53,13 +53,6 @@ class QueueCommands():
         command_parts = args.command.split('.')
         command_child = command_parts[1]
 
-        config = PulpoConfig().fromJsonFile(file_path=args.config)
-        file_queue_adapter_config = config.get('file_queue_adapter')
-        config =PulpoConfig().fromJsonFile(file_path=args.config).fromArgumentParser(args)
-        file_queue_adapter_config = config.get('file_queue_adapter')
-
-
-
         pulpo = Pulpo(PulpoConfig().fromJsonFile(file_path=args.config).fromArgumentParser(args))
         client = pulpo.initialize_queue_adapter()
 
