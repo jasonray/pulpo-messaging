@@ -24,20 +24,21 @@ class TestFqaCli(unittest.TestCase):
             args.append(f'--file_queue_adapter.base_path={fqa_base_directory}')
 
         args = args + additional_args
-        print(f'{args=}')
+        # print(f'{args=}')
         result = subprocess.run(args, capture_output=True)
         print(f'{command=} => {result=}')
         return result
 
     def get_message_id_from_output(self, result):
-        print(f'{result=}')
+        # print(f'{result=}')
         output = result.stdout
         output_str = output.decode('utf-8')
-        print(f'{output_str=}')
-        match = re.search(r"message\.id='([^']+)'", output_str)
+        print(f'attempt to extract message id from string: {output_str}')
+        match = re.search(r"(?:message\.id|message_id)='([^']+)'", output_str)
 
         self.assertIsNotNone(match, f'unable to determine job id from output [{output_str}]')
         message_id = match.group(1)
+        print(f'extracted {message_id=}')
         return message_id
 
     def test_ls(self):
