@@ -64,22 +64,21 @@ class QueueCommands():
         pulpo = Pulpo(PulpoConfig().fromJsonFile(file_path=args.config).fromArgumentParser(args))
         client = pulpo.initialize_queue_adapter()
 
-        match command_child:
-            case 'pop' | 'dequeue':
-                QueueCommands.pop(client=client)
-            case 'peek':
-                QueueCommands.peek(client=client, message_id=args.message_id)
-            case 'delete':
-                QueueCommands.delete(client=client, message_id=args.message_id)
-            case 'publish' | 'put' | 'enqueue':
-                if args.number_of_messages:
-                    n=args.number_of_messages
-                else:
-                    n=1
-                for i in range(1,n+1):
-                    QueueCommands.publish(client=client, body=args.payload)
-            case _:
-                raise Exception(f'invalid command [{command_child}]')
+        if command_child== 'pop':
+            QueueCommands.pop(client=client)
+        elif command_child== 'peek':
+            QueueCommands.peek(client=client, message_id=args.message_id)
+        elif command_child== 'delete':
+            QueueCommands.delete(client=client, message_id=args.message_id)
+        elif command_child=='put':
+            if args.number_of_messages:
+                n=args.number_of_messages
+            else:
+                n=1
+            for i in range(1,n+1):
+                QueueCommands.publish(client=client, body=args.payload)
+        else:
+            raise Exception(f'invalid command [{command_child}]')
 
 
     @staticmethod
