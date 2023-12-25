@@ -107,7 +107,7 @@ class QueueCommands():
         if not message_id:
             raise Exception(f'invalid job id {message_id}')
         client.delete(message_id=message_id)
-        logger.success(f'delete: {message_id}')
+        logger.success(f'delete: {message_id=}')
 
     @staticmethod
     def publish(client: QueueAdapter, body: str):
