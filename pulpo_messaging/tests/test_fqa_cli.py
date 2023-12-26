@@ -124,7 +124,7 @@ class TestFqaCli(unittest.TestCase):
         result = self.run_peek(put_message_id, fqa_base_directory=fqa_base_directory)
         assert 'no message' in str(result.stdout)
 
-    def test_put_empty(self):
+    def test_pop_empty(self):
         fqa_base_directory = get_unique_base_path("cli")
 
         result, pop_message_id = self.run_pop(fqa_base_directory=fqa_base_directory, error_on_fail=True)
