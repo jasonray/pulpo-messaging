@@ -1,8 +1,7 @@
 import os
-import re
 import subprocess
 import unittest
-from .unittest_helper import get_unique_base_path
+from .unittest_helper import get_message_id_from_output, get_unique_base_path
 
 
 class TestFqaCli(unittest.TestCase):
@@ -38,7 +37,7 @@ class TestFqaCli(unittest.TestCase):
         result = self.run_cli(command='queue.put', config=self.fqa_config, fqa_base_directory=fqa_base_directory, additional_args=additional_args, error_on_fail=error_on_fail)
 
         if result.returncode == 0:
-            message_id = self.get_message_id_from_output(result)
+            message_id = get_message_id_from_output(result)
             print(f'run put cli [{message_id=}]')
         else:
             message_id = None
@@ -48,7 +47,7 @@ class TestFqaCli(unittest.TestCase):
     def run_pop(self, fqa_base_directory: str = None, error_on_fail: bool = True):
         result = self.run_cli(command='queue.pop', config=self.fqa_config, fqa_base_directory=fqa_base_directory, error_on_fail=error_on_fail)
 
-        message_id = self.get_message_id_from_output(result)
+        message_id = get_message_id_from_output(result)
         print(f'run pop cli [{message_id=}]')
         return result, message_id
 
@@ -63,20 +62,6 @@ class TestFqaCli(unittest.TestCase):
         result = self.run_cli(command='queue.delete', config=self.fqa_config, fqa_base_directory=fqa_base_directory, additional_args=additional_args, error_on_fail=error_on_fail)
         print('run delete cli')
         return result
-
-    def get_message_id_from_output(self, result):
-        # print(f'{result=}')
-        output = result.stdout
-        output_str = output.decode('utf-8')
-        # print(f'attempt to extract message id from string: {output_str}')
-        match = re.search(r"(?:message\.id|message_id)='([^']+)'", output_str)
-
-        if match:
-            message_id = match.group(1)
-        else:
-            message_id = None
-
-        return message_id
 
     def test_put(self):
         _, message_id = self.run_put(message='hello world!')

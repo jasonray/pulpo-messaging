@@ -144,11 +144,11 @@ class BeanstalkdQueueAdapter(QueueAdapter):
         return message
 
     def _get_message_attempts(self, message: Message) -> Message:
-        job_stats = self.client.stats_job(int( message.id) )
+        job_stats = self.client.stats_job(int(message.id))
         message.attempts = job_stats.get('releases')
         return message
 
-    def delete(self, message_id: str, is_success: bool = True) -> Message:
+    def delete(self, message_id: str, is_success: bool = True) -> Message:  # pylint: disable=unused-argument
         logger.trace(f'delete {message_id=}')
         self.client.delete(job=greenstalk.Job(id=int(message_id), body=''))
 

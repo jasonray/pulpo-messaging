@@ -1,10 +1,9 @@
 import os
-import re
 import subprocess
 import time
 from typing import Callable
 import unittest
-from .unittest_helper import get_unique_base_path
+from .unittest_helper import get_message_id_from_output, get_unique_base_path
 
 BEANSTALKD_PATH = os.getenv("BEANSTALKD_PATH", "beanstalkd")
 DEFAULT_INET_ADDRESS = ("127.0.0.1", 4444)
@@ -12,6 +11,7 @@ DEFAULT_INET_ADDRESS = ("127.0.0.1", 4444)
 TestFunc = Callable[[], None]
 WrapperFunc = Callable[[], None]
 DecoratorFunc = Callable[[TestFunc], WrapperFunc]
+
 
 def with_beanstalkd() -> DecoratorFunc:
 
@@ -21,7 +21,7 @@ def with_beanstalkd() -> DecoratorFunc:
             cmd = [BEANSTALKD_PATH]
             host = '127.0.0.1'
             port = 11300
-            address = (host,port)
+            address = (host, port)
             cmd.extend(["-l", host, "-p", str(port)])
             print(f'starting beanstalkd [{cmd=}][{address=}]')
             with subprocess.Popen(cmd) as beanstalkd:
@@ -41,7 +41,7 @@ def with_beanstalkd() -> DecoratorFunc:
 class TestBqaCli(unittest.TestCase):
     bqa_config = 'pulpo-config-beanstalk.json'
 
-    def run_cli(self, command, config: str = None,  additional_args=None, error_on_fail: bool = True):
+    def run_cli(self, command, config: str = None, additional_args=None, error_on_fail: bool = True):
         if not config:
             config = self.bqa_config
 
@@ -59,53 +59,39 @@ class TestBqaCli(unittest.TestCase):
         print(f'{command=} => {result=}')
         return result
 
-    def run_put(self, payload: str = None,   error_on_fail: bool = True):
+    def run_put(self, payload: str = None, error_on_fail: bool = True):
         if not payload:
             payload = 'hello world'
 
         additional_args = [f'--payload="{payload}"']
-        result = self.run_cli(command='queue.put', config=self.bqa_config,   additional_args=additional_args, error_on_fail=error_on_fail)
+        result = self.run_cli(command='queue.put', config=self.bqa_config, additional_args=additional_args, error_on_fail=error_on_fail)
 
         if result.returncode == 0:
-            message_id = self.get_message_id_from_output(result)
+            message_id = get_message_id_from_output(result)
             print(f'run put cli [{message_id=}]')
         else:
             message_id = None
 
         return result, message_id
 
-    def run_pop(self,  error_on_fail: bool = True):
-        result = self.run_cli(command='queue.pop', config=self.bqa_config,  error_on_fail=error_on_fail)
+    def run_pop(self, error_on_fail: bool = True):
+        result = self.run_cli(command='queue.pop', config=self.bqa_config, error_on_fail=error_on_fail)
 
-        message_id = self.get_message_id_from_output(result)
+        message_id = get_message_id_from_output(result)
         print(f'run pop cli [{message_id=}]')
         return result, message_id
 
-    def run_peek(self, message_id: str,   error_on_fail: bool = True):
+    def run_peek(self, message_id: str, error_on_fail: bool = True):
         additional_args = [f'--id={message_id}']
-        result = self.run_cli(command='queue.peek', config=self.bqa_config,   additional_args=additional_args, error_on_fail=error_on_fail)
+        result = self.run_cli(command='queue.peek', config=self.bqa_config, additional_args=additional_args, error_on_fail=error_on_fail)
         print('run peek cli')
         return result
 
-    def run_delete(self, message_id: str,   error_on_fail: bool = True):
+    def run_delete(self, message_id: str, error_on_fail: bool = True):
         additional_args = [f'--id={message_id}']
-        result = self.run_cli(command='queue.delete', config=self.bqa_config,  additional_args=additional_args, error_on_fail=error_on_fail)
+        result = self.run_cli(command='queue.delete', config=self.bqa_config, additional_args=additional_args, error_on_fail=error_on_fail)
         print('run delete cli')
         return result
-
-    def get_message_id_from_output(self, result):
-        # print(f'{result=}')
-        output = result.stdout
-        output_str = output.decode('utf-8')
-        # print(f'attempt to extract message id from string: {output_str}')
-        match = re.search(r"(?:message\.id|message_id)='([^']+)'", output_str)
-
-        if match:
-            message_id = match.group(1)
-        else:
-            message_id = None
-
-        return message_id
 
     @with_beanstalkd()
     def test_put(self):
@@ -125,18 +111,18 @@ class TestBqaCli(unittest.TestCase):
 
     @with_beanstalkd()
     def test_put_peek(self):
-        result, message_id = self.run_put(payload='hello world' )
+        result, message_id = self.run_put(payload='hello world')
 
-        result = self.run_peek(message_id=message_id,   error_on_fail=True)
+        result = self.run_peek(message_id=message_id, error_on_fail=True)
         assert result.returncode == 0
         assert 'hello world' in str(result.stdout)
 
     @with_beanstalkd()
     def test_put_pop_peek(self):
-        result, put_message_id = self.run_put(payload='hello world', error_on_fail=True)
+        result, put_message_id = self.run_put(payload='hello world', error_on_fail=True)  # pylint: disable=unused-variable
         self.assertIsNotNone(put_message_id)
 
-        result, pop_message_id = self.run_pop( error_on_fail=True)
+        result, pop_message_id = self.run_pop(error_on_fail=True)
         self.assertIsNotNone(pop_message_id)
         self.assertEqual(pop_message_id, put_message_id)
 
@@ -153,9 +139,8 @@ class TestBqaCli(unittest.TestCase):
         with self.assertRaises(Exception):
             self.run_peek(put_message_id)
 
-
     @with_beanstalkd()
     def test_pop_empty(self):
-        result, pop_message_id = self.run_pop(  error_on_fail=True)
+        result, pop_message_id = self.run_pop(error_on_fail=True)
         self.assertIsNone(pop_message_id)
         assert 'no message' in str(result.stdout)
