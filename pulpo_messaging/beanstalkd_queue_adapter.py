@@ -144,17 +144,21 @@ class BeanstalkdQueueAdapter(QueueAdapter):
         return message
 
     def _get_message_attempts(self, message: Message) -> Message:
-        job_stats = self.client.stats_job(message.id)
+        job_stats = self.client.stats_job(int( message.id) )
         message.attempts = job_stats.get('releases')
         return message
 
+    def delete(self, message_id: str, is_success: bool = True) -> Message:
+        logger.trace(f'delete {message_id=}')
+        self.client.delete(job=greenstalk.Job(id=int(message_id), body=''))
+
     def commit(self, message: Message, is_success: bool = True) -> Message:
         logger.trace(f'commit (delete) {message.id=}')
-        self.client.delete(job=greenstalk.Job(message.id, message.body))
+        self.client.delete(job=greenstalk.Job(int(message.id), message.body))
 
     def rollback(self, message: Message) -> Message:
         logger.trace(f'rollback (release) {message.id=}')
-        self.client.release(job=greenstalk.Job(message.id, message.body))
+        self.client.release(job=greenstalk.Job(int(message.id), message.body))
 
     def beanstalk_stat(self, tube: str = None) -> Message:
         if not tube:

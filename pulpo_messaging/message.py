@@ -82,7 +82,7 @@ class Message():
 
     @property
     def id(self):
-        return self.get("id")
+        return str(self.get("id"))
 
     @id.setter
     def id(self, value):

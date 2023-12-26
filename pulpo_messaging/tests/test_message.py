@@ -65,7 +65,7 @@ class TestMessage(unittest.TestCase):
     def test_message_id(self):
         m = Message(message_id=123)
         print(f'{m}')
-        self.assertEqual(m.id, 123)
+        self.assertEqual(m.id, '123')
 
     def test_message_expiration(self):
         dt = datetime.datetime.now

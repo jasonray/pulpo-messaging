@@ -107,11 +107,6 @@ class QueueCommands():
         message = client.enqueue(message)
         logger.success(f'put: {message.id=}')
 
-    # @staticmethod
-    # def delete(client: QueueAdapter, job_id: int):
-    #     client.delete(job=job_id)
-    #     logger.info(f'delete: {job_id=}')
-
 
 if __name__ == '__main__':
     main()
