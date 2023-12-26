@@ -16,6 +16,8 @@ def main():
     parser.add_argument('--config', type=str, help='path to config file')
 
     parser.add_argument('--file_queue_adapter.base_path', type=str)
+    parser.add_argument('--beanstalkd_queue_adapter.host', type=str)
+    parser.add_argument('--beanstalkd_queue_adapter.port', type=int)
 
     # parser.add_argument('--server', '-s', dest='host', default='127.0.0.1', help='beanstalkd host/server', type=str)
     # parser.add_argument('--port', '-p', dest='port', default=11300, help='beanstalkd port', type=int)
