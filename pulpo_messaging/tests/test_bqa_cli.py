@@ -19,11 +19,9 @@ def with_beanstalkd() -> DecoratorFunc:
 
         def wrapper(cls) -> None:
             cmd = [BEANSTALKD_PATH]
-            host = '127.0.0.1'
-            port = 11300
-            address = (host, port)
+            host, port = DEFAULT_INET_ADDRESS
             cmd.extend(["-l", host, "-p", str(port)])
-            print(f'starting beanstalkd [{cmd=}][{address=}]')
+            print(f'starting beanstalkd [{cmd=}][{DEFAULT_INET_ADDRESS=}]')
             with subprocess.Popen(cmd) as beanstalkd:
                 print(f'started beanstalkd {beanstalkd.pid=}')
                 time.sleep(0.1)
@@ -50,6 +48,10 @@ class TestBqaCli(unittest.TestCase):
         args.append('pulpo-cli.py')
         args.append(command)
         args.append(f'--config={config}')
+
+        host, port = DEFAULT_INET_ADDRESS
+        args.append(f'--beanstalkd_queue_adapter.host={host}')
+        args.append(f'--beanstalkd_queue_adapter.port={port}')
 
         if additional_args:
             args = args + additional_args
