@@ -146,6 +146,42 @@ class TestFqaCompliance(unittest.TestCase):
         dq_3 = qa.dequeue()
         self.assertIsNotNone(dq_3)
 
+    def test_flush(self):
+        qa = self.queue_adapter_factory()
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        qa.flush(flush_active=True)
+        
+        dq_2 = qa.dequeue()
+        self.assertIsNone(dq_2)
+
+    def test_flush_not_active(self):
+        qa = self.queue_adapter_factory()
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        qa.flush(flush_active=False, flush_history=True)
+        
+        dq_2 = qa.dequeue()
+        self.assertIsNotNone(dq_2)
+
+    def test_flush_active_and_history(self):
+        qa = self.queue_adapter_factory()
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        qa.flush(flush_active=True, flush_history=True)
+        
+        dq_2 = qa.dequeue()
+        self.assertIsNone(dq_2)
+
+        m3 = Message(payload='hello world')
+        m3 = qa.enqueue(m3)
+
+        dq_3 = qa.dequeue()
+        self.assertIsNotNone(dq_3)
+
 
 class TestFqa(unittest.TestCase):
 

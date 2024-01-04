@@ -1,4 +1,5 @@
 import os
+import shutil
 import uuid
 import time
 import json
@@ -45,8 +46,9 @@ class FileQueueAdapterConfig(Config):
         return self.getAsBool('enable_archive', "False")
 
     @property
-    def max_number_of_attempts(self: Config) -> bool:
+    def max_number_of_attempts(self: Config) -> int:
         return self.getAsInt('max_number_of_attempts', 0)
+
 
 
 class FileQueueAdapter(QueueAdapter):
@@ -165,6 +167,30 @@ class FileQueueAdapter(QueueAdapter):
     def delete(self, message_id: str):
         status = self.lookup_message_state(message_id=message_id)
         self._archive_message(message_id=message_id, source=status, destination='failure')
+
+    def flush(self, flush_active: bool = True, flush_history: bool = False):
+        if flush_active & flush_history:
+            self._purge_all()
+        elif flush_active:
+            self._archive_all_messages()
+        elif flush_history:
+            self._delete_history_directories()
+
+    def _purge_all(self):
+        shutil.rmtree(self.config.base_path)
+        self._create_message_directories()
+
+    def _delete_history_directories(self):
+        shutil.rmtree(self.config.archive_success_path)
+        shutil.rmtree(self.config.archive_failure_path)
+        self._create_message_directories()
+
+    def _archive_all_messages(self):
+        entries = self._get_message_file_list(self.config.base_path)
+
+        for file in entries:
+            m = self._load_message_from_file(file_path=file)
+            self._archive_message(m.id, "queue", "failure")
 
     def _load_message_from_file(self, file_path) -> Message:
         logger.trace(f'load message from file [{file_path=}][format={self.config.message_format}]')
