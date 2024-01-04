@@ -21,5 +21,5 @@ class QueueAdapter():
     def delete(self, message_id: str):
         pass
 
-    def flush(self, flush_active: bool = True, flush_history: bool = False):
+    def flush(self):
         pass

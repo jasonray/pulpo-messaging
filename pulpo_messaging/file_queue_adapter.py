@@ -168,13 +168,8 @@ class FileQueueAdapter(QueueAdapter):
         status = self.lookup_message_state(message_id=message_id)
         self._archive_message(message_id=message_id, source=status, destination='failure')
 
-    def flush(self, flush_active: bool = True, flush_history: bool = False):
-        if flush_active & flush_history:
-            self._purge_all()
-        elif flush_active:
-            self._archive_all_messages()
-        elif flush_history:
-            self._delete_history_directories()
+    def flush(self):
+        self._archive_all_messages()
 
     def _purge_all(self):
         shutil.rmtree(self.config.base_path)
