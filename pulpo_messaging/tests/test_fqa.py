@@ -152,7 +152,7 @@ class TestFqaCompliance(unittest.TestCase):
         m1 = qa.enqueue(m1)
 
         qa.flush()
-        
+
         dq_2 = qa.dequeue()
         self.assertIsNone(dq_2)
 

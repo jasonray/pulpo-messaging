@@ -160,6 +160,17 @@ class BeanstalkdQueueAdapter(QueueAdapter):
         logger.trace(f'rollback (release) {message.id=}')
         self.client.release(job=greenstalk.Job(int(message.id), message.body))
 
+    def flush(self):
+        logger.trace('flush')
+
+        while True:
+            try:
+                job = self.client.reserve(timeout=0)
+                self.commit(message=job, is_success=False)
+                logger.trace('flush, reserve/commit ')
+            except greenstalk.TimedOutError:
+                break
+
     def beanstalk_stat(self, tube: str = None) -> Message:
         if not tube:
             tube = self.config.default_tube

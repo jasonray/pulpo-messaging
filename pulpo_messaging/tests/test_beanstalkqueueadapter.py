@@ -171,6 +171,16 @@ class TestBeanstalkQueueAdapterCompliance(unittest.TestCase):
         dq_3 = qa.dequeue()
         assert dq_3
 
+    @with_beanstalkd()
+    def test_flush(self, qa: QueueAdapter):
+        m1 = Message(payload='hello world')
+        m1 = qa.enqueue(m1)
+
+        qa.flush()
+
+        dq_2 = qa.dequeue()
+        self.assertIsNone(dq_2)
+
 
 class TestBeanstalkQueueAdapterDelay(unittest.TestCase):
 

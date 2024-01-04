@@ -50,7 +50,6 @@ class FileQueueAdapterConfig(Config):
         return self.getAsInt('max_number_of_attempts', 0)
 
 
-
 class FileQueueAdapter(QueueAdapter):
     MODE_READ_WRITE = 0o770
     MODE_READ_WRITE_EXECUTE = 0o777
