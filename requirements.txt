@@ -1,4 +1,4 @@
-statman == 1.4.5
+statman == 1.4.6
 pulpo-config == 2.0.2
 art == 6.1
 greenstalk==2.0.2
